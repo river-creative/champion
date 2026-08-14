@@ -3,6 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script>window.__resources={};</script>
+<script src="sync.js"></script>
+<script src="react.production.min.js"></script>
+<script src="react-dom.production.min.js"></script>
 <script src="./support.js"></script>
 </head>
 <body>
@@ -10,7 +14,7 @@
 <helmet>
 <link rel="stylesheet" href="ds-styles.css">
 <script src="ds-bundle.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,700;1,800;1,900&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="fonts.css">
 <style>
 body{margin:0;background:#0a0f16;font-family:'Archivo',sans-serif;-webkit-font-smoothing:antialiased}
 a{color:#ec3013}a:hover{color:#f3f2f2}
@@ -19,6 +23,8 @@ input:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px soli
 ::selection{background:#ec3013;color:#fff}
 ::-webkit-scrollbar{height:5px;width:5px}::-webkit-scrollbar-thumb{background:#2a3546}
 @keyframes livepulse{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes vsblink{0%,100%{opacity:1}45%{opacity:.18}}
+@keyframes bigline{0%,100%{background:rgba(236,48,19,.25)}50%{background:#ec3013}}
 
 /* --- deploy fixes: full-page shell (Design exports are canvas-sized) --- */
 html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-webkit-text-size-adjust:100%}
@@ -213,7 +219,7 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
                       </div>
                     </sc-if>
                     <div style="background:#151d29;border:1px solid {{ m.border }};border-radius:6px;overflow:hidden">
-                      <div data-slot="{{ m.aSlot }}" draggable="{{ m.aDrag }}" onDragStart="{{ m.aDragStart }}" onDragOver="{{ dragOver }}" onDrop="{{ m.aDrop }}" onTouchStart="{{ m.aTouchStart }}" onTouchMove="{{ touchMove }}" onTouchEnd="{{ m.aTouchEnd }}" onClick="{{ m.onA }}" style="display:flex;justify-content:space-between;align-items:center;gap:4px;padding:7px 8px;font-size:11.5px;font-weight:{{ m.aWeight }};color:{{ m.aColor }};cursor:{{ m.cursor }};background:{{ m.aBg }};touch-action:{{ m.touchAction }};border-bottom:1px solid rgba(243,242,242,0.07)">
+                      <div data-slot="{{ m.aSlot }}" draggable="{{ m.aDrag }}" onDragStart="{{ m.aDragStart }}" onDragOver="{{ dragOver }}" onDrop="{{ m.aDrop }}" onTouchStart="{{ m.aTouchStart }}" onTouchMove="{{ touchMove }}" onTouchEnd="{{ m.aTouchEnd }}" onClick="{{ m.onA }}" style="display:flex;justify-content:space-between;align-items:center;gap:4px;padding:7px 8px;font-size:11.5px;font-weight:{{ m.aWeight }};color:{{ m.aColor }};cursor:{{ m.cursor }};background:{{ m.aBg }};touch-action:{{ m.touchAction }};border-bottom:1px solid {{ m.divColor }};animation:{{ m.divAnim }}">
                         <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ m.aName }}</span>
                         <span style="flex:none;display:flex;gap:5px;align-items:center"><span style="color:#c8ccd4;font-weight:800;font-size:11px">{{ m.aScore }}</span><span style="color:#ec3013;font-weight:900">{{ m.aMark }}</span></span>
                       </div>
@@ -366,25 +372,38 @@ class Component extends DCLogic {
   state = { view: 'home', tId: null, cId: null, adminOn: false, pinOk: false, pinOpen: false, pinVal: '', pinError: false, entrantsText: '', newCompName: '', newCompType: 'timed', boardName: '', boardBw: '', boardScore: '', updateText: '', zoom: 0.85, confirm: null, tdragFrom: null, tOverId: null, data: null };
 
   componentDidMount() {
-    const demo = /[?&]demo=1/.test(location.search);
-    let d = null;
-    if (!demo) { try { const raw = localStorage.getItem(this.LS); if (raw) d = JSON.parse(raw); } catch (e) {} }
-    if (!d) { d = this.seedData(); try { localStorage.setItem(this.LS, JSON.stringify(d)); } catch (e) {} }
+    // Paint instantly from the local cache, then reconcile with the server.
+    let d = ChampSync.demo() ? null : ChampSync.cacheGet();
+    if (!d) { d = this.seedData(); ChampSync.cacheSet(d); }
     this.setState({ data: d });
+
+    ChampSync.pull().then((remote) => {
+      if (remote && remote.data) this.setState({ data: remote.data });
+      else if (!ChampSync.isOffline() && !ChampSync.demo()) ChampSync.push(this.state.data);
+    });
+
+    // Pick up edits made from another device, unless we have unsent changes.
+    this._poll = setInterval(() => {
+      if (ChampSync.dirty()) return;
+      ChampSync.pull().then((r) => { if (r && r.data) this.setState({ data: r.data }); });
+    }, 5000);
+
+    // Same-browser tabs still sync through localStorage, which is instant.
     this._sh = (e) => {
       if (e.key && e.key !== this.LS) return;
-      try { const raw = localStorage.getItem(this.LS); if (raw) this.setState({ data: JSON.parse(raw) }); } catch (er) {}
+      const c = ChampSync.cacheGet();
+      if (c) this.setState({ data: c });
     };
     window.addEventListener('storage', this._sh);
   }
-  componentWillUnmount() { window.removeEventListener('storage', this._sh); }
+  componentWillUnmount() { clearInterval(this._poll); window.removeEventListener('storage', this._sh); }
 
   LS = 'champion-app-v2';
   loadData() {
     try { const raw = localStorage.getItem(this.LS); if (raw) return JSON.parse(raw); } catch (e) {}
     return this.seedData();
   }
-  save(data) { this.setState({ data }); try { localStorage.setItem(this.LS, JSON.stringify(data)); } catch (e) {} }
+  save(data) { this.setState({ data }); ChampSync.push(data); }
 
   seedOrderArr(n) { let r = [0]; while (r.length < n) { const m = r.length * 2; r = r.flatMap(x => [x, m - 1 - x]); } return r; }
   genBracket(names, mode) {
@@ -486,6 +505,7 @@ class Component extends DCLogic {
 
   matchView(t, r, i, m, s) {
     const playable = m.a && m.b && !m.winner;
+    const hot = playable && r >= t.rounds.length - 2;
     const clickable = s.adminOn && m.a && m.b;
     const slotId = (rr, ii, side) => rr + '-' + ii + '-' + side;
     const openAdvance = (name) => {
@@ -532,6 +552,8 @@ class Component extends DCLogic {
       aColor: m.a ? (m.winner && m.winner !== m.a ? '#5c6675' : '#f3f2f2') : '#5c6675',
       bColor: m.b ? (m.winner && m.winner !== m.b ? '#5c6675' : '#f3f2f2') : '#5c6675',
       border: playable ? 'rgba(236,48,19,0.55)' : 'rgba(243,242,242,0.1)',
+      divColor: hot ? '#ec3013' : 'rgba(243,242,242,0.07)',
+      divAnim: hot ? 'bigline 2.6s ease-in-out infinite' : 'none',
       tag, tagRow: !!(tag || canPin), canPin,
       pinLabel: pinned ? '★' : '☆', pinColor: pinned ? '#ec3013' : '#8b93a1',
       onPin: () => { t.featured = pinned ? null : { r, i }; this.save({ ...this.state.data }); },
@@ -560,7 +582,7 @@ class Component extends DCLogic {
       pinOpen: s.pinOpen, pinVal: s.pinVal, pinError: s.pinError,
       onPinVal: (e) => this.setState({ pinVal: e.target.value, pinError: false }),
       closePin: () => this.setState({ pinOpen: false, pinVal: '', pinError: false }),
-      submitPin: () => { if (s.pinVal === pin) this.setState({ pinOk: true, adminOn: true, pinOpen: false, pinVal: '', pinError: false }); else this.setState({ pinError: true, pinVal: '' }); },
+      submitPin: () => { if (s.pinVal === pin) { ChampSync.setPin(s.pinVal); this.setState({ pinOk: true, adminOn: true, pinOpen: false, pinVal: '', pinError: false }); } else this.setState({ pinError: true, pinVal: '' }); },
       toggleAdmin: () => { if (s.adminOn) this.setState({ adminOn: false }); else if (s.pinOk) this.setState({ adminOn: true }); else this.setState({ pinOpen: true, pinVal: '', pinError: false }); },
       adminOn: s.adminOn,
       adminLabel: s.adminOn ? 'Admin On' : 'Admin',

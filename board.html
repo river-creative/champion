@@ -3,6 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script>window.__resources={};</script>
+<script src="sync.js"></script>
+<script src="react.production.min.js"></script>
+<script src="react-dom.production.min.js"></script>
 <script src="./support.js"></script>
 </head>
 <body>
@@ -10,12 +14,14 @@
 <helmet>
 <link rel="stylesheet" href="ds-styles.css">
 <script src="ds-bundle.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,600;0,700;0,800;0,900;1,800;1,900&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="fonts.css">
 <style>
 body{margin:0;background:#0a0f16;font-family:'Archivo',sans-serif;-webkit-font-smoothing:antialiased}
 a{color:#ec3013}a:hover{color:#f3f2f2}
 ::selection{background:#ec3013;color:#fff}
 @keyframes livepulse{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes vsblink{0%,100%{opacity:1}45%{opacity:.18}}
+@keyframes bigline{0%,100%{background:rgba(236,48,19,.25)}50%{background:#ec3013}}
 
 /* --- deploy fixes: full-page shell (Design exports are canvas-sized) --- */
 html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-webkit-text-size-adjust:100%}
@@ -41,7 +47,7 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
   <sc-if value="{{ hasData }}" hint-placeholder-val="{{ true }}">
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px" ref="{{ gridRef }}">
       <sc-for list="{{ bPanels }}" as="p" hint-placeholder-count="3">
-        <div style="border:1px solid rgba(243,242,242,0.12);border-top:2px solid #ec3013;padding:16px 18px;background:#0e141d;overflow:hidden">
+        <div style="border:1px solid rgba(243,242,242,0.12);border-top:2px solid #ec3013;padding:16px 18px;background:#0e141d;overflow:hidden;box-shadow:{{ p.shadow }};transition:box-shadow .5s ease">
           <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px">
             <span style="font-weight:900;font-style:italic;text-transform:uppercase;font-size:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.name }}</span>
             <span style="font-size:10px;letter-spacing:2px;color:#8b93a1;font-weight:700;text-transform:uppercase;flex:none">{{ p.status }}</span>
@@ -59,7 +65,7 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
                     <sc-for list="{{ col.matches }}" as="m" hint-placeholder-count="2">
                       <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:2px 1px">
                         <div style="background:#151d29;border:1px solid {{ m.border }};border-radius:5px;overflow:hidden">
-                          <div style="display:flex;justify-content:space-between;align-items:center;gap:3px;padding:3px 7px;font-size:10.5px;font-weight:{{ m.aWeight }};color:{{ m.aColor }};border-bottom:1px solid rgba(243,242,242,0.07)">
+                          <div style="display:flex;justify-content:space-between;align-items:center;gap:3px;padding:3px 7px;font-size:10.5px;font-weight:{{ m.aWeight }};color:{{ m.aColor }};border-bottom:1px solid {{ m.divColor }};animation:{{ m.divAnim }}">
                             <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ m.aName }}</span>
                             <span style="flex:none;display:flex;gap:4px;align-items:center"><span style="color:#c8ccd4;font-weight:800;font-size:10px">{{ m.aScore }}</span><span style="color:#ec3013;font-weight:900">{{ m.aMark }}</span></span>
                           </div>
@@ -112,21 +118,44 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
           </div>
         </div>
       </sc-for>
-      <div style="border:1px solid rgba(243,242,242,0.12);border-top:2px solid #ec3013;padding:16px 18px;background:#0e141d">
+      <div style="border:1px solid rgba(243,242,242,0.12);border-top:2px solid #ec3013;padding:16px 18px;background:#0e141d;overflow:hidden">
         <div style="display:flex;align-items:center;gap:8px">
           <span style="width:8px;height:8px;background:#ec3013;animation:livepulse 1.6s infinite"></span>
-          <span style="font-weight:900;font-style:italic;text-transform:uppercase;font-size:18px">Latest</span>
+          <span style="font-weight:900;font-style:italic;text-transform:uppercase;font-size:18px">{{ newsTitle }}</span>
         </div>
-        <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px">
-          <sc-for list="{{ feed }}" as="f" hint-placeholder-count="5">
-            <div style="border-bottom:1px solid rgba(243,242,242,0.08);padding-bottom:7px">
-              <div style="display:flex;justify-content:space-between;gap:8px">
-                <span style="font-size:8.5px;letter-spacing:1.5px;color:#ec3013;font-weight:700;text-transform:uppercase">{{ f.comp }}</span>
-                <span style="font-size:9px;color:#5c6675;flex:none">{{ f.time }}</span>
-              </div>
-              <div style="font-weight:700;font-size:11.5px;line-height:1.35;margin-top:2px">{{ f.title }}</div>
-            </div>
-          </sc-for>
+        <div style="margin-top:12px;height:214px;overflow:hidden">
+          <div ref="{{ newsRef }}" style="display:flex;flex-direction:column;gap:8px;transform:translateY(-{{ newsY }}px);transition:transform {{ newsDur }}s linear">
+            <sc-if value="{{ newsIsLatest }}" hint-placeholder-val="{{ true }}">
+              <sc-for list="{{ feed }}" as="f" hint-placeholder-count="5">
+                <div style="border-bottom:1px solid rgba(243,242,242,0.08);padding-bottom:7px">
+                  <div style="display:flex;justify-content:space-between;gap:8px">
+                    <span style="font-size:8.5px;letter-spacing:1.5px;color:#ec3013;font-weight:700;text-transform:uppercase">{{ f.comp }}</span>
+                    <span style="font-size:9px;color:#5c6675;flex:none">{{ f.time }}</span>
+                  </div>
+                  <div style="font-weight:700;font-size:11.5px;line-height:1.35;margin-top:2px">{{ f.title }}</div>
+                </div>
+              </sc-for>
+            </sc-if>
+            <sc-if value="{{ newsIsNext }}" hint-placeholder-val="{{ false }}">
+              <sc-for list="{{ upNext }}" as="u" hint-placeholder-count="5">
+                <div style="border-bottom:1px solid {{ u.lineColor }};padding-bottom:7px">
+                  <div style="display:flex;justify-content:space-between;gap:8px">
+                    <span style="font-size:8.5px;letter-spacing:1.5px;color:#ec3013;font-weight:700;text-transform:uppercase">{{ u.comp }}</span>
+                    <span style="font-size:9px;color:#5c6675;flex:none">{{ u.round }}</span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:6px;margin-top:3px">
+                    <span style="flex:none;color:#ec3013;font-size:10px">{{ u.star }}</span>
+                    <span style="font-weight:700;font-size:11.5px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ u.a }}</span>
+                    <span style="flex:none;font-size:9.5px;font-weight:900;font-style:italic;text-transform:uppercase;color:{{ u.vsColor }};animation:{{ u.vsAnim }}">vs</span>
+                    <span style="font-weight:700;font-size:11.5px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ u.b }}</span>
+                  </div>
+                </div>
+              </sc-for>
+              <sc-if value="{{ upNextEmpty }}" hint-placeholder-val="{{ false }}">
+                <div style="color:#5c6675;font-size:12px;letter-spacing:0.5px">No matches queued</div>
+              </sc-if>
+            </sc-if>
+          </div>
         </div>
       </div>
     </div>
@@ -135,7 +164,7 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{}">
 class Component extends DCLogic {
-  state = { data: null, now: Date.now(), panelW: 0, offs: {} };
+  state = { data: null, now: Date.now(), panelW: 0, offs: {}, focusIdx: -1, newsMode: 'latest', newsY: 0, newsDur: 0 };
   LS = 'champion-app-v2';
   measure = () => {
     const el = this._grid; if (!el) return;
@@ -144,15 +173,38 @@ class Component extends DCLogic {
   };
   gridRef = (el) => { this._grid = el; if (el) this.measure(); };
   componentDidMount() {
-    const upd = () => this.setState({ data: this.loadData(), now: Date.now() });
+    const upd = () => {
+      this.setState({ data: this.loadData(), now: Date.now() });
+      ChampSync.pull().then((r) => { if (r && r.data) this.setState({ data: r.data }); });
+    };
     upd();
     this._i = setInterval(upd, 3000);
     this._sh = (e) => { if (!e.key || e.key === this.LS) upd(); };
     window.addEventListener('storage', this._sh);
     window.addEventListener('resize', this.measure);
     this._ct = setTimeout(this.cycle, 8000);
+    this.newsCycle();
   }
-  componentWillUnmount() { clearInterval(this._i); clearTimeout(this._ct); window.removeEventListener('storage', this._sh); window.removeEventListener('resize', this.measure); }
+  componentWillUnmount() { clearInterval(this._i); clearTimeout(this._ct); clearTimeout(this._nt); window.removeEventListener('storage', this._sh); window.removeEventListener('resize', this.measure); }
+
+  // Latest <-> Up Next rotation. Each panel holds still, then creeps down at
+  // 15 px/s through the final 30s so the tail is readable before the swap.
+  NEWS_VH = 214; NEWS_PERIOD = 120000; NEWS_LEAD = 30000; NEWS_SPEED = 15;
+  newsRef = (el) => { this._news = el; };
+  newsCycle = () => {
+    clearTimeout(this._nt);
+    this.setState({ newsY: 0, newsDur: 0 });
+    this._nt = setTimeout(() => {
+      const el = this._news;
+      const over = el ? Math.max(0, el.scrollHeight - this.NEWS_VH) : 0;
+      const dist = Math.min(over, this.NEWS_SPEED * (this.NEWS_LEAD / 1000));
+      if (dist > 2) this.setState({ newsY: Math.round(dist), newsDur: dist / this.NEWS_SPEED });
+      this._nt = setTimeout(() => {
+        this.setState({ newsMode: this.state.newsMode === 'latest' ? 'upnext' : 'latest' });
+        this.newsCycle();
+      }, this.NEWS_LEAD);
+    }, this.NEWS_PERIOD - this.NEWS_LEAD);
+  };
 
   RW = 122; CW = 14;
   geom(t) {
@@ -175,30 +227,36 @@ class Component extends DCLogic {
     clearTimeout(this._ct);
     const data = this.state.data;
     if (!data) { this._ct = setTimeout(this.cycle, 3000); return; }
-    const seq = [];
-    data.tournaments.forEach((t, i) => { const g = this.geom(t); if (g.maxOff > 4) seq.push({ i, g }); });
+    const seq = data.tournaments.map((t, i) => ({ i, g: this.geom(t) }));
     let k = 0;
     const step = () => {
-      if (k >= seq.length) { this.setState({ offs: {} }); this._ct = setTimeout(this.cycle, 120000); return; }
+      if (k >= seq.length) { this.setState({ offs: {}, focusIdx: -1 }); this._ct = setTimeout(this.cycle, 120000); return; }
       const { i, g } = seq[k];
-      this.setOff(i, 0, 3);
-      this._ct = setTimeout(() => {
-        const dur = Math.max(10, g.maxOff / 12);
-        this.setOff(i, g.maxOff, dur);
+      this.setState({ focusIdx: i });
+      if (g.maxOff > 4) {
+        this.setOff(i, 0, 3);
         this._ct = setTimeout(() => {
-          this.setOff(i, g.staticOff, 3);
-          k++;
-          this._ct = setTimeout(step, 4500);
-        }, dur * 1000 + 2500);
-      }, 4000);
+          const dur = Math.max(10, g.maxOff / 12);
+          this.setOff(i, g.maxOff, dur);
+          this._ct = setTimeout(() => {
+            this.setOff(i, g.staticOff, 3);
+            k++;
+            this._ct = setTimeout(step, 4500);
+          }, dur * 1000 + 2500);
+        }, 4000);
+      } else {
+        // Bracket already fits end to end, so there's nothing to pan. Hold the
+        // highlight for the same beat so the rotation still visits it in turn.
+        k++;
+        this._ct = setTimeout(step, 7000);
+      }
     };
     step();
   };
   loadData() {
-    const demo = /[?&]demo=1/.test(location.search);
-    if (!demo) { try { const raw = localStorage.getItem(this.LS); if (raw) return JSON.parse(raw); } catch (e) {} }
+    if (!ChampSync.demo()) { const c = ChampSync.cacheGet(); if (c) return c; }
     const d = this.seedData();
-    try { localStorage.setItem(this.LS, JSON.stringify(d)); } catch (e) {}
+    ChampSync.cacheSet(d);
     return d;
   }
   seedOrderArr(n) { let r = [0]; while (r.length < n) { const m = r.length * 2; r = r.flatMap(x => [x, m - 1 - x]); } return r; }
@@ -299,9 +357,12 @@ class Component extends DCLogic {
   champion(t) { return t.rounds[t.rounds.length - 1][0].winner || null; }
   loser(m) { return m.winner === m.a ? m.b : m.a; }
   scoreline(m) { if (m.sa == null || m.sb == null) return null; return m.winner === m.a ? m.sa + '–' + m.sb : m.sb + '–' + m.sa; }
-  mv(m) {
+  mv(m, big) {
     const playable = m.a && m.b && !m.winner;
+    const hot = playable && big;
     return {
+      divColor: hot ? '#ec3013' : 'rgba(243,242,242,0.07)',
+      divAnim: hot ? 'bigline 2.6s ease-in-out infinite' : 'none',
       aName: m.a || (m.bye ? '—' : 'TBD'), bName: m.b || (m.bye ? 'BYE' : 'TBD'),
       aMark: m.winner && m.winner === m.a ? 'W' : '', bMark: m.winner && m.winner === m.b ? 'W' : '',
       aScore: m.sa != null ? m.sa : '', bScore: m.sb != null ? m.sb : '',
@@ -313,7 +374,11 @@ class Component extends DCLogic {
   }
   renderVals() {
     const data = this.state.data;
-    const base = { hasData: !!data, noData: !data, bPanels: [], lBoards: [], feed: [], gridRef: this.gridRef };
+    const latest = this.state.newsMode === 'latest';
+    const base = { hasData: !!data, noData: !data, bPanels: [], lBoards: [], feed: [], upNext: [], upNextEmpty: true,
+                   gridRef: this.gridRef, newsRef: this.newsRef,
+                   newsTitle: latest ? 'Latest' : 'Up Next', newsIsLatest: latest, newsIsNext: !latest,
+                   newsY: this.state.newsY, newsDur: this.state.newsDur };
     if (!data) return base;
     base.bPanels = data.tournaments.map((t, i) => {
       const g = this.geom(t);
@@ -321,10 +386,10 @@ class Component extends DCLogic {
       const off = ov ? ov.off : g.staticOff;
       const cols = [];
       t.rounds.forEach((rd, r) => {
-        cols.push({ isRound: true, isConn: false, label: this.roundLabel(rd.length), matches: rd.map(m => this.mv(m)) });
+        cols.push({ isRound: true, isConn: false, label: this.roundLabel(rd.length), matches: rd.map(m => this.mv(m, r >= t.rounds.length - 2)) });
         if (r < t.rounds.length - 1) cols.push({ isRound: false, isConn: true, cells: Array.from({ length: rd.length / 2 }, () => ({})) });
       });
-      return { name: t.name, status: this.tStatus(t), champion: this.champion(t), cols, h: g.h, scale: g.scale, tx: -Math.round(off), dur: ov ? ov.dur : 3, outerH: Math.ceil((g.h + 20) * g.scale) + 2 };
+      return { name: t.name, status: this.tStatus(t), champion: this.champion(t), cols, h: g.h, scale: g.scale, tx: -Math.round(off), dur: ov ? ov.dur : 3, outerH: Math.ceil((g.h + 20) * g.scale) + 2, shadow: this.state.focusIdx === i ? '0 0 0 2px rgba(236,48,19,0.55)' : 'none' };
     });
     base.lBoards = data.competitions.map(c => ({
       name: c.name,
@@ -345,7 +410,37 @@ class Component extends DCLogic {
     });
     data.competitions.forEach(c => c.updates.forEach(u => feed.push({ ts: u.ts, comp: c.name, title: u.text })));
     feed.sort((a, b) => b.ts - a.ts);
-    base.feed = feed.slice(0, 7).map(f => ({ ...f, time: this.rel(f.ts) }));
+    base.feed = feed.slice(0, 14).map(f => ({ ...f, time: this.rel(f.ts) }));
+
+    // Featured matches lead, then everything else that's ready to play,
+    // finals first because that's what the room cares about.
+    const ups = [], seen = new Set();
+    const addUp = (t, r, i, m, feat) => {
+      const key = t.name + '|' + r + '|' + i;
+      if (seen.has(key)) return;
+      seen.add(key);
+      const big = r >= t.rounds.length - 2;
+      ups.push({
+        comp: t.name, round: this.roundLabel(t.rounds[r].length),
+        a: m.a, b: m.b, star: feat ? '\u2605' : '',
+        vsColor: big ? '#ec3013' : '#5c6675',
+        vsAnim: big ? 'vsblink 2.6s ease-in-out infinite' : 'none',
+        lineColor: big ? 'rgba(236,48,19,0.45)' : 'rgba(243,242,242,0.08)'
+      });
+    };
+    data.tournaments.forEach(t => {
+      const f = t.featured;
+      if (!f) return;
+      const m = t.rounds[f.r] && t.rounds[f.r][f.i];
+      if (m && m.a && m.b && !m.winner) addUp(t, f.r, f.i, m, true);
+    });
+    data.tournaments.forEach(t => {
+      for (let r = t.rounds.length - 1; r >= 0; r--) {
+        t.rounds[r].forEach((m, i) => { if (m.a && m.b && !m.winner) addUp(t, r, i, m, false); });
+      }
+    });
+    base.upNext = ups.slice(0, 14);
+    base.upNextEmpty = ups.length === 0;
     return base;
   }
 }
