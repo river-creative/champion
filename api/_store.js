@@ -1,4 +1,4 @@
-/* Storage adapter, for the CHAMPION shared state.
+/* Storage adapter for the CHAMPION shared state.
  *
  * Two backends, picked from whichever env vars are present:
  *
@@ -13,31 +13,58 @@
 
 const KEY = 'champion:state';
 
-const REDIS_URL =
-  process.env.KV_REST_API_URL ||
-  process.env.UPSTASH_REDIS_REST_URL ||
-  process.env.REDIS_REST_URL ||
-  '';
-const REDIS_TOKEN =
-  process.env.KV_REST_API_TOKEN ||
-  process.env.UPSTASH_REDIS_REST_TOKEN ||
-  process.env.REDIS_REST_TOKEN ||
-  '';
+/* Credentials are matched by SUFFIX, not exact name. Vercel's Marketplace
+ * integrations prefix variables with the store name — a store called
+ * "champion" yields CHAMPION_REDIS_URL, not REDIS_URL — and the prefix varies
+ * per project, so an exact-name lookup silently falls through to memory. */
 
-// Vercel's newer Marketplace integrations hand over a single TCP connection
-// string instead of the REST pair, so support that too.
-const REDIS_TCP =
-  process.env.REDIS_URL ||
-  process.env.KV_URL ||
-  '';
+function findVar(suffix) {
+  const re = new RegExp('(^|_)' + suffix + '$');
+  for (const k of Object.keys(process.env).sort()) {
+    if (re.test(k) && (process.env[k] || '').length > 0) return k;
+  }
+  return null;
+}
 
-const BLOB_TOKEN = process.env.BLOB_READ_WRITE_TOKEN || '';
+// A REST URL and its token must come from the SAME prefix, or we'd pair
+// one store's address with another store's password.
+function findPair(urlSuffix, tokenSuffix) {
+  const urlKey = findVar(urlSuffix);
+  if (!urlKey) return null;
+  const tokenKey = urlKey.slice(0, urlKey.length - urlSuffix.length) + tokenSuffix;
+  if (!process.env[tokenKey]) return null;
+  return { url: process.env[urlKey], token: process.env[tokenKey], via: urlKey };
+}
+
+const REST =
+  findPair('KV_REST_API_URL', 'KV_REST_API_TOKEN') ||
+  findPair('UPSTASH_REDIS_REST_URL', 'UPSTASH_REDIS_REST_TOKEN') ||
+  findPair('REDIS_REST_URL', 'REDIS_REST_TOKEN');
+
+const REDIS_URL = REST ? REST.url : '';
+const REDIS_TOKEN = REST ? REST.token : '';
+
+// Marketplace integrations often hand over a single TCP connection string
+// instead of the REST pair.
+const TCP_KEY = findVar('REDIS_URL') || findVar('KV_URL');
+const REDIS_TCP = TCP_KEY ? process.env[TCP_KEY] : '';
+
+const BLOB_KEY = findVar('BLOB_READ_WRITE_TOKEN');
+const BLOB_TOKEN = BLOB_KEY ? process.env[BLOB_KEY] : '';
 
 export function backend() {
   if (REDIS_URL && REDIS_TOKEN) return 'redis';
   if (REDIS_TCP) return 'redis-tcp';
   if (BLOB_TOKEN) return 'blob';
   return 'memory';
+}
+
+// Which env var actually got used, for the ?debug=1 view. Name only.
+export function backendVar() {
+  if (REDIS_URL && REDIS_TOKEN) return REST.via;
+  if (REDIS_TCP) return TCP_KEY;
+  if (BLOB_TOKEN) return BLOB_KEY;
+  return null;
 }
 
 /* ------------------------------------------------------------------ redis */
