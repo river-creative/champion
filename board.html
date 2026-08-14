@@ -21,7 +21,8 @@ a{color:#ec3013}a:hover{color:#f3f2f2}
 ::selection{background:#ec3013;color:#fff}
 @keyframes livepulse{0%,100%{opacity:1}50%{opacity:.35}}
 @keyframes vsblink{0%,100%{opacity:1}45%{opacity:.18}}
-@keyframes bigline{0%,100%{background:rgba(236,48,19,.25)}50%{background:#ec3013}}
+@keyframes bigmatch{0%,100%{box-shadow:0 0 0 1px rgba(236,48,19,.12)}50%{box-shadow:0 0 0 3px rgba(236,48,19,.95)}}
+@keyframes redline{0%,100%{border-color:rgba(236,48,19,.2)}50%{border-color:#ec3013}}
 
 /* --- deploy fixes: full-page shell (Design exports are canvas-sized) --- */
 html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-webkit-text-size-adjust:100%}
@@ -59,13 +60,13 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
           <div style="display:flex;width:max-content;transform:scale({{ p.scale }}) translateX({{ p.tx }}px);transform-origin:0 0;transition:transform {{ p.dur }}s linear">
             <sc-for list="{{ p.cols }}" as="col" hint-placeholder-count="3">
               <sc-if value="{{ col.isRound }}" hint-placeholder-val="{{ true }}">
-                <div style="width:122px;flex:none;display:flex;flex-direction:column">
-                  <div style="height:20px;font-size:8.5px;letter-spacing:1.5px;color:#8b93a1;font-weight:700;text-transform:uppercase;text-align:center">{{ col.label }}</div>
+                <div style="width:122px;flex:none;display:flex;flex-direction:column;background:{{ col.colBg }};transition:background .5s ease">
+                  <div style="height:20px;font-size:8.5px;letter-spacing:1.5px;color:{{ col.labelColor }};font-weight:700;text-transform:uppercase;text-align:center;transition:color .5s ease">{{ col.label }}</div>
                   <div style="height:{{ p.h }}px;display:flex;flex-direction:column">
                     <sc-for list="{{ col.matches }}" as="m" hint-placeholder-count="2">
                       <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:2px 1px">
-                        <div style="background:#151d29;border:1px solid {{ m.border }};border-radius:5px;overflow:hidden">
-                          <div style="display:flex;justify-content:space-between;align-items:center;gap:3px;padding:3px 7px;font-size:10.5px;font-weight:{{ m.aWeight }};color:{{ m.aColor }};border-bottom:1px solid {{ m.divColor }};animation:{{ m.divAnim }}">
+                        <div style="background:#151d29;border:1px solid {{ m.border }};border-radius:5px;overflow:hidden;animation:{{ m.cardAnim }}">
+                          <div style="display:flex;justify-content:space-between;align-items:center;gap:3px;padding:3px 7px;font-size:10.5px;font-weight:{{ m.aWeight }};color:{{ m.aColor }};border-bottom:1px solid rgba(243,242,242,0.07)">
                             <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ m.aName }}</span>
                             <span style="flex:none;display:flex;gap:4px;align-items:center"><span style="color:#c8ccd4;font-weight:800;font-size:10px">{{ m.aScore }}</span><span style="color:#ec3013;font-weight:900">{{ m.aMark }}</span></span>
                           </div>
@@ -138,7 +139,7 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
             </sc-if>
             <sc-if value="{{ newsIsNext }}" hint-placeholder-val="{{ false }}">
               <sc-for list="{{ upNext }}" as="u" hint-placeholder-count="5">
-                <div style="border-bottom:1px solid {{ u.lineColor }};padding-bottom:7px">
+                <div style="border-top:{{ u.topW }}px solid {{ u.topColor }};animation:{{ u.topAnim }};padding-top:{{ u.topPad }}px;border-bottom:1px solid {{ u.lineColor }};padding-bottom:7px">
                   <div style="display:flex;justify-content:space-between;gap:8px">
                     <span style="font-size:8.5px;letter-spacing:1.5px;color:#ec3013;font-weight:700;text-transform:uppercase">{{ u.comp }}</span>
                     <span style="font-size:9px;color:#5c6675;flex:none">{{ u.round }}</span>
@@ -164,7 +165,7 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{}">
 class Component extends DCLogic {
-  state = { data: null, now: Date.now(), panelW: 0, offs: {}, focusIdx: -1, newsMode: 'latest', newsY: 0, newsDur: 0 };
+  state = { data: null, now: Date.now(), panelW: 0, offs: {}, focusIdx: -1, sweepCol: -1, newsMode: 'latest', newsY: 0, newsDur: 0 };
   LS = 'champion-app-v2';
   measure = () => {
     const el = this._grid; if (!el) return;
@@ -245,10 +246,23 @@ class Component extends DCLogic {
           }, dur * 1000 + 2500);
         }, 4000);
       } else {
-        // Bracket already fits end to end, so there's nothing to pan. Hold the
-        // highlight for the same beat so the rotation still visits it in turn.
-        k++;
-        this._ct = setTimeout(step, 7000);
+        // Bracket already fits end to end, so there is no travel to animate.
+        // Walk the round columns left to right instead — same left-to-right
+        // read as a pan, without zooming and clipping the tall first round.
+        const t = data.tournaments[i];
+        let c = 0;
+        const sweep = () => {
+          if (c >= t.rounds.length) {
+            this.setState({ sweepCol: -1 });
+            k++;
+            this._ct = setTimeout(step, 2500);
+            return;
+          }
+          this.setState({ sweepCol: c });
+          c++;
+          this._ct = setTimeout(sweep, 1400);
+        };
+        sweep();
       }
     };
     step();
@@ -356,13 +370,17 @@ class Component extends DCLogic {
   }
   champion(t) { return t.rounds[t.rounds.length - 1][0].winner || null; }
   loser(m) { return m.winner === m.a ? m.b : m.a; }
-  scoreline(m) { if (m.sa == null || m.sb == null) return null; return m.winner === m.a ? m.sa + '–' + m.sb : m.sb + '–' + m.sa; }
+  scoreline(m) {
+    if (m.sa == null || m.sb == null) return null;
+    const a = parseFloat(m.sa), b = parseFloat(m.sb);
+    if (isFinite(a) && isFinite(b) && a !== b) return (a > b ? m.sa + '–' + m.sb : m.sb + '–' + m.sa);
+    return m.winner === m.a ? m.sa + '–' + m.sb : m.sb + '–' + m.sa;
+  }
   mv(m, big) {
     const playable = m.a && m.b && !m.winner;
     const hot = playable && big;
     return {
-      divColor: hot ? '#ec3013' : 'rgba(243,242,242,0.07)',
-      divAnim: hot ? 'bigline 2.6s ease-in-out infinite' : 'none',
+      cardAnim: hot ? 'bigmatch 2.4s ease-in-out infinite' : 'none',
       aName: m.a || (m.bye ? '—' : 'TBD'), bName: m.b || (m.bye ? 'BYE' : 'TBD'),
       aMark: m.winner && m.winner === m.a ? 'W' : '', bMark: m.winner && m.winner === m.b ? 'W' : '',
       aScore: m.sa != null ? m.sa : '', bScore: m.sb != null ? m.sb : '',
@@ -386,7 +404,11 @@ class Component extends DCLogic {
       const off = ov ? ov.off : g.staticOff;
       const cols = [];
       t.rounds.forEach((rd, r) => {
-        cols.push({ isRound: true, isConn: false, label: this.roundLabel(rd.length), matches: rd.map(m => this.mv(m, r >= t.rounds.length - 2)) });
+        const lit = this.state.focusIdx === i && this.state.sweepCol === r;
+        cols.push({ isRound: true, isConn: false, label: this.roundLabel(rd.length),
+          labelColor: lit ? '#ec3013' : '#8b93a1',
+          colBg: lit ? 'rgba(236,48,19,0.10)' : 'transparent',
+          matches: rd.map(m => this.mv(m, r >= t.rounds.length - 2)) });
         if (r < t.rounds.length - 1) cols.push({ isRound: false, isConn: true, cells: Array.from({ length: rd.length / 2 }, () => ({})) });
       });
       return { name: t.name, status: this.tStatus(t), champion: this.champion(t), cols, h: g.h, scale: g.scale, tx: -Math.round(off), dur: ov ? ov.dur : 3, outerH: Math.ceil((g.h + 20) * g.scale) + 2, shadow: this.state.focusIdx === i ? '0 0 0 2px rgba(236,48,19,0.55)' : 'none' };
@@ -395,14 +417,15 @@ class Component extends DCLogic {
       name: c.name,
       empty: !(c.board && c.board.length),
       kicker: (c.board && c.board.length) ? (c.lowerBetter ? 'FASTEST · TOP 5' : 'TOP 5' + (c.unit && c.unit !== 'TIME' ? ' · ' + c.unit : '')) : 'AWAITING RESULTS',
-      rows: this.sortBoard(c).slice(0, 5).map((r, i) => ({ rank: i + 1, name: r.name, meta: r.bw ? 'BW ' + r.bw : '', score: r.score, rankColor: i === 0 ? '#ec3013' : '#8b93a1' }))
+      rows: this.sortBoard(c).slice(0, 5).map((r, i) => ({ rank: i + 1, name: r.name, meta: r.bw ? 'BW ' + r.bw : '', score: r.score, rankColor: i === 0 ? '#e8b44a' : '#8b93a1' }))
     }));
     const feed = [];
     data.tournaments.forEach(t => {
-      t.rounds.forEach(rd => rd.forEach(m => {
+      t.rounds.forEach((rd, r) => rd.forEach(m => {
         if (m.winner && !m.bye && m.ts) {
           const sl = this.scoreline(m);
-          feed.push({ ts: m.ts, comp: t.name, title: m.winner + ' def. ' + this.loser(m) + (sl ? ' · ' + sl : '') });
+          feed.push({ ts: m.ts, comp: t.name,
+            title: m.winner + ' def. ' + this.loser(m) + ' · ' + this.roundLabel(rd.length) + (sl ? ' · ' + sl : '') });
         }
       }));
       const last = t.rounds[t.rounds.length - 1][0];
@@ -424,8 +447,12 @@ class Component extends DCLogic {
         comp: t.name, round: this.roundLabel(t.rounds[r].length),
         a: m.a, b: m.b, star: feat ? '\u2605' : '',
         vsColor: big ? '#ec3013' : '#5c6675',
-        vsAnim: big ? 'vsblink 2.6s ease-in-out infinite' : 'none',
-        lineColor: big ? 'rgba(236,48,19,0.45)' : 'rgba(243,242,242,0.08)'
+        vsAnim: big ? 'vsblink 2.4s ease-in-out infinite' : 'none',
+        lineColor: big ? 'rgba(236,48,19,0.45)' : 'rgba(243,242,242,0.08)',
+        topW: big ? 2 : 0,
+        topColor: big ? '#ec3013' : 'transparent',
+        topAnim: big ? 'redline 2.4s ease-in-out infinite' : 'none',
+        topPad: big ? 7 : 0
       });
     };
     data.tournaments.forEach(t => {

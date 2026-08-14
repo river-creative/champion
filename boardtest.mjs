@@ -22,7 +22,7 @@ function boardCtx() {
 
 const C = boardCtx();
 const b = new C();
-b.state = { data: null, now: Date.now(), panelW: 0, offs: {}, focusIdx: -1, newsMode: 'latest', newsY: 0, newsDur: 0 };
+b.state = { data: null, now: Date.now(), panelW: 0, offs: {}, focusIdx: -1, sweepCol: -1, newsMode: 'latest', newsY: 0, newsDur: 0 };
 b.state.data = b.loadData();
 
 const pass = (n, c, extra = '') => console.log((c ? 'PASS' : 'FAIL') + '  ' + n + (extra ? '   ' + extra : ''));
@@ -98,9 +98,9 @@ pass('blinking rounds are only Final/Semifinals',
 
 const panel = v3.bPanels[0];
 const hotCols = [];
-panel.cols.forEach((c) => { if (c.isRound) c.matches.forEach((m) => { if (m.divAnim !== 'none') hotCols.push(c.label); }); });
-pass('semi/final line blinks in the bracket', hotCols.length > 0, hotCols.join(', ') || 'none');
-pass('only semi/final lines blink',
+panel.cols.forEach((c) => { if (c.isRound) c.matches.forEach((m) => { if (m.cardAnim !== 'none') hotCols.push(c.label); }); });
+pass('semi/final card outline blinks in the bracket', hotCols.length > 0, hotCols.join(', ') || 'none');
+pass('only semi/final cards blink',
      hotCols.every((l) => l === 'Final' || l === 'Semifinals'));
 
 clearTimeout(b._ct); clearTimeout(b._nt);

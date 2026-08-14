@@ -24,7 +24,8 @@ input:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px soli
 ::-webkit-scrollbar{height:5px;width:5px}::-webkit-scrollbar-thumb{background:#2a3546}
 @keyframes livepulse{0%,100%{opacity:1}50%{opacity:.35}}
 @keyframes vsblink{0%,100%{opacity:1}45%{opacity:.18}}
-@keyframes bigline{0%,100%{background:rgba(236,48,19,.25)}50%{background:#ec3013}}
+@keyframes bigmatch{0%,100%{box-shadow:0 0 0 1px rgba(236,48,19,.12)}50%{box-shadow:0 0 0 3px rgba(236,48,19,.95)}}
+@keyframes redline{0%,100%{border-color:rgba(236,48,19,.2)}50%{border-color:#ec3013}}
 
 /* --- deploy fixes: full-page shell (Design exports are canvas-sized) --- */
 html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-webkit-text-size-adjust:100%}
@@ -214,12 +215,12 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
                       <div style="display:flex;justify-content:space-between;align-items:flex-end;margin:0 4px 3px">
                         <span style="font-size:8px;letter-spacing:1.5px;font-weight:800;color:#ec3013;text-transform:uppercase">{{ m.tag }}</span>
                         <sc-if value="{{ m.canPin }}" hint-placeholder-val="{{ false }}">
-                          <button onClick="{{ m.onPin }}" title="Feature on Home" style="background:none;border:none;color:{{ m.pinColor }};font-size:13px;cursor:pointer;padding:0;line-height:1">{{ m.pinLabel }}</button>
+                          <button onClick="{{ m.onPin }}" title="Feature on Home" style="background:none;border:none;color:{{ m.pinColor }};font-size:20px;cursor:pointer;padding:2px 8px;margin:-2px -6px -2px 0;line-height:1;min-width:36px;min-height:32px;display:flex;align-items:center;justify-content:flex-end;touch-action:manipulation">{{ m.pinLabel }}</button>
                         </sc-if>
                       </div>
                     </sc-if>
-                    <div style="background:#151d29;border:1px solid {{ m.border }};border-radius:6px;overflow:hidden">
-                      <div data-slot="{{ m.aSlot }}" draggable="{{ m.aDrag }}" onDragStart="{{ m.aDragStart }}" onDragOver="{{ dragOver }}" onDrop="{{ m.aDrop }}" onTouchStart="{{ m.aTouchStart }}" onTouchMove="{{ touchMove }}" onTouchEnd="{{ m.aTouchEnd }}" onClick="{{ m.onA }}" style="display:flex;justify-content:space-between;align-items:center;gap:4px;padding:7px 8px;font-size:11.5px;font-weight:{{ m.aWeight }};color:{{ m.aColor }};cursor:{{ m.cursor }};background:{{ m.aBg }};touch-action:{{ m.touchAction }};border-bottom:1px solid {{ m.divColor }};animation:{{ m.divAnim }}">
+                    <div style="background:#151d29;border:1px solid {{ m.border }};border-radius:6px;overflow:hidden;animation:{{ m.cardAnim }}">
+                      <div data-slot="{{ m.aSlot }}" draggable="{{ m.aDrag }}" onDragStart="{{ m.aDragStart }}" onDragOver="{{ dragOver }}" onDrop="{{ m.aDrop }}" onTouchStart="{{ m.aTouchStart }}" onTouchMove="{{ touchMove }}" onTouchEnd="{{ m.aTouchEnd }}" onClick="{{ m.onA }}" style="display:flex;justify-content:space-between;align-items:center;gap:4px;padding:7px 8px;font-size:11.5px;font-weight:{{ m.aWeight }};color:{{ m.aColor }};cursor:{{ m.cursor }};background:{{ m.aBg }};touch-action:{{ m.touchAction }};border-bottom:1px solid rgba(243,242,242,0.07)">
                         <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ m.aName }}</span>
                         <span style="flex:none;display:flex;gap:5px;align-items:center"><span style="color:#c8ccd4;font-weight:800;font-size:11px">{{ m.aScore }}</span><span style="color:#ec3013;font-weight:900">{{ m.aMark }}</span></span>
                       </div>
@@ -498,11 +499,26 @@ class Component extends DCLogic {
   }
   champion(t) { return t.rounds[t.rounds.length - 1][0].winner || null; }
   loser(m) { return m.winner === m.a ? m.b : m.a; }
-  scoreline(m) { if (m.sa == null || m.sb == null) return null; return m.winner === m.a ? m.sa + '–' + m.sb : m.sb + '–' + m.sa; }
+  scoreline(m) {
+    if (m.sa == null || m.sb == null) return null;
+    const a = parseFloat(m.sa), b = parseFloat(m.sb);
+    // Higher score leads regardless of which side won or which slot it sits in.
+    if (isFinite(a) && isFinite(b) && a !== b) return (a > b ? m.sa + '–' + m.sb : m.sb + '–' + m.sa);
+    return m.winner === m.a ? m.sa + '–' + m.sb : m.sb + '–' + m.sa;
+  }
 
   openT(id) { const t = this.state.data.tournaments.find(x => x.id === id); this.setState({ view: 'bracket', tId: id, entrantsText: t ? t.entrants.join('\n') : '' }); }
   openC(id) { this.setState({ view: 'event', cId: id }); }
 
+  // When scores are entered, they are the source of truth. Tapping the wrong
+  // name and then typing 21-7 the other way should advance the 21.
+  scoreWinner(cf) {
+    if (!cf || cf.kind !== 'advance') return cf ? cf.winner : null;
+    if (!cf.scored) return cf.winner;
+    const a = parseFloat(cf.sa), b = parseFloat(cf.sb);
+    if (!isFinite(a) || !isFinite(b) || a === b) return cf.winner;
+    return a > b ? cf.aName : cf.bName;
+  }
   matchView(t, r, i, m, s) {
     const playable = m.a && m.b && !m.winner;
     const hot = playable && r >= t.rounds.length - 2;
@@ -552,8 +568,7 @@ class Component extends DCLogic {
       aColor: m.a ? (m.winner && m.winner !== m.a ? '#5c6675' : '#f3f2f2') : '#5c6675',
       bColor: m.b ? (m.winner && m.winner !== m.b ? '#5c6675' : '#f3f2f2') : '#5c6675',
       border: playable ? 'rgba(236,48,19,0.55)' : 'rgba(243,242,242,0.1)',
-      divColor: hot ? '#ec3013' : 'rgba(243,242,242,0.07)',
-      divAnim: hot ? 'bigline 2.6s ease-in-out infinite' : 'none',
+      cardAnim: hot ? 'bigmatch 2.4s ease-in-out infinite' : 'none',
       tag, tagRow: !!(tag || canPin), canPin,
       pinLabel: pinned ? '★' : '☆', pinColor: pinned ? '#ec3013' : '#8b93a1',
       onPin: () => { t.featured = pinned ? null : { r, i }; this.save({ ...this.state.data }); },
@@ -598,7 +613,7 @@ class Component extends DCLogic {
       screenTitle: { home: 'Dashboard', brackets: 'Brackets', bracket: 'Bracket', events: 'Competitions', event: 'Competition' }[s.view],
       confirmOpen: !!cf,
       confirmTitle: cf ? (cf.kind === 'advance' ? 'Advance competitor' : cf.kind === 'swap' ? 'Match change' : 'Remove competition') : '',
-      confirmBody: cf ? (cf.kind === 'advance' ? cf.winner + ' wins over ' + cf.loserName + ' and moves to the next round.' : cf.kind === 'swap' ? 'Swap ' + cf.n1 + ' with ' + cf.n2 + '? This changes the matchups.' : 'Remove "' + cf.name + '" and all of its results? This cannot be undone.') : '',
+      confirmBody: cf ? (cf.kind === 'advance' ? this.scoreWinner(cf) + ' wins over ' + (this.scoreWinner(cf) === cf.aName ? cf.bName : cf.aName) + ' and moves to the next round.' : cf.kind === 'swap' ? 'Swap ' + cf.n1 + ' with ' + cf.n2 + '? This changes the matchups.' : 'Remove "' + cf.name + '" and all of its results? This cannot be undone.') : '',
       confirmScored: !!(cf && cf.kind === 'advance' && cf.scored),
       confirmAName: cf && cf.aName || '', confirmBName: cf && cf.bName || '',
       confirmSa: cf ? cf.sa : '', confirmSb: cf ? cf.sb : '',
@@ -613,7 +628,7 @@ class Component extends DCLogic {
         }
         const t = data.tournaments.find(x => x.id === s.tId); if (!t) { this.setState({ confirm: null }); return; }
         if (c.kind === 'advance') {
-          this.setWinner(t, c.r, c.i, c.winner, Date.now(), c.sa, c.sb);
+          this.setWinner(t, c.r, c.i, this.scoreWinner(c), Date.now(), c.sa, c.sb);
         } else {
           const mF = t.rounds[c.fr][c.fi], mT = t.rounds[c.tr][c.ti];
           const tmp = mF[c.fside]; mF[c.fside] = mT[c.tside]; mT[c.tside] = tmp;
@@ -795,7 +810,7 @@ class Component extends DCLogic {
         rank: i + 1, name: row.name,
         meta: row.bw ? 'BW ' + row.bw + ' LBS' : '',
         score: row.score + (c.unit && c.unit !== 'TIME' ? ' ' + c.unit : ''),
-        rankColor: i === 0 ? '#ec3013' : '#8b93a1',
+        rankColor: i === 0 ? '#e8b44a' : '#8b93a1',
         bg: i === 0 ? 'rgba(236,48,19,0.08)' : 'transparent'
       }));
       base.cUpdates = c.updates.map(u => ({ time: this.rel(u.ts), text: u.text }));
