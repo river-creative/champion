@@ -24,10 +24,18 @@ const REDIS_TOKEN =
   process.env.REDIS_REST_TOKEN ||
   '';
 
+// Vercel's newer Marketplace integrations hand over a single TCP connection
+// string instead of the REST pair, so support that too.
+const REDIS_TCP =
+  process.env.REDIS_URL ||
+  process.env.KV_URL ||
+  '';
+
 const BLOB_TOKEN = process.env.BLOB_READ_WRITE_TOKEN || '';
 
 export function backend() {
   if (REDIS_URL && REDIS_TOKEN) return 'redis';
+  if (REDIS_TCP) return 'redis-tcp';
   if (BLOB_TOKEN) return 'blob';
   return 'memory';
 }
@@ -56,6 +64,33 @@ async function redisRead() {
 
 async function redisWrite(record) {
   await redis(['SET', KEY, JSON.stringify(record)]);
+  return record;
+}
+
+/* --------------------------------------------------------------- redis tcp */
+
+// Cached on module scope so warm invocations reuse the socket instead of
+// opening a new one on every three-second poll.
+let tcpClient = null;
+
+async function tcp() {
+  if (tcpClient && tcpClient.isOpen) return tcpClient;
+  const { createClient } = await import('redis');
+  tcpClient = createClient({ url: REDIS_TCP });
+  tcpClient.on('error', () => {});   // don't let a stray event kill the function
+  await tcpClient.connect();
+  return tcpClient;
+}
+
+async function tcpRead() {
+  const c = await tcp();
+  const raw = await c.get(KEY);
+  return raw ? JSON.parse(raw) : null;
+}
+
+async function tcpWrite(record) {
+  const c = await tcp();
+  await c.set(KEY, JSON.stringify(record));
   return record;
 }
 
@@ -96,6 +131,7 @@ let mem = null;
 export async function readState() {
   switch (backend()) {
     case 'redis': return redisRead();
+    case 'redis-tcp': return tcpRead();
     case 'blob': return blobRead();
     default: return mem;
   }
@@ -104,6 +140,7 @@ export async function readState() {
 export async function writeState(record) {
   switch (backend()) {
     case 'redis': return redisWrite(record);
+    case 'redis-tcp': return tcpWrite(record);
     case 'blob': return blobWrite(record);
     default: mem = record; return mem;
   }
