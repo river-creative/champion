@@ -14,14 +14,16 @@ The same files work on both. Without `/api/state`, the app falls back to
 
 ## Deploying to Vercel
 
-1. vercel.com → **Add New → Project** → import `agarcia-rmi/champ`.
+1. vercel.com → **Add New → Project** → import `river-creative/champion`.
 2. Framework preset: **Other**. No build command, no output directory.
 3. Storage tab → **Upstash Redis** → create and connect it to this project.
    That sets `KV_REST_API_URL` and `KV_REST_API_TOKEN` for you.
 4. Settings → Environment Variables → add `CHAMP_PIN` = `Champs26`
    (or whatever PIN you want gating writes). Redeploy after adding it.
-5. Open `/api/state` — it should return `{"rev":0,"data":null,"backend":"redis"}`.
-   If `backend` says `memory`, step 3 didn't take.
+5. Open `/api/state`. `backend` tells you which path is live:
+   - `redis` — REST credentials, the fastest option
+   - `redis-tcp` — a `REDIS_URL` connection string, also fine
+   - `memory` — nothing attached; step 3 didn't take
 
 ### Why Redis and not Blob
 
@@ -55,6 +57,23 @@ Writes are last-writer-wins. If two people score the same match in the same
 second, the later tap wins. That's deliberate — rejecting the stale write would
 make someone's tap silently revert on stage.
 
+### Repo layout
+
+Everything is flat at the root except the two serverless functions, which must
+live in `api/`. Nothing else belongs there, and neither of those two files
+belongs at the root — a copy at the root is served as downloadable plain text
+instead of running as a function.
+
+```
+champion/
+  api/
+    state.js
+    _store.js
+  index.html
+  board.html
+  ...
+```
+
 ## Files
 
 - `index.html` — the app
@@ -62,7 +81,7 @@ make someone's tap silently revert on stage.
 - `guide.html` — printable launch guide
 - `sync.js` — shared-state client (server when available, cache when not)
 - `api/state.js` — GET returns `{rev, data}`, PUT accepts `{rev, data}`
-- `api/_store.js` — Redis / Blob / in-memory adapter
+- `api/_store.js` — Redis (REST or TCP) / Blob / in-memory adapter
 - `support.js`, `ds-*`, `react*`, `fonts.css`, `archivo-*.woff2` — runtime and assets
 
 Two test scripts run against the real code, no browser needed:
@@ -70,4 +89,5 @@ Two test scripts run against the real code, no browser needed:
 ```
 node selftest.mjs    # sync: cross-device, pin gate, shape guard, offline fallback
 node boardtest.mjs   # board: rotation coverage, news timing, Up Next order, blink
+node tcptest.mjs     # storage: REDIS_URL path against a local RESP server
 ```
