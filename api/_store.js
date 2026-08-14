@@ -1,4 +1,3 @@
-
 /* Storage adapter for the CHAMPION shared state.
  *
  * Two backends, picked from whichever env vars are present:
