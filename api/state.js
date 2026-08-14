@@ -1,4 +1,4 @@
-import { readState, writeState, backend } from './_store.js';
+import { readState, writeState, backend, backendVar } from './_store.js';
 
 const MAX_BYTES = 512 * 1024;
 
@@ -22,6 +22,7 @@ export default async function handler(req, res) {
           .sort();
         return send(res, 200, {
           backend: backend(),
+          usingVar: backendVar(),
           envVarsFound: seen,
           hint: seen.length === 0
             ? 'No storage env vars visible. They are not scoped to this environment, or the deployment predates them — redeploy.'
