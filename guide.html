@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,700;1,900&amp;display=swap" rel="stylesheet">
+<script src="./doc-page.js"></script>
+<style>
+doc-page:not(:defined){visibility:hidden}
+body{font-family:'Archivo',sans-serif;color:#201e1d}
+a{color:#ec3013}a:hover{color:#a11f0b}
+.callout{break-inside:avoid;orphans:3;widows:3}
+</style>
+</helmet>
+<doc-page margin="0.8in">
+  <div style="border-bottom:3px solid #ec3013;padding-bottom:14px;margin-bottom:6px">
+    <div style="font-size:11px;letter-spacing:3px;font-weight:700;color:#ec3013;text-transform:uppercase">Revival Ministries International · Men's Conference 2026</div>
+    <h1 style="font-size:34px;font-weight:900;font-style:italic;text-transform:uppercase;margin:8px 0 4px;letter-spacing:0.5px">CHAMPION — Launch Guide</h1>
+    <div style="font-size:13px;color:#5c554f">Developer brief · User manual · Admin manual · Deployment (GitHub + Vercel + custom domain) — Tampa, FL · Sept 2–5, 2026</div>
+  </div>
+
+  <h2 style="font-size:20px;font-weight:900;text-transform:uppercase;border-bottom:2px solid #201e1d;padding-bottom:6px;margin-top:28px">1 · What CHAMPION is</h2>
+  <p style="font-size:14px;line-height:1.6">CHAMPION is a live scoreboard for the conference's six competitions. It has two screens built from the same data:</p>
+  <ul style="font-size:14px;line-height:1.7">
+    <li><strong>The app</strong> (phones) — dashboard with the featured "Up Next" matches, all three tournament brackets (FC World Cup, College Football Playoff, Call of Duty), all leaderboard competitions (Benchpress, Crucible, John Wick Challenge, plus any you add), and a Latest Results feed. Attendees browse; admins update everything from the same screen after unlocking with the PIN.</li>
+    <li><strong>The big screen</strong> (TVs / projector) — read-only landscape display of all brackets, all leaderboards, and the Latest feed. Refreshes every 3 seconds. Each bracket auto-anchors to its highest played phase, and roughly every 2 minutes the brackets take turns slowly panning through all their rounds.</li>
+  </ul>
+  <p style="font-size:14px;line-height:1.6"><strong>Current state:</strong> both screens are finished designs that run in a browser and store data on the device (localStorage). To launch for real — many phones, one shared scoreboard — a developer wires the data layer to a small server, described in §4–5. Everything else ships as-is.</p>
+
+  <h2 style="font-size:20px;font-weight:900;text-transform:uppercase;border-bottom:2px solid #201e1d;padding-bottom:6px;margin-top:28px">2 · User manual (attendees)</h2>
+  <ul style="font-size:14px;line-height:1.7">
+    <li><strong>Home</strong> — "Up Next" cards show the next (or admin-featured ★) match in each tournament. Below: all six competitions with their current status or leader, then Latest Results across everything. Tap anything to jump to it.</li>
+    <li><strong>Brackets tab</strong> — pick a tournament to see the full two-sided bracket with the Final in the center. Use − / + to zoom, Reset to restore, and rotate the phone for the widest view. Winners are marked <strong>W</strong>; FC World Cup and CFP matches also show scores. A red-bordered match is still to be played; the champion banner appears when the Final is decided.</li>
+    <li><strong>Compete tab</strong> — leaderboard competitions. Each shows its top 5 (leader highlighted), the scoring type (fastest time, heaviest weight, or highest count), and an Updates feed of posts and automatic results.</li>
+    <li>No account, no install required. For one-tap access, use the phone's <em>Add to Home Screen</em> from the share menu — it then opens full-screen like an app.</li>
+  </ul>
+
+  <h2 style="font-size:20px;font-weight:900;text-transform:uppercase;border-bottom:2px solid #201e1d;padding-bottom:6px;margin-top:28px">3 · Admin manual</h2>
+  <p style="font-size:14px;line-height:1.6">Tap <strong>Admin</strong> (top right) and enter the PIN — <strong>Champs26</strong>, case-sensitive, 8 characters. Change it before the event (§5, step 4). The button turns red while admin mode is on; tap it again to turn it off.</p>
+  <h3 style="font-size:15px;font-weight:800;text-transform:uppercase;margin-top:18px">Brackets</h3>
+  <ul style="font-size:14px;line-height:1.7">
+    <li><strong>Record a result</strong> — tap the winner's name in any ready match. A confirm popup appears; for FC World Cup and CFP you can optionally enter both scores there. Confirming advances the winner to the next round. Tapping a different name later re-routes the bracket (downstream results are cleared, with confirmation).</li>
+    <li><strong>Change a matchup</strong> — drag any competitor's name onto another slot (works with touch). A Confirm Changes popup summarizes the swap before it applies. Only unplayed matches can be changed.</li>
+    <li><strong>Feature a match</strong> — tap ☆ on a ready match to pin it as that tournament's "Up Next" on everyone's Home screen; tap ★ to unpin.</li>
+    <li><strong>Set up a bracket</strong> — in the panel below the bracket, enter one competitor per line, choose <em>Random draw</em> or <em>List order</em> seeding, then <em>Generate bracket</em>. This resets that tournament's results. Byes are placed automatically when the count isn't a power of two.</li>
+  </ul>
+  <h3 style="font-size:15px;font-weight:800;text-transform:uppercase;margin-top:18px">Leaderboard competitions</h3>
+  <ul style="font-size:14px;line-height:1.7">
+    <li><strong>Add a result</strong> — on a competition page, enter name + score (+ body weight for Benchpress) and tap +. Times are entered as m:ss. Entering an existing name updates that person's score instead of duplicating them.</li>
+    <li><strong>Automatic updates</strong> — the app posts to the feed on any top-5 change: new leader / fastest time, extending the lead, entering the top 5, moving up a spot, or improving while holding rank. These appear in the competition's Updates, the Home feed, and the big screen.</li>
+    <li><strong>Manual updates</strong> — post free-text announcements from the same page (schedules, calls to the stage, records).</li>
+    <li><strong>Add a competition</strong> — on the Compete tab: name it and pick a scoring type — <em>Timed</em> (m:ss, fastest wins), <em>Weight</em> (LBS, highest wins), or <em>Count</em> (reps/points, most wins). It appears everywhere immediately, including its own big-screen panel ("Awaiting results" until the first entry). Remove a competition with ✕ (confirmed, irreversible).</li>
+  </ul>
+  <h3 style="font-size:15px;font-weight:800;text-transform:uppercase;margin-top:18px">Big screen</h3>
+  <ul style="font-size:14px;line-height:1.7">
+    <li>Open the big-screen URL in a browser on the TV / projector computer, press F11 for full screen. It is read-only and needs no PIN.</li>
+    <li>It updates itself every 3 seconds. The bracket panning sequence runs automatically; no operator needed.</li>
+  </ul>
+
+  <h2 style="font-size:20px;font-weight:900;text-transform:uppercase;border-bottom:2px solid #201e1d;padding-bottom:6px;margin-top:28px">4 · Developer brief</h2>
+  <p style="font-size:14px;line-height:1.6"><strong>Front end.</strong> Two self-contained HTML pages (app + big screen), no framework build required. All state lives in one JSON document, currently persisted under the localStorage key <code>champion-app-v2</code>. The big screen reads the same key and polls it every 3 s — which is why, today, both pages must run on the same device. Deployment replaces localStorage with a tiny API.</p>
+  <div class="callout" style="border:1px solid #d8d4d0;border-left:3px solid #ec3013;padding:12px 16px;margin:14px 0;background:#faf9f8">
+    <div style="font-size:11px;letter-spacing:2px;font-weight:700;color:#ec3013;text-transform:uppercase;margin-bottom:6px">Data model (one JSON document)</div>
+    <pre style="margin:0;font-size:11.5px;line-height:1.55;white-space:pre-wrap">{
+  tournaments: [{ id, name, seeding: 'order'|'random', scored: bool,
+    entrants: [names], featured: {r, i} | null,
+    rounds: [ [ { a, b, winner, bye, ts, sa, sb } ] ]   // rounds[0] = first round
+  }],
+  competitions: [{ id, name, unit: 'TIME'|'LBS'|'REPS', lowerBetter: bool,
+    hasBW: bool, board: [{ name, bw?, score }],
+    updates: [{ ts, text, auto? }]
+  }]
+}</pre>
+  </div>
+  <p style="font-size:14px;line-height:1.6"><strong>Server work (the only real engineering):</strong></p>
+  <ol style="font-size:14px;line-height:1.7">
+    <li><code>GET /api/state</code> — returns the JSON document. Called on load and polled (app 5 s, big screen 3 s).</li>
+    <li><code>POST /api/state</code> — body <code>{ pin, data }</code>. Verify <code>pin</code> against the <code>ADMIN_PIN</code> environment variable <em>server-side</em>, then write the document. Reject otherwise. The client-side PIN gate stays as UX only — never as security.</li>
+    <li>Storage: <strong>Vercel KV</strong> (Redis, one <code>GET/SET</code> key) is the simplest fit for a single small JSON document; Vercel Blob also works. Traffic is one document, a few hundred readers, ~1 write per result — free tier is plenty.</li>
+    <li>In the pages, replace the <code>loadData()/save()</code> localStorage calls with <code>fetch</code> to those two routes, and send the entered PIN with each write. Last-write-wins is acceptable with one or two admins; if several admins work at once, add a version number to the document and reject stale writes.</li>
+  </ol>
+  <p style="font-size:14px;line-height:1.6"><strong>Suggested repo layout</strong> (Next.js is the path of least resistance on Vercel): <code>public/</code> or app routes serving the two pages + assets (banner, RMI logo), and <code>app/api/state/route.js</code> with the two handlers. Total server code is well under 100 lines.</p>
+
+  <h2 style="font-size:20px;font-weight:900;text-transform:uppercase;border-bottom:2px solid #201e1d;padding-bottom:6px;margin-top:28px">5 · Deployment — GitHub → Vercel → your domain</h2>
+  <ol style="font-size:14px;line-height:1.75">
+    <li><strong>GitHub.</strong> Create a private repo (e.g. <code>rmi/champion</code>), commit the project. Every push to <code>main</code> will auto-deploy; branches get preview URLs for testing.</li>
+    <li><strong>Vercel.</strong> Sign in with GitHub at vercel.com → <em>Add New Project</em> → import the repo. Vercel detects the framework and deploys; you get <code>champion-xxx.vercel.app</code> immediately.</li>
+    <li><strong>Storage.</strong> In the Vercel project: <em>Storage → Create → KV</em>, connect it to the project. The connection env vars are injected automatically.</li>
+    <li><strong>PIN.</strong> <em>Settings → Environment Variables</em>: add <code>ADMIN_PIN</code> with a fresh value (retire <code>Champs26</code> once it has been shared in documents like this one). Redeploy to apply.</li>
+    <li><strong>Custom domain.</strong> <em>Settings → Domains</em> → add e.g. <code>champion.yourdomain.com</code>. At your DNS registrar add the record Vercel shows: for a subdomain, <code>CNAME champion → cname.vercel-dns.com</code>; for an apex domain, <code>A @ → 76.76.21.21</code>. HTTPS certificates are issued automatically within minutes.</li>
+    <li><strong>Routes.</strong> Serve the app at <code>/</code> and the big screen at <code>/big-screen</code> on the same domain.</li>
+    <li><strong>Distribute.</strong> Generate a QR code pointing at the domain, print it on signage and programs. TVs open <code>/big-screen</code> full-screen.</li>
+  </ol>
+
+  <h2 style="font-size:20px;font-weight:900;text-transform:uppercase;border-bottom:2px solid #201e1d;padding-bottom:6px;margin-top:28px">6 · Pre-event checklist</h2>
+  <table style="width:100%;border-collapse:collapse;font-size:13px">
+    <thead><tr>
+      <th style="text-align:left;border-bottom:2px solid #201e1d;padding:8px 10px;text-transform:uppercase;letter-spacing:1px;font-size:11px">When</th>
+      <th style="text-align:left;border-bottom:2px solid #201e1d;padding:8px 10px;text-transform:uppercase;letter-spacing:1px;font-size:11px">Task</th>
+    </tr></thead>
+    <tbody>
+      <tr><td style="border-bottom:1px solid #d8d4d0;padding:8px 10px;white-space:nowrap;font-weight:700">2+ weeks out</td><td style="border-bottom:1px solid #d8d4d0;padding:8px 10px">Developer wires the API (§4), deploys to Vercel, connects the domain. Change the PIN.</td></tr>
+      <tr><td style="border-bottom:1px solid #d8d4d0;padding:8px 10px;font-weight:700">1 week out</td><td style="border-bottom:1px solid #d8d4d0;padding:8px 10px">Clear the demo data. Enter real competitor names per tournament, pick seeding, generate brackets. Confirm the competition list and scoring types.</td></tr>
+      <tr><td style="border-bottom:1px solid #d8d4d0;padding:8px 10px;font-weight:700">Days before</td><td style="border-bottom:1px solid #d8d4d0;padding:8px 10px">Dry run: record a result, swap a matchup, feature a match, add a leaderboard entry — confirm each shows on a second phone and the big screen within seconds. Print QR signage.</td></tr>
+      <tr><td style="border-bottom:1px solid #d8d4d0;padding:8px 10px;font-weight:700">Event day</td><td style="border-bottom:1px solid #d8d4d0;padding:8px 10px">TVs on <code>/big-screen</code> full-screen and on power (disable sleep). Two people know the PIN. Verify venue Wi-Fi reaches the stage and TV positions.</td></tr>
+    </tbody>
+  </table>
+  <p style="font-size:12px;color:#5c554f;margin-top:22px;border-top:1px solid #d8d4d0;padding-top:10px">CHAMPION · RMI Men's Conference 2026 · This guide prints cleanly — use Export → PDF to share it.</p>
+</doc-page>
+</x-dc>
+</body>
+</html>

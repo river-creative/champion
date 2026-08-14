@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/modernist-e15045d2-4219-426e-a4ea-da1b6e0867ec/styles.css">
+<script src="_ds/modernist-e15045d2-4219-426e-a4ea-da1b6e0867ec/_ds_bundle.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,700;1,800;1,900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0a0f16;font-family:'Archivo',sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#ec3013}a:hover{color:#f3f2f2}
+input,textarea,button,select{font-family:'Archivo',sans-serif}
+input:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px solid #ec3013;outline-offset:2px}
+::selection{background:#ec3013;color:#fff}
+::-webkit-scrollbar{height:5px;width:5px}::-webkit-scrollbar-thumb{background:#2a3546}
+@keyframes livepulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+/* --- deploy fixes: full-page shell (Design exports are canvas-sized) --- */
+html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-webkit-text-size-adjust:100%}
+#dc-root,#dc-root>.sc-host{min-height:100dvh;display:block}
+#dc-root>.sc-host>div,#dc-root>div{
+  max-width:none!important;width:100%!important;margin:0!important;
+  min-height:100dvh!important;
+  padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))!important;
+}
+@media (min-width:1000px){
+  #dc-root>.sc-host>div,#dc-root>div{
+    padding-left:clamp(0px,3vw,48px)!important;padding-right:clamp(0px,3vw,48px)!important;
+  }
+}
+#dc-root nav{
+  position:fixed!important;left:0!important;right:0!important;bottom:0!important;
+  transform:none!important;width:100%!important;max-width:none!important;
+  background:#0a0f16!important;
+  padding-bottom:env(safe-area-inset-bottom,0px)!important;
+  box-shadow:0 -10px 28px rgba(0,0,0,.55);
+}
+</style>
+</helmet>
+<div style="max-width:{{ rootMax }};margin:0 auto;min-height:100vh;background:#0d131c;color:#f3f2f2;display:flex;flex-direction:column;padding-bottom:88px;box-sizing:border-box">
+
+  <sc-if value="{{ showBanner }}" hint-placeholder-val="{{ true }}">
+    <div style="background:#0e141d;border-bottom:2px solid #ec3013;padding:14px 16px 12px;display:flex;justify-content:space-between;align-items:center;gap:12px">
+      <div style="min-width:0">
+        <img src="assets/banner-word.png" alt="CHAMPION" style="display:block;width:210px;max-width:100%">
+        <div style="font-size:9px;letter-spacing:2px;color:#8b93a1;font-weight:600;text-transform:uppercase;margin-top:7px">Men's Conference 2026 · Tampa, FL · Sept 2–5</div>
+      </div>
+      <img src="assets/rmi-logo.png" alt="Revival Ministries International" style="flex:none;width:64px;opacity:0.92">
+    </div>
+  </sc-if>
+
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid rgba(243,242,242,0.1)">
+    <div style="font-weight:900;font-style:italic;text-transform:uppercase;letter-spacing:1px;font-size:15px">{{ screenTitle }}</div>
+    <button onClick="{{ toggleAdmin }}" style="display:flex;align-items:center;gap:6px;background:{{ adminBtnBg }};color:{{ adminBtnColor }};border:1px solid rgba(243,242,242,0.2);padding:6px 10px;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5l8-3z"></path></svg>
+      {{ adminLabel }}
+    </button>
+  </div>
+
+  <sc-if value="{{ pinOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;inset:0;background:rgba(10,15,22,0.85);z-index:40;display:flex;align-items:center;justify-content:center" onClick="{{ closePin }}">
+      <div style="background:#151d29;border:1px solid rgba(243,242,242,0.15);border-top:2px solid #ec3013;padding:24px;width:280px" onClick="{{ stop }}">
+        <div style="font-size:10px;letter-spacing:2px;color:#ec3013;font-weight:700;margin-bottom:6px">ADMIN ACCESS</div>
+        <div style="font-weight:900;font-style:italic;text-transform:uppercase;font-size:18px;margin-bottom:16px">Enter PIN</div>
+        <input type="password" value="{{ pinVal }}" onChange="{{ onPinVal }}" placeholder="••••••••" style="width:100%;box-sizing:border-box;background:#0d131c;border:1px solid rgba(243,242,242,0.2);color:#f3f2f2;padding:12px;font-size:17px;letter-spacing:4px;text-align:center;margin-bottom:6px">
+        <sc-if value="{{ pinError }}" hint-placeholder-val="{{ false }}"><div style="color:#ec3013;font-size:11px;font-weight:600;margin-bottom:6px">Wrong PIN — case-sensitive, try again</div></sc-if>
+        <button onClick="{{ submitPin }}" style="width:100%;background:#ec3013;color:#fff;border:none;padding:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase;font-size:12px;text-align:left;cursor:pointer;margin-top:6px">Unlock →</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ confirmOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;inset:0;background:rgba(10,15,22,0.85);z-index:40;display:flex;align-items:center;justify-content:center" onClick="{{ confirmNo }}">
+      <div style="background:#151d29;border:1px solid rgba(243,242,242,0.15);border-top:2px solid #ec3013;padding:24px;width:300px" onClick="{{ stop }}">
+        <div style="font-size:10px;letter-spacing:2px;color:#ec3013;font-weight:700;margin-bottom:6px">CONFIRM CHANGES</div>
+        <div style="font-weight:900;font-style:italic;text-transform:uppercase;font-size:17px;margin-bottom:10px">{{ confirmTitle }}</div>
+        <div style="font-size:13px;line-height:1.5;color:#c8ccd4;margin-bottom:14px">{{ confirmBody }}</div>
+        <sc-if value="{{ confirmScored }}" hint-placeholder-val="{{ false }}">
+          <div style="font-size:9px;letter-spacing:1.5px;color:#8b93a1;font-weight:700;text-transform:uppercase;margin-bottom:6px">Score (optional)</div>
+          <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="flex:1;font-size:12px;font-weight:700">{{ confirmAName }}</span>
+              <input value="{{ confirmSa }}" onChange="{{ onConfirmSa }}" inputmode="numeric" placeholder="—" style="width:56px;background:#0d131c;border:1px solid rgba(243,242,242,0.2);color:#f3f2f2;padding:8px;font-size:14px;text-align:center">
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="flex:1;font-size:12px;font-weight:700">{{ confirmBName }}</span>
+              <input value="{{ confirmSb }}" onChange="{{ onConfirmSb }}" inputmode="numeric" placeholder="—" style="width:56px;background:#0d131c;border:1px solid rgba(243,242,242,0.2);color:#f3f2f2;padding:8px;font-size:14px;text-align:center">
+            </div>
+          </div>
+        </sc-if>
+        <button onClick="{{ confirmYes }}" style="width:100%;background:#ec3013;color:#fff;border:none;padding:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase;font-size:11px;text-align:left;cursor:pointer">Confirm →</button>
+        <button onClick="{{ confirmNo }}" style="width:100%;margin-top:8px;background:transparent;color:#8b93a1;border:1px solid rgba(243,242,242,0.2);padding:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;font-size:11px;text-align:left;cursor:pointer">Cancel</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
+    <sc-if value="{{ hasUpNext }}" hint-placeholder-val="{{ true }}">
+      <div style="padding:18px 16px 10px;display:flex;align-items:center;gap:8px">
+        <span style="width:8px;height:8px;background:#ec3013;animation:livepulse 1.6s infinite"></span>
+        <span style="font-weight:900;font-style:italic;text-transform:uppercase;font-size:14px;letter-spacing:1px">Up Next</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;padding:0 16px">
+        <sc-for list="{{ upNext }}" as="u" hint-placeholder-count="3">
+          <button onClick="{{ u.open }}" style="text-align:left;background:#151d29;border:1px solid rgba(243,242,242,0.12);border-top:2px solid #ec3013;padding:14px 16px;cursor:pointer;color:#f3f2f2">
+            <div style="display:flex;justify-content:space-between;gap:8px">
+              <span style="font-size:9px;letter-spacing:1.5px;color:#ec3013;font-weight:700;text-transform:uppercase">{{ u.comp }}</span>
+              <span style="font-size:9px;letter-spacing:1.5px;color:#8b93a1;font-weight:700;text-transform:uppercase;flex:none">{{ u.round }}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;margin-top:10px">
+              <span style="flex:1;font-weight:900;font-style:italic;font-size:16px;text-transform:uppercase;line-height:1.15">{{ u.a }}</span>
+              <span style="flex:none;color:#ec3013;font-weight:900;font-size:11px">VS</span>
+              <span style="flex:1;text-align:right;font-weight:900;font-style:italic;font-size:16px;text-transform:uppercase;line-height:1.15">{{ u.b }}</span>
+            </div>
+          </button>
+        </sc-for>
+      </div>
+    </sc-if>
+    <div style="padding:22px 16px 10px;font-weight:900;font-style:italic;text-transform:uppercase;font-size:14px;letter-spacing:1px">All Competitions</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 16px">
+      <sc-for list="{{ allComps }}" as="g" hint-placeholder-count="6">
+        <button onClick="{{ g.open }}" style="text-align:left;background:#151d29;border:1px solid rgba(243,242,242,0.12);border-top:2px solid #ec3013;padding:12px;cursor:pointer;color:#f3f2f2;display:flex;flex-direction:column;gap:4px">
+          <div style="font-size:8.5px;letter-spacing:1.5px;color:#8b93a1;font-weight:700">{{ g.kind }}</div>
+          <div style="font-weight:900;font-style:italic;text-transform:uppercase;font-size:13px;line-height:1.15">{{ g.name }}</div>
+          <div style="font-size:10.5px;color:#8b93a1;line-height:1.35">{{ g.sub }}</div>
+        </button>
+      </sc-for>
+    </div>
+    <div style="padding:22px 16px 8px;display:flex;align-items:baseline;justify-content:space-between">
+      <span style="font-weight:900;font-style:italic;text-transform:uppercase;font-size:12px;letter-spacing:1px;color:#8b93a1">Latest Results</span>
+      <span style="font-size:9px;color:#5c6675;letter-spacing:1px">ALL COMPETITIONS</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px;padding:0 16px">
+      <sc-for list="{{ feed }}" as="f" hint-placeholder-count="6">
+        <button onClick="{{ f.open }}" style="text-align:left;background:#11161f;border:1px solid rgba(243,242,242,0.08);padding:8px 12px;cursor:pointer;color:#f3f2f2;display:flex;flex-direction:column;gap:2px" style-hover="border-color:#ec3013">
+          <div style="display:flex;justify-content:space-between;gap:8px">
+            <span style="font-size:8.5px;letter-spacing:1.5px;color:#ec3013;font-weight:700;text-transform:uppercase">{{ f.comp }}</span>
+            <span style="font-size:9px;color:#5c6675;flex:none">{{ f.time }}</span>
+          </div>
+          <div style="font-weight:700;font-size:12px;line-height:1.35">{{ f.title }}</div>
+          <div style="font-size:10px;color:#8b93a1">{{ f.sub }}</div>
+        </button>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isBracketList }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;flex-direction:column;gap:10px;padding:16px">
+      <sc-for list="{{ tournaments }}" as="t" hint-placeholder-count="3">
+        <button onClick="{{ t.open }}" style="text-align:left;background:#151d29;border:1px solid rgba(243,242,242,0.12);border-left:2px solid #ec3013;padding:16px;cursor:pointer;color:#f3f2f2;display:flex;gap:14px;align-items:center">
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:900;font-style:italic;text-transform:uppercase;font-size:17px;letter-spacing:0.5px">{{ t.name }}</div>
+            <div style="font-size:11px;color:#8b93a1;margin-top:4px;letter-spacing:1px;text-transform:uppercase">{{ t.status }}</div>
+            <sc-if value="{{ t.champion }}" hint-placeholder-val="{{ false }}">
+              <div style="margin-top:8px;display:inline-block;background:#ec3013;color:#fff;font-size:10px;font-weight:800;letter-spacing:1.5px;padding:4px 8px;text-transform:uppercase">🏆 CHAMPION: {{ t.champion }}</div>
+            </sc-if>
+            <div style="margin-top:10px;font-size:8.5px;letter-spacing:1.5px;color:#ec3013;font-weight:700;text-transform:uppercase">{{ t.latestKicker }}</div>
+            <div style="font-size:11.5px;color:#c8ccd4;margin-top:3px;line-height:1.4">{{ t.latest }}</div>
+          </div>
+          <div style="flex:none;display:flex;gap:4px;height:68px">
+            <sc-for list="{{ t.preview }}" as="pc" hint-placeholder-count="3">
+              <div style="display:flex;flex-direction:column;justify-content:space-around;width:9px">
+                <sc-for list="{{ pc.bars }}" as="pb" hint-placeholder-count="2">
+                  <div style="height:5px;background:{{ pb.c }};border-radius:2px"></div>
+                </sc-for>
+              </div>
+            </sc-for>
+          </div>
+        </button>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isBracket }}" hint-placeholder-val="{{ false }}">
+    <div style="padding:14px 16px 0">
+      <button onClick="{{ goBrackets }}" style="background:none;border:none;color:#8b93a1;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;padding:0">← All Brackets</button>
+      <div style="font-weight:900;font-style:italic;text-transform:uppercase;font-size:22px;margin-top:8px">{{ bName }}</div>
+      <div style="font-size:11px;color:#8b93a1;letter-spacing:1px;text-transform:uppercase;margin-top:3px">{{ bStatus }}</div>
+      <sc-if value="{{ bChampion }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top:10px;background:#ec3013;color:#fff;padding:10px 14px;font-weight:900;font-style:italic;text-transform:uppercase;font-size:15px;letter-spacing:1px">🏆 Champion — {{ bChampion }}</div>
+      </sc-if>
+      <sc-if value="{{ adminOn }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top:10px;border:1px dashed rgba(236,48,19,0.6);color:#ec3013;font-size:10px;font-weight:700;letter-spacing:1px;padding:7px 10px;text-transform:uppercase">Admin: tap a name to advance · drag first-round names to change matchups</div>
+      </sc-if>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;padding:12px 16px 0">
+      <button onClick="{{ zoomOut }}" style="width:32px;height:32px;background:#151d29;border:1px solid rgba(243,242,242,0.2);color:#f3f2f2;font-size:16px;font-weight:800;cursor:pointer;border-radius:6px">−</button>
+      <span style="font-size:11px;color:#8b93a1;font-weight:700;min-width:38px;text-align:center">{{ zoomPct }}</span>
+      <button onClick="{{ zoomIn }}" style="width:32px;height:32px;background:#151d29;border:1px solid rgba(243,242,242,0.2);color:#f3f2f2;font-size:16px;font-weight:800;cursor:pointer;border-radius:6px">+</button>
+      <button onClick="{{ zoomReset }}" style="background:none;border:none;color:#8b93a1;font-size:10px;font-weight:700;letter-spacing:1px;cursor:pointer;text-transform:uppercase">Reset</button>
+      <span style="margin-left:auto;font-size:9px;color:#5c6675;letter-spacing:1px;text-transform:uppercase;text-align:right">Rotate phone for full view</span>
+    </div>
+    <div style="overflow:auto;margin:10px 0 6px;height:{{ bOuterH }}px">
+      <div style="transform:scale({{ bZoom }});transform-origin:0 0;display:flex;padding:0 16px;width:max-content">
+        <sc-for list="{{ bCols }}" as="col" hint-placeholder-count="3">
+          <sc-if value="{{ col.isRound }}" hint-placeholder-val="{{ true }}">
+            <div style="width:150px;flex:none;display:flex;flex-direction:column">
+              <div style="height:24px;font-size:9px;letter-spacing:2px;color:#8b93a1;font-weight:700;text-transform:uppercase;text-align:center">{{ col.label }}</div>
+              <div style="height:{{ bH }}px;display:flex;flex-direction:column">
+                <sc-for list="{{ col.matches }}" as="m" hint-placeholder-count="2">
+                  <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:4px 2px">
+                    <sc-if value="{{ m.tagRow }}" hint-placeholder-val="{{ false }}">
+                      <div style="display:flex;justify-content:space-between;align-items:flex-end;margin:0 4px 3px">
+                        <span style="font-size:8px;letter-spacing:1.5px;font-weight:800;color:#ec3013;text-transform:uppercase">{{ m.tag }}</span>
+                        <sc-if value="{{ m.canPin }}" hint-placeholder-val="{{ false }}">
+                          <button onClick="{{ m.onPin }}" title="Feature on Home" style="background:none;border:none;color:{{ m.pinColor }};font-size:13px;cursor:pointer;padding:0;line-height:1">{{ m.pinLabel }}</button>
+                        </sc-if>
+                      </div>
+                    </sc-if>
+                    <div style="background:#151d29;border:1px solid {{ m.border }};border-radius:6px;overflow:hidden">
+                      <div data-slot="{{ m.aSlot }}" draggable="{{ m.aDrag }}" onDragStart="{{ m.aDragStart }}" onDragOver="{{ dragOver }}" onDrop="{{ m.aDrop }}" onTouchStart="{{ m.aTouchStart }}" onTouchMove="{{ touchMove }}" onTouchEnd="{{ m.aTouchEnd }}" onClick="{{ m.onA }}" style="display:flex;justify-content:space-between;align-items:center;gap:4px;padding:7px 8px;font-size:11.5px;font-weight:{{ m.aWeight }};color:{{ m.aColor }};cursor:{{ m.cursor }};background:{{ m.aBg }};touch-action:{{ m.touchAction }};border-bottom:1px solid rgba(243,242,242,0.07)">
+                        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ m.aName }}</span>
+                        <span style="flex:none;display:flex;gap:5px;align-items:center"><span style="color:#c8ccd4;font-weight:800;font-size:11px">{{ m.aScore }}</span><span style="color:#ec3013;font-weight:900">{{ m.aMark }}</span></span>
+                      </div>
+                      <div data-slot="{{ m.bSlot }}" draggable="{{ m.bDrag }}" onDragStart="{{ m.bDragStart }}" onDragOver="{{ dragOver }}" onDrop="{{ m.bDrop }}" onTouchStart="{{ m.bTouchStart }}" onTouchMove="{{ touchMove }}" onTouchEnd="{{ m.bTouchEnd }}" onClick="{{ m.onB }}" style="display:flex;justify-content:space-between;align-items:center;gap:4px;padding:7px 8px;font-size:11.5px;font-weight:{{ m.bWeight }};color:{{ m.bColor }};cursor:{{ m.cursor }};background:{{ m.bBg }};touch-action:{{ m.touchAction }}">
+                        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ m.bName }}</span>
+                        <span style="flex:none;display:flex;gap:5px;align-items:center"><span style="color:#c8ccd4;font-weight:800;font-size:11px">{{ m.bScore }}</span><span style="color:#ec3013;font-weight:900">{{ m.bMark }}</span></span>
+                      </div>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+              <sc-if value="{{ col.champion }}" hint-placeholder-val="{{ false }}">
+                <div style="margin-top:6px;text-align:center;background:#ec3013;color:#fff;padding:8px 6px;font-weight:900;font-style:italic;text-transform:uppercase;font-size:12px;border-radius:6px">🏆 {{ col.champion }}</div>
+              </sc-if>
+            </div>
+          </sc-if>
+          <sc-if value="{{ col.isConn }}" hint-placeholder-val="{{ false }}">
+            <div style="width:20px;flex:none;display:flex;flex-direction:column">
+              <div style="height:24px"></div>
+              <div style="height:{{ bH }}px;display:flex;flex-direction:column">
+                <sc-for list="{{ col.cells }}" as="cc" hint-placeholder-count="1">
+                  <div style="flex:1;display:flex;align-items:center">
+                    <div style="width:100%;height:{{ cc.h }};border-top:2px solid #33405a;border-bottom:{{ cc.bb }};border-right:{{ cc.br }};border-left:{{ cc.bl }};box-sizing:border-box"></div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+        </sc-for>
+      </div>
+    </div>
+    <sc-if value="{{ adminOn }}" hint-placeholder-val="{{ false }}">
+      <div style="margin:0 16px 16px;background:#151d29;border:1px solid rgba(243,242,242,0.12);padding:14px">
+        <div style="font-size:10px;letter-spacing:2px;color:#ec3013;font-weight:700;text-transform:uppercase;margin-bottom:10px">Admin · Competitors ({{ bCompetitorCount }})</div>
+        <textarea value="{{ entrantsText }}" onChange="{{ onEntrantsText }}" rows="8" placeholder="One name per line" style="width:100%;box-sizing:border-box;background:#0d131c;border:1px solid rgba(243,242,242,0.2);color:#f3f2f2;padding:10px;font-size:13px;line-height:1.6;resize:vertical"></textarea>
+        <div style="display:flex;gap:8px;margin-top:10px;align-items:center">
+          <button onClick="{{ setSeedRandom }}" style="flex:1;background:{{ seedRandomBg }};color:{{ seedRandomColor }};border:1px solid rgba(243,242,242,0.2);padding:9px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;text-align:left">Random draw</button>
+          <button onClick="{{ setSeedOrder }}" style="flex:1;background:{{ seedOrderBg }};color:{{ seedOrderColor }};border:1px solid rgba(243,242,242,0.2);padding:9px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;text-align:left">List order</button>
+        </div>
+        <button onClick="{{ regenerate }}" style="width:100%;margin-top:10px;background:#ec3013;color:#fff;border:none;padding:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase;font-size:11px;text-align:left;cursor:pointer">Generate bracket → (resets results)</button>
+      </div>
+    </sc-if>
+  </sc-if>
+
+  <sc-if value="{{ isEventList }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;flex-direction:column;gap:10px;padding:16px">
+      <sc-for list="{{ competitions }}" as="c" hint-placeholder-count="3">
+        <div style="position:relative">
+          <button onClick="{{ c.open }}" style="display:block;width:100%;box-sizing:border-box;text-align:left;background:#151d29;border:1px solid rgba(243,242,242,0.12);border-left:2px solid #ec3013;padding:16px;cursor:pointer;color:#f3f2f2">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
+              <span style="font-weight:900;font-style:italic;text-transform:uppercase;font-size:17px">{{ c.name }}</span>
+              <span style="font-size:9px;letter-spacing:1.5px;color:#8b93a1;font-weight:700;flex:none">{{ c.tag }}</span>
+            </div>
+            <sc-if value="{{ c.hasLeader }}" hint-placeholder-val="{{ true }}">
+              <div style="margin-top:10px;font-size:8.5px;letter-spacing:1.5px;color:#ec3013;font-weight:700;text-transform:uppercase">{{ c.leaderKicker }}</div>
+              <div style="font-size:12.5px;color:#f3f2f2;font-weight:700;margin-top:3px">{{ c.leader }}</div>
+            </sc-if>
+            <div style="margin-top:8px;font-size:8.5px;letter-spacing:1.5px;color:#8b93a1;font-weight:700;text-transform:uppercase">{{ c.latestKicker }}</div>
+            <div style="font-size:11.5px;color:#c8ccd4;margin-top:3px;line-height:1.4">{{ c.latest }}</div>
+          </button>
+          <sc-if value="{{ adminOn }}" hint-placeholder-val="{{ false }}">
+            <button onClick="{{ c.remove }}" title="Remove competition" style="position:absolute;top:44px;right:12px;width:28px;height:28px;background:rgba(236,48,19,0.12);border:1px solid rgba(236,48,19,0.6);color:#ec3013;font-size:13px;font-weight:800;cursor:pointer;border-radius:6px">✕</button>
+          </sc-if>
+        </div>
+      </sc-for>
+      <sc-if value="{{ adminOn }}" hint-placeholder-val="{{ false }}">
+        <div style="background:#151d29;border:1px dashed rgba(236,48,19,0.6);padding:14px">
+          <div style="font-size:10px;letter-spacing:2px;color:#ec3013;font-weight:700;text-transform:uppercase;margin-bottom:10px">Admin · Add competition</div>
+          <input value="{{ newCompName }}" onChange="{{ onNewCompName }}" placeholder="Competition name" style="width:100%;box-sizing:border-box;background:#0d131c;border:1px solid rgba(243,242,242,0.2);color:#f3f2f2;padding:10px;font-size:13px">
+          <div style="margin-top:8px;font-size:9px;letter-spacing:1.5px;color:#8b93a1;font-weight:700;text-transform:uppercase">Scoring type</div>
+          <div style="display:flex;gap:6px;margin-top:6px">
+            <sc-for list="{{ compTypes }}" as="ct" hint-placeholder-count="3">
+              <button onClick="{{ ct.pick }}" style="flex:1;background:{{ ct.bg }};color:{{ ct.color }};border:1px solid rgba(243,242,242,0.2);padding:8px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;text-align:left">{{ ct.label }}</button>
+            </sc-for>
+          </div>
+          <div style="margin-top:6px;font-size:10px;color:#5c6675;line-height:1.4">{{ compTypeHint }}</div>
+          <button onClick="{{ addComp }}" style="width:100%;margin-top:8px;background:#ec3013;color:#fff;border:none;padding:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;font-size:11px;text-align:left;cursor:pointer">Add →</button>
+        </div>
+      </sc-if>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isEvent }}" hint-placeholder-val="{{ false }}">
+    <div style="padding:14px 16px 16px">
+      <button onClick="{{ goEvents }}" style="background:none;border:none;color:#8b93a1;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;padding:0">← All Competitions</button>
+      <div style="font-weight:900;font-style:italic;text-transform:uppercase;font-size:22px;margin-top:8px">{{ cName }}</div>
+      <div style="font-size:11px;color:#8b93a1;letter-spacing:1px;text-transform:uppercase;margin-top:3px">{{ cSub }}</div>
+      <sc-if value="{{ cHasBoard }}" hint-placeholder-val="{{ true }}">
+        <div style="margin-top:16px">
+          <div style="font-size:10px;letter-spacing:2px;color:#8b93a1;font-weight:700;text-transform:uppercase;margin-bottom:8px">Leaderboard</div>
+          <div style="border:1px solid rgba(243,242,242,0.12)">
+            <sc-for list="{{ cBoard }}" as="row" hint-placeholder-count="5">
+              <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;border-bottom:1px solid rgba(243,242,242,0.07);background:{{ row.bg }}">
+                <span style="width:24px;font-weight:900;font-style:italic;color:{{ row.rankColor }};font-size:14px">{{ row.rank }}</span>
+                <span style="flex:1;min-width:0"><span style="font-weight:700;font-size:14px">{{ row.name }}</span><span style="font-size:10.5px;color:#8b93a1;margin-left:8px">{{ row.meta }}</span></span>
+                <span style="font-weight:900;font-size:14px;color:#ec3013;flex:none">{{ row.score }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <sc-if value="{{ adminOn }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;gap:8px;margin-top:8px">
+              <input value="{{ boardName }}" onChange="{{ onBoardName }}" placeholder="Name" style="flex:2;min-width:0;background:#0d131c;border:1px solid rgba(243,242,242,0.2);color:#f3f2f2;padding:9px;font-size:12px">
+              <sc-if value="{{ cHasBW }}" hint-placeholder-val="{{ false }}">
+                <input value="{{ boardBw }}" onChange="{{ onBoardBw }}" placeholder="BW" style="flex:1;min-width:0;background:#0d131c;border:1px solid rgba(243,242,242,0.2);color:#f3f2f2;padding:9px;font-size:12px">
+              </sc-if>
+              <input value="{{ boardScore }}" onChange="{{ onBoardScore }}" placeholder="{{ scorePlaceholder }}" style="flex:1;min-width:0;background:#0d131c;border:1px solid rgba(243,242,242,0.2);color:#f3f2f2;padding:9px;font-size:12px">
+              <button onClick="{{ addBoardRow }}" style="flex:none;background:#ec3013;color:#fff;border:none;padding:9px 14px;font-weight:900;cursor:pointer">+</button>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
+      <div style="margin-top:20px">
+        <div style="font-size:10px;letter-spacing:2px;color:#8b93a1;font-weight:700;text-transform:uppercase;margin-bottom:8px">Updates</div>
+        <sc-if value="{{ adminOn }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-bottom:10px">
+            <textarea value="{{ updateText }}" onChange="{{ onUpdateText }}" rows="2" placeholder="Post an update…" style="width:100%;box-sizing:border-box;background:#0d131c;border:1px solid rgba(236,48,19,0.5);color:#f3f2f2;padding:10px;font-size:13px;resize:vertical"></textarea>
+            <button onClick="{{ postUpdate }}" style="margin-top:6px;background:#ec3013;color:#fff;border:none;padding:9px 16px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;font-size:10px;cursor:pointer">Post update →</button>
+          </div>
+        </sc-if>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <sc-for list="{{ cUpdates }}" as="u" hint-placeholder-count="3">
+            <div style="background:#151d29;border:1px solid rgba(243,242,242,0.1);padding:11px 13px">
+              <div style="font-size:10px;color:#8b93a1;margin-bottom:4px">{{ u.time }}</div>
+              <div style="font-size:13px;line-height:1.45">{{ u.text }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <nav style="position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:{{ rootMax }};background:#0a0f16;border-top:2px solid #ec3013;display:flex;z-index:30">
+    <button onClick="{{ goHome }}" style="flex:1;background:none;border:none;color:{{ navHomeColor }};padding:14px 0 18px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 10.5L12 3l9 7.5V21h-6v-6H9v6H3z"></path></svg>
+      <span style="font-size:9px;font-weight:800;letter-spacing:1.5px">HOME</span>
+    </button>
+    <button onClick="{{ goBrackets }}" style="flex:1;background:none;border:none;color:{{ navBracketColor }};padding:14px 0 18px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 5h5v4H3zM3 15h5v4H3zM8 7h4v10H8zM12 12h5M17 10h4v4h-4z"></path></svg>
+      <span style="font-size:9px;font-weight:800;letter-spacing:1.5px">BRACKETS</span>
+    </button>
+    <button onClick="{{ goEvents }}" style="flex:1;background:none;border:none;color:{{ navEventColor }};padding:14px 0 18px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M8 21h8M12 17v4M6 3h12v6a6 6 0 01-12 0zM6 5H3v2a4 4 0 004 4M18 5h3v2a4 4 0 01-4 4"></path></svg>
+      <span style="font-size:9px;font-weight:800;letter-spacing:1.5px">COMPETE</span>
+    </button>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;pin&quot;: {&quot;editor&quot;: &quot;text&quot;, &quot;default&quot;: &quot;Champs26&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Admin&quot;}, &quot;showBanner&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Layout&quot;}}">
+class Component extends DCLogic {
+  state = { view: 'home', tId: null, cId: null, adminOn: false, pinOk: false, pinOpen: false, pinVal: '', pinError: false, entrantsText: '', newCompName: '', newCompType: 'timed', boardName: '', boardBw: '', boardScore: '', updateText: '', zoom: 0.85, confirm: null, tdragFrom: null, tOverId: null, data: null };
+
+  componentDidMount() {
+    const demo = /[?&]demo=1/.test(location.search);
+    let d = null;
+    if (!demo) { try { const raw = localStorage.getItem(this.LS); if (raw) d = JSON.parse(raw); } catch (e) {} }
+    if (!d) { d = this.seedData(); try { localStorage.setItem(this.LS, JSON.stringify(d)); } catch (e) {} }
+    this.setState({ data: d });
+    this._sh = (e) => {
+      if (e.key && e.key !== this.LS) return;
+      try { const raw = localStorage.getItem(this.LS); if (raw) this.setState({ data: JSON.parse(raw) }); } catch (er) {}
+    };
+    window.addEventListener('storage', this._sh);
+  }
+  componentWillUnmount() { window.removeEventListener('storage', this._sh); }
+
+  LS = 'champion-app-v2';
+  loadData() {
+    try { const raw = localStorage.getItem(this.LS); if (raw) return JSON.parse(raw); } catch (e) {}
+    return this.seedData();
+  }
+  save(data) { this.setState({ data }); try { localStorage.setItem(this.LS, JSON.stringify(data)); } catch (e) {} }
+
+  seedOrderArr(n) { let r = [0]; while (r.length < n) { const m = r.length * 2; r = r.flatMap(x => [x, m - 1 - x]); } return r; }
+  genBracket(names, mode) {
+    let list = names.filter(Boolean);
+    if (mode === 'random') { list = [...list]; for (let i = list.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [list[i], list[j]] = [list[j], list[i]]; } }
+    const size = Math.pow(2, Math.ceil(Math.log2(Math.max(2, list.length))));
+    const order = this.seedOrderArr(size);
+    const slots = order.map(i => list[i] || null);
+    const rounds = []; let cur = [];
+    for (let i = 0; i < size; i += 2) {
+      const a = slots[i], b = slots[i + 1];
+      const m = { a, b, winner: null, bye: false, ts: null, sa: null, sb: null };
+      if (a && !b) { m.winner = a; m.bye = true; }
+      if (b && !a) { m.winner = b; m.bye = true; }
+      cur.push(m);
+    }
+    rounds.push(cur);
+    while (cur.length > 1) {
+      const next = [];
+      for (let j = 0; j < cur.length; j += 2) next.push({ a: cur[j].winner || null, b: cur[j + 1].winner || null, winner: null, bye: false, ts: null, sa: null, sb: null });
+      rounds.push(next); cur = next;
+    }
+    return rounds;
+  }
+  roundLabel(count) { return { 1: 'Final', 2: 'Semifinals', 4: 'Quarterfinals', 8: 'Round of 16', 16: 'Round of 32' }[count] || 'Round'; }
+
+  clearMatch(t, r, i) {
+    const m = t.rounds[r][i]; if (!m || !m.winner) return;
+    const w = m.winner; m.winner = null; m.ts = null; m.sa = null; m.sb = null;
+    if (r + 1 < t.rounds.length) {
+      const nm = t.rounds[r + 1][i >> 1], side = i % 2 ? 'b' : 'a';
+      if (nm[side] === w) { this.clearMatch(t, r + 1, i >> 1); nm[side] = null; }
+    }
+  }
+  setWinner(t, r, i, name, ts, sa, sb) {
+    const m = t.rounds[r][i];
+    if (m.winner && m.winner !== name) this.clearMatch(t, r, i);
+    m.winner = name; m.ts = ts || Date.now();
+    if (sa !== undefined && sa !== '') m.sa = sa;
+    if (sb !== undefined && sb !== '') m.sb = sb;
+    if (r + 1 < t.rounds.length) {
+      const nm = t.rounds[r + 1][i >> 1], side = i % 2 ? 'b' : 'a';
+      if (nm[side] && nm[side] !== name) this.clearMatch(t, r + 1, i >> 1);
+      nm[side] = name;
+    }
+  }
+  playPicks(t, picks, baseTs, scoreFn) {
+    let k = 0;
+    t.rounds.forEach((rd, r) => rd.forEach((m, i) => {
+      if (k < picks.length && m.a && m.b && !m.winner) {
+        const winB = !!picks[k], winner = winB ? m.b : m.a;
+        let sa, sb;
+        if (scoreFn) { const [ws, ls] = scoreFn(k); sa = winB ? ls : ws; sb = winB ? ws : ls; }
+        this.setWinner(t, r, i, winner, baseTs + k * 41 * 60000, sa, sb);
+        k++;
+      }
+    }));
+  }
+
+  seedData() {
+    const now = Date.now(), H = 3600000;
+    const fc = ['Marcus Reed', 'Tony Alvarez', 'Dre Whitfield', 'Sam Okafor', 'Jake Rollins', 'Chris Beam', 'Eli Vance', 'Pete Coker', 'Luis Ortega', 'Ben Hastings', 'Coby Marsh', 'Trent Dawes', 'Omar Fields', 'Nick Sowell', 'Ray Delgado', 'Josh Tran'];
+    const cfp = ['Vic Lawson', 'Andre Boone', 'Cal Whitaker', 'Moses Grant', 'Ty Renner', 'Dan Pruitt', 'Kev Marsh', 'Isaiah Cole', 'Reggie Fox', 'Wes Hargrove', 'Milo Barnes', 'Judah Kemp'];
+    const cod = ['Squad Alpha', 'Squad Bravo', 'Squad Charlie', 'Squad Delta', 'Squad Echo', 'Squad Foxtrot', 'Squad Golf', 'Squad Hotel'];
+    const t1 = { id: 'fc', name: 'FC World Cup', seeding: 'order', scored: true, entrants: fc, rounds: this.genBracket(fc, 'order') };
+    this.playPicks(t1, [0, 1, 0, 0, 1, 0, 1, 0, 0, 1], now - 26 * H, k => [String(2 + (k % 3)), String(k % 2)]);
+    const t2 = { id: 'cfp', name: 'College Football Playoff', seeding: 'order', scored: true, entrants: cfp, rounds: this.genBracket(cfp, 'order') };
+    this.playPicks(t2, [0, 1, 1], now - 8 * H, k => [String(24 + (k % 3) * 7), String(10 + (k % 2) * 7)]);
+    const t3 = { id: 'cod', name: 'Call of Duty', seeding: 'order', scored: false, entrants: cod, rounds: this.genBracket(cod, 'order') };
+    this.playPicks(t3, [0, 0, 1, 1, 0], now - 5 * H);
+    const competitions = [
+      { id: 'bench', name: 'Benchpress', unit: 'LBS', hasBW: true, board: [{ name: 'Moses Grant', bw: '224', score: '315' }, { name: 'Dre Whitfield', bw: '198', score: '295' }, { name: 'Tony Alvarez', bw: '205', score: '285' }, { name: 'Cal Whitaker', bw: '187', score: '275' }, { name: 'Ben Hastings', bw: '176', score: '255' }], updates: [{ ts: now - 2 * H, text: 'Moses Grant takes the lead with a 315 lb press. Finals round at 4 PM.' }, { ts: now - 6 * H, text: 'Qualifying open at the main stage — 3 attempts each.' }] },
+      { id: 'crucible', name: 'Crucible', unit: 'TIME', lowerBetter: true, board: [{ name: 'Isaiah Cole', score: '8:42' }, { name: 'Marcus Reed', score: '9:15' }, { name: 'Ty Renner', score: '9:58' }, { name: 'Omar Fields', score: '11:03' }], updates: [{ ts: now - 90 * 60000, text: 'Station 3 (rope climb) is live. Isaiah Cole sets the pace at 8:42.' }] },
+      { id: 'wick', name: 'John Wick Challenge', unit: 'TIME', lowerBetter: true, board: [{ name: 'Ray Delgado', score: '1:42' }, { name: 'Jake Rollins', score: '1:58' }, { name: 'Kev Marsh', score: '2:07' }], updates: [{ ts: now - 40 * 60000, text: 'Ray Delgado sets the course record: 1:42. Heats continue through 6 PM.' }, { ts: now - 4 * H, text: 'Course walkthrough at the pavilion. Closed-course rules — eye protection required.' }] }
+    ];
+    return { tournaments: [t1, t2, t3], competitions };
+  }
+
+  rel(ts) {
+    const d = Date.now() - ts;
+    if (d < 90000) return 'just now';
+    if (d < 3600000) return Math.round(d / 60000) + 'm ago';
+    if (d < 86400000) return Math.round(d / 3600000) + 'h ago';
+    return Math.round(d / 86400000) + 'd ago';
+  }
+  parseScore(s) { const m = /^(\d+):(\d\d)/.exec(String(s)); if (m) return +m[1] * 60 + +m[2]; const f = parseFloat(s); return isNaN(f) ? null : f; }
+  tStatus(t) {
+    const last = t.rounds[t.rounds.length - 1][0];
+    if (last.winner) return 'Complete';
+    for (let r = 0; r < t.rounds.length; r++) if (t.rounds[r].some(m => !m.winner)) return this.roundLabel(t.rounds[r].length);
+    return 'In progress';
+  }
+  champion(t) { return t.rounds[t.rounds.length - 1][0].winner || null; }
+  loser(m) { return m.winner === m.a ? m.b : m.a; }
+  scoreline(m) { if (m.sa == null || m.sb == null) return null; return m.winner === m.a ? m.sa + '–' + m.sb : m.sb + '–' + m.sa; }
+
+  openT(id) { const t = this.state.data.tournaments.find(x => x.id === id); this.setState({ view: 'bracket', tId: id, entrantsText: t ? t.entrants.join('\n') : '' }); }
+  openC(id) { this.setState({ view: 'event', cId: id }); }
+
+  matchView(t, r, i, m, s) {
+    const playable = m.a && m.b && !m.winner;
+    const clickable = s.adminOn && m.a && m.b;
+    const slotId = (rr, ii, side) => rr + '-' + ii + '-' + side;
+    const openAdvance = (name) => {
+      if (!clickable) return;
+      if (Date.now() - (this._clickBlock || 0) < 500) return;
+      this.setState({ confirm: { kind: 'advance', r, i, winner: name, loserName: name === m.a ? m.b : m.a, aName: m.a, bName: m.b, sa: m.sa || '', sb: m.sb || '', scored: !!t.scored } });
+    };
+    const canDrag = (side) => s.adminOn && !m.winner && !!m[side];
+    const openSwap = (fr, fi, fside, tr, ti, tside) => {
+      if (fr === tr && fi === ti && fside === tside) return;
+      const src = t.rounds[fr] && t.rounds[fr][fi], dst = t.rounds[tr] && t.rounds[tr][ti];
+      if (!src || !dst || src.winner || dst.winner) return;
+      const n1 = src[fside], n2 = dst[tside];
+      if (!n1 || !n2) return;
+      this.setState({ confirm: { kind: 'swap', fr, fi, fside, tr, ti, tside, n1, n2 } });
+    };
+    const dragStart = (side) => (e) => { this._drag = { r, i, side }; try { e.dataTransfer.setData('text/plain', m[side]); } catch (err) {} };
+    const drop = (side) => (e) => {
+      e.preventDefault();
+      const d = this._drag; this._drag = null;
+      if (!d || !canDrag(side)) return;
+      openSwap(d.r, d.i, d.side, r, i, side);
+    };
+    const touchStart = (side) => (e) => { if (!canDrag(side)) return; const p = e.touches[0]; this._touch = { r, i, side, x: p.clientX, y: p.clientY, drag: false }; };
+    const touchEnd = (side) => () => {
+      const tc = this._touch; this._touch = null;
+      if (tc && tc.drag) {
+        this._clickBlock = Date.now();
+        const id = this.state.tOverId;
+        this.setState({ tdragFrom: null, tOverId: null });
+        if (id) { const parts = id.split('-'); openSwap(tc.r, tc.i, tc.side, +parts[0], +parts[1], parts[2]); }
+      }
+    };
+    const from = s.tdragFrom, over = s.tOverId;
+    const bg = (side) => (from && from.r === r && from.i === i && from.side === side) ? 'rgba(236,48,19,0.3)' : (over === slotId(r, i, side) ? 'rgba(236,48,19,0.16)' : 'transparent');
+    const pinned = !!(t.featured && t.featured.r === r && t.featured.i === i);
+    const canPin = s.adminOn && playable;
+    const tag = m.bye ? 'BYE' : (playable ? (pinned ? '★ FEATURED' : 'UP NEXT') : '');
+    return {
+      aName: m.a || (m.bye ? '—' : 'TBD'), bName: m.b || (m.bye ? 'BYE' : 'TBD'),
+      aMark: m.winner && m.winner === m.a ? 'W' : '', bMark: m.winner && m.winner === m.b ? 'W' : '',
+      aScore: m.sa != null ? m.sa : '', bScore: m.sb != null ? m.sb : '',
+      aWeight: m.winner === m.a ? 900 : 600, bWeight: m.winner === m.b ? 900 : 600,
+      aColor: m.a ? (m.winner && m.winner !== m.a ? '#5c6675' : '#f3f2f2') : '#5c6675',
+      bColor: m.b ? (m.winner && m.winner !== m.b ? '#5c6675' : '#f3f2f2') : '#5c6675',
+      border: playable ? 'rgba(236,48,19,0.55)' : 'rgba(243,242,242,0.1)',
+      tag, tagRow: !!(tag || canPin), canPin,
+      pinLabel: pinned ? '★' : '☆', pinColor: pinned ? '#ec3013' : '#8b93a1',
+      onPin: () => { t.featured = pinned ? null : { r, i }; this.save({ ...this.state.data }); },
+      cursor: clickable ? 'pointer' : 'default',
+      touchAction: (canDrag('a') || canDrag('b')) ? 'none' : 'auto',
+      aSlot: slotId(r, i, 'a'), bSlot: slotId(r, i, 'b'),
+      aBg: bg('a'), bBg: bg('b'),
+      onA: m.a && m.b ? () => openAdvance(m.a) : undefined,
+      onB: m.a && m.b ? () => openAdvance(m.b) : undefined,
+      aDrag: canDrag('a'), bDrag: canDrag('b'),
+      aDragStart: dragStart('a'), bDragStart: dragStart('b'),
+      aDrop: drop('a'), bDrop: drop('b'),
+      aTouchStart: touchStart('a'), bTouchStart: touchStart('b'),
+      aTouchEnd: touchEnd('a'), bTouchEnd: touchEnd('b')
+    };
+  }
+
+  renderVals() {
+    const s = this.state, data = s.data;
+    const pin = String(this.props.pin ?? 'Champs26');
+    const showBanner = this.props.showBanner ?? true;
+    const cf = s.confirm;
+    const base = {
+      showBanner, stop: (e) => e.stopPropagation(),
+      dragOver: (e) => e.preventDefault(),
+      pinOpen: s.pinOpen, pinVal: s.pinVal, pinError: s.pinError,
+      onPinVal: (e) => this.setState({ pinVal: e.target.value, pinError: false }),
+      closePin: () => this.setState({ pinOpen: false, pinVal: '', pinError: false }),
+      submitPin: () => { if (s.pinVal === pin) this.setState({ pinOk: true, adminOn: true, pinOpen: false, pinVal: '', pinError: false }); else this.setState({ pinError: true, pinVal: '' }); },
+      toggleAdmin: () => { if (s.adminOn) this.setState({ adminOn: false }); else if (s.pinOk) this.setState({ adminOn: true }); else this.setState({ pinOpen: true, pinVal: '', pinError: false }); },
+      adminOn: s.adminOn,
+      adminLabel: s.adminOn ? 'Admin On' : 'Admin',
+      adminBtnBg: s.adminOn ? '#ec3013' : 'transparent',
+      adminBtnColor: s.adminOn ? '#fff' : '#8b93a1',
+      goHome: () => this.setState({ view: 'home' }),
+      goBrackets: () => this.setState({ view: 'brackets' }),
+      goEvents: () => this.setState({ view: 'events' }),
+      isHome: s.view === 'home', isBracketList: s.view === 'brackets', isBracket: s.view === 'bracket', isEventList: s.view === 'events', isEvent: s.view === 'event',
+      navHomeColor: s.view === 'home' ? '#ec3013' : '#8b93a1',
+      navBracketColor: (s.view === 'brackets' || s.view === 'bracket') ? '#ec3013' : '#8b93a1',
+      navEventColor: (s.view === 'events' || s.view === 'event') ? '#ec3013' : '#8b93a1',
+      screenTitle: { home: 'Dashboard', brackets: 'Brackets', bracket: 'Bracket', events: 'Competitions', event: 'Competition' }[s.view],
+      confirmOpen: !!cf,
+      confirmTitle: cf ? (cf.kind === 'advance' ? 'Advance competitor' : cf.kind === 'swap' ? 'Match change' : 'Remove competition') : '',
+      confirmBody: cf ? (cf.kind === 'advance' ? cf.winner + ' wins over ' + cf.loserName + ' and moves to the next round.' : cf.kind === 'swap' ? 'Swap ' + cf.n1 + ' with ' + cf.n2 + '? This changes the matchups.' : 'Remove "' + cf.name + '" and all of its results? This cannot be undone.') : '',
+      confirmScored: !!(cf && cf.kind === 'advance' && cf.scored),
+      confirmAName: cf && cf.aName || '', confirmBName: cf && cf.bName || '',
+      confirmSa: cf ? cf.sa : '', confirmSb: cf ? cf.sb : '',
+      onConfirmSa: (e) => this.setState({ confirm: { ...this.state.confirm, sa: e.target.value } }),
+      onConfirmSb: (e) => this.setState({ confirm: { ...this.state.confirm, sb: e.target.value } }),
+      confirmNo: () => this.setState({ confirm: null }),
+      confirmYes: () => {
+        const c = this.state.confirm; if (!c) return;
+        if (c.kind === 'delcomp') {
+          const d = { ...data, competitions: data.competitions.filter(x => x.id !== c.cid) };
+          this.setState({ confirm: null }); this.save(d); return;
+        }
+        const t = data.tournaments.find(x => x.id === s.tId); if (!t) { this.setState({ confirm: null }); return; }
+        if (c.kind === 'advance') {
+          this.setWinner(t, c.r, c.i, c.winner, Date.now(), c.sa, c.sb);
+        } else {
+          const mF = t.rounds[c.fr][c.fi], mT = t.rounds[c.tr][c.ti];
+          const tmp = mF[c.fside]; mF[c.fside] = mT[c.tside]; mT[c.tside] = tmp;
+        }
+        this.setState({ confirm: null }); this.save({ ...data });
+      },
+      zoomIn: () => this.setState({ zoom: Math.min(1.3, Math.round((s.zoom + 0.15) * 100) / 100) }),
+      zoomOut: () => this.setState({ zoom: Math.max(0.4, Math.round((s.zoom - 0.15) * 100) / 100) }),
+      zoomReset: () => this.setState({ zoom: 0.85 }),
+      bZoom: s.zoom, zoomPct: Math.round(s.zoom * 100) + '%',
+      rootMax: '100%',
+      touchMove: (e) => {
+        const tc = this._touch; if (!tc) return;
+        const p = e.touches[0];
+        if (!tc.drag) {
+          if (Math.hypot(p.clientX - tc.x, p.clientY - tc.y) > 12) { tc.drag = true; this.setState({ tdragFrom: { r: tc.r, i: tc.i, side: tc.side } }); }
+          else return;
+        }
+        if (e.cancelable) e.preventDefault();
+        const el = document.elementFromPoint(p.clientX, p.clientY);
+        const slot = el && el.closest ? el.closest('[data-slot]') : null;
+        const id = slot ? slot.getAttribute('data-slot') : null;
+        if (id !== this.state.tOverId) this.setState({ tOverId: id });
+      },
+      feed: [], upNext: [], hasUpNext: false, allComps: [], tournaments: [], competitions: [], bCols: [], bH: 0, bOuterH: 0
+    };
+    if (!data) return base;
+
+    const feed = [];
+    data.tournaments.forEach(t => {
+      t.rounds.forEach(rd => rd.forEach(m => {
+        if (m.winner && !m.bye && m.ts) {
+          const sl = this.scoreline(m);
+          feed.push({ ts: m.ts, comp: t.name, title: m.winner + '  def.  ' + this.loser(m), sub: this.roundLabel(rd.length) + (sl ? ' · ' + sl : ''), open: () => this.openT(t.id) });
+        }
+      }));
+      const last = t.rounds[t.rounds.length - 1][0];
+      if (last.winner && last.ts) feed.push({ ts: last.ts + 1, comp: t.name, title: '🏆 ' + last.winner + ' wins it all', sub: 'Tournament champion', open: () => this.openT(t.id) });
+    });
+    data.competitions.forEach(c => c.updates.forEach(u => feed.push({ ts: u.ts, comp: c.name, title: u.text, sub: 'Update', open: () => this.openC(c.id) })));
+    feed.sort((a, b) => b.ts - a.ts);
+    base.feed = feed.slice(0, 20).map(f => ({ ...f, time: this.rel(f.ts) }));
+
+    const upNext = [];
+    data.tournaments.forEach(t => {
+      let pick = null;
+      if (t.featured) { const fm = (t.rounds[t.featured.r] || [])[t.featured.i]; if (fm && fm.a && fm.b && !fm.winner) pick = { m: fm, rd: t.rounds[t.featured.r] }; }
+      if (!pick) {
+        for (const rd of t.rounds) { for (const m of rd) { if (m.a && m.b && !m.winner) { pick = { m, rd }; break; } } if (pick) break; }
+      }
+      if (pick) upNext.push({ comp: t.name, a: pick.m.a, b: pick.m.b, round: this.roundLabel(pick.rd.length), open: () => this.openT(t.id) });
+    });
+    base.upNext = upNext;
+    base.hasUpNext = base.upNext.length > 0;
+
+    const boardTop = (c) => {
+      if (!c.board || !c.board.length) return c.updates[0] ? c.updates[0].text : 'No results yet';
+      const sorted = this.sortBoard(c);
+      const top = sorted[0];
+      const label = c.lowerBetter ? 'Fastest: ' : 'Leader: ';
+      return label + top.name + ' · ' + top.score + (c.unit && c.unit !== 'TIME' ? ' ' + c.unit : '');
+    };
+    base.allComps = [
+      ...data.tournaments.map(t => ({ kind: 'BRACKET', name: t.name, sub: this.champion(t) ? '🏆 ' + this.champion(t) : this.tStatus(t) + ' in progress', open: () => this.openT(t.id) })),
+      ...data.competitions.map(c => ({ kind: 'COMPETITION', name: c.name, sub: boardTop(c), open: () => this.openC(c.id) }))
+    ];
+
+    base.tournaments = data.tournaments.map(t => {
+      let latest = null;
+      t.rounds.forEach(rd => rd.forEach(m => {
+        if (m.winner && !m.bye && m.ts && (!latest || m.ts > latest.ts)) {
+          const sl = this.scoreline(m);
+          latest = { ts: m.ts, text: m.winner + ' def. ' + this.loser(m) + (sl ? ' · ' + sl : '') + ' — ' + this.roundLabel(rd.length) };
+        }
+      }));
+      return {
+        name: t.name, status: this.tStatus(t), champion: this.champion(t), open: () => this.openT(t.id),
+        latest: latest ? latest.text : 'No results yet',
+        latestKicker: latest ? 'Latest · ' + this.rel(latest.ts) : 'Latest',
+        preview: t.rounds.map(rd => ({ bars: rd.map(m => ({ c: m.winner ? '#ec3013' : '#33405a' })) }))
+      };
+    });
+
+    base.competitions = data.competitions.map(c => {
+      const sortedB = this.sortBoard(c);
+      const top = sortedB[0];
+      return {
+        name: c.name, tag: c.board && c.board.length ? (c.unit === 'TIME' ? 'TIMED' : (c.unit ? 'LEADERBOARD · ' + c.unit : 'LEADERBOARD')) : 'UPDATES',
+        hasLeader: !!top,
+        leaderKicker: c.lowerBetter ? 'Fastest' : 'Leader',
+        leader: top ? top.name + ' · ' + top.score + (c.unit && c.unit !== 'TIME' ? ' ' + c.unit : '') : '',
+        latestKicker: c.updates[0] ? 'Latest · ' + this.rel(c.updates[0].ts) : 'Latest',
+        latest: c.updates[0] ? c.updates[0].text : 'No updates yet',
+        open: () => this.openC(c.id),
+        remove: () => this.setState({ confirm: { kind: 'delcomp', cid: c.id, name: c.name } })
+      };
+    });
+    base.newCompName = s.newCompName;
+    base.onNewCompName = (e) => this.setState({ newCompName: e.target.value });
+    const typeDefs = [
+      { id: 'timed', label: 'Timed', hint: 'Timed — m:ss or seconds, fastest wins.', unit: 'TIME', lowerBetter: true },
+      { id: 'weight', label: 'Weight', hint: 'Weight — pounds, highest wins.', unit: 'LBS', lowerBetter: false },
+      { id: 'count', label: 'Count', hint: 'Count — reps or points, most wins.', unit: 'REPS', lowerBetter: false }
+    ];
+    base.compTypes = typeDefs.map(td => ({
+      label: td.label,
+      bg: s.newCompType === td.id ? '#ec3013' : 'transparent',
+      color: s.newCompType === td.id ? '#fff' : '#8b93a1',
+      pick: () => this.setState({ newCompType: td.id })
+    }));
+    base.compTypeHint = (typeDefs.find(td => td.id === s.newCompType) || typeDefs[0]).hint;
+    base.addComp = () => {
+      const name = s.newCompName.trim(); if (!name) return;
+      const td = typeDefs.find(x => x.id === s.newCompType) || typeDefs[0];
+      const d = { ...data, competitions: [...data.competitions, { id: 'c' + Date.now(), name, unit: td.unit, lowerBetter: td.lowerBetter, board: [], updates: [] }] };
+      this.setState({ newCompName: '' }); this.save(d);
+    };
+
+    const t = data.tournaments.find(x => x.id === s.tId);
+    if (t && s.view === 'bracket') {
+      base.bName = t.name; base.bStatus = this.tStatus(t) + ' · ' + t.entrants.length + ' competitors';
+      base.bChampion = this.champion(t); base.bCompetitorCount = t.entrants.length;
+      const L = t.rounds.length;
+      const half0 = Math.max(1, t.rounds[0].length / 2);
+      const H = Math.max(2, half0) * 96;
+      base.bH = H; base.bOuterH = Math.ceil((H + 60) * s.zoom) + 20;
+      const CONN = '2px solid #33405a';
+      const makeConn = (feedCount, side) => {
+        const cells = [];
+        if (feedCount === 1) cells.push({ h: '0px', bb: 'none', br: 'none', bl: 'none' });
+        else for (let j = 0; j < feedCount / 2; j++) cells.push({ h: '50%', bb: CONN, br: side === 'left' ? CONN : 'none', bl: side === 'right' ? CONN : 'none' });
+        return { isConn: true, isRound: false, cells };
+      };
+      const cols = [];
+      for (let r = 0; r < L - 1; r++) {
+        const rd = t.rounds[r], half = rd.length / 2;
+        cols.push({ isRound: true, isConn: false, label: this.roundLabel(rd.length), matches: rd.slice(0, half).map((m, i) => this.matchView(t, r, i, m, s)), champion: false });
+        cols.push(makeConn(half, 'left'));
+      }
+      const fin = t.rounds[L - 1][0];
+      cols.push({ isRound: true, isConn: false, label: 'Final', matches: [this.matchView(t, L - 1, 0, fin, s)], champion: this.champion(t) });
+      for (let r = L - 2; r >= 0; r--) {
+        const rd = t.rounds[r], half = rd.length / 2;
+        cols.push(makeConn(half, 'right'));
+        cols.push({ isRound: true, isConn: false, label: this.roundLabel(rd.length), matches: rd.slice(half).map((m, i) => this.matchView(t, r, half + i, m, s)), champion: false });
+      }
+      base.bCols = cols;
+      base.entrantsText = s.entrantsText;
+      base.onEntrantsText = (e) => this.setState({ entrantsText: e.target.value });
+      base.seedRandomBg = t.seeding === 'random' ? '#ec3013' : 'transparent';
+      base.seedRandomColor = t.seeding === 'random' ? '#fff' : '#8b93a1';
+      base.seedOrderBg = t.seeding === 'order' ? '#ec3013' : 'transparent';
+      base.seedOrderColor = t.seeding === 'order' ? '#fff' : '#8b93a1';
+      base.setSeedRandom = () => { t.seeding = 'random'; this.save({ ...data }); };
+      base.setSeedOrder = () => { t.seeding = 'order'; this.save({ ...data }); };
+      base.regenerate = () => {
+        const names = s.entrantsText.split('\n').map(x => x.trim()).filter(Boolean);
+        if (names.length < 2) return;
+        t.entrants = names; t.rounds = this.genBracket(names, t.seeding);
+        this.save({ ...data });
+      };
+    } else { base.entrantsText = s.entrantsText; base.onEntrantsText = (e) => this.setState({ entrantsText: e.target.value }); }
+
+    const c = data.competitions.find(x => x.id === s.cId);
+    base.boardName = s.boardName; base.boardBw = s.boardBw; base.boardScore = s.boardScore; base.updateText = s.updateText;
+    base.onBoardName = (e) => this.setState({ boardName: e.target.value });
+    base.onBoardBw = (e) => this.setState({ boardBw: e.target.value });
+    base.onBoardScore = (e) => this.setState({ boardScore: e.target.value });
+    base.onUpdateText = (e) => this.setState({ updateText: e.target.value });
+    base.cBoard = []; base.cUpdates = [];
+    if (c && s.view === 'event') {
+      base.cName = c.name;
+      base.cSub = c.unit === 'TIME' ? 'Timed competition · fastest wins' : (c.hasBW ? 'Max bench · body weight recorded' : (c.unit === 'LBS' ? 'Weight competition · highest wins' : c.unit === 'REPS' ? 'Count competition · most wins' : 'Leaderboard competition'));
+      base.cHasBoard = s.adminOn || (c.board && c.board.length > 0);
+      base.cHasBW = !!c.hasBW;
+      base.scorePlaceholder = c.unit === 'TIME' ? 'm:ss' : 'Score';
+      const sorted = this.sortBoard(c).slice(0, 5);
+      base.cBoard = sorted.map((row, i) => ({
+        rank: i + 1, name: row.name,
+        meta: row.bw ? 'BW ' + row.bw + ' LBS' : '',
+        score: row.score + (c.unit && c.unit !== 'TIME' ? ' ' + c.unit : ''),
+        rankColor: i === 0 ? '#ec3013' : '#8b93a1',
+        bg: i === 0 ? 'rgba(236,48,19,0.08)' : 'transparent'
+      }));
+      base.cUpdates = c.updates.map(u => ({ time: this.rel(u.ts), text: u.text }));
+      base.addBoardRow = () => {
+        if (!s.boardName.trim() || !s.boardScore.trim()) return;
+        const name = s.boardName.trim(), scoreVal = s.boardScore.trim();
+        const before = this.sortBoard(c).slice(0, 5).map(r => r.name);
+        const existing = (c.board || []).find(r => r.name.toLowerCase() === name.toLowerCase());
+        let row;
+        if (existing) {
+          row = existing; row.score = scoreVal;
+          if (c.hasBW && s.boardBw.trim()) row.bw = s.boardBw.trim();
+          c.board = [...c.board];
+        } else {
+          row = { name, score: scoreVal };
+          if (c.hasBW && s.boardBw.trim()) row.bw = s.boardBw.trim();
+          c.board = [...(c.board || []), row];
+        }
+        const after = this.sortBoard(c);
+        const idx = after.indexOf(row);
+        const prevIdx = before.indexOf(row.name);
+        const disp = scoreVal + (c.unit && c.unit !== 'TIME' ? ' ' + c.unit : '');
+        let text = null;
+        if (idx === 0 && prevIdx !== 0) text = (c.lowerBetter ? 'New fastest time: ' : 'New leader: ') + row.name + ' · ' + disp;
+        else if (idx === 0 && prevIdx === 0) text = row.name + ' extends the lead — ' + disp;
+        else if (idx < 5 && prevIdx === -1) text = row.name + ' enters the top 5 — #' + (idx + 1) + ' at ' + disp;
+        else if (idx < 5 && idx < prevIdx) text = row.name + ' moves up to #' + (idx + 1) + ' at ' + disp;
+        else if (idx < 5 && idx === prevIdx) text = row.name + ' improves to ' + disp + ' — holds #' + (idx + 1);
+        if (text) c.updates = [{ ts: Date.now(), text, auto: true }, ...c.updates];
+        this.setState({ boardName: '', boardBw: '', boardScore: '' }); this.save({ ...data });
+      };
+      base.postUpdate = () => {
+        const text = s.updateText.trim(); if (!text) return;
+        c.updates = [{ ts: Date.now(), text }, ...c.updates];
+        this.setState({ updateText: '' }); this.save({ ...data });
+      };
+    }
+    return base;
+  }
+
+  sortBoard(c) {
+    const rows = [...(c.board || [])];
+    if (rows.every(r => this.parseScore(r.score) != null)) rows.sort((a, b) => c.lowerBetter ? this.parseScore(a.score) - this.parseScore(b.score) : this.parseScore(b.score) - this.parseScore(a.score));
+    return rows;
+  }
+}
+</script>
+</body>
+</html>
