@@ -45,7 +45,8 @@ const server = net.createServer((sock) => {
 
 await new Promise((r) => server.listen(6399, '127.0.0.1', r));
 
-process.env.REDIS_URL = 'redis://127.0.0.1:6399';
+// exactly the name Vercel created for this project
+process.env.CHAMPION_REDIS_URL = 'redis://127.0.0.1:6399';
 delete process.env.KV_REST_API_URL;
 delete process.env.KV_REST_API_TOKEN;
 delete process.env.UPSTASH_REDIS_REST_URL;
@@ -56,7 +57,7 @@ const { readState, writeState, backend } = await import('./api/_store.js');
 
 const pass = (n, c, x = '') => console.log((c ? 'PASS' : 'FAIL') + '  ' + n + (x ? '   ' + x : ''));
 
-pass('REDIS_URL selects the TCP backend', backend() === 'redis-tcp', backend());
+pass('CHAMPION_REDIS_URL selects the TCP backend', backend() === 'redis-tcp', backend());
 
 const empty = await readState();
 pass('empty store reads as null', empty === null);
