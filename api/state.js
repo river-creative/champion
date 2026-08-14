@@ -13,6 +13,21 @@ function send(res, status, body) {
 export default async function handler(req, res) {
   try {
     if (req.method === 'GET') {
+      // /api/state?debug=1 reports which storage env vars the function can
+      // actually see. Names only, never values.
+      if (/[?&]debug=1/.test(req.url || '')) {
+        const seen = Object.keys(process.env)
+          .filter((k) => /REDIS|KV_|UPSTASH|BLOB|CHAMP_PIN/.test(k))
+          .filter((k) => (process.env[k] || '').length > 0)
+          .sort();
+        return send(res, 200, {
+          backend: backend(),
+          envVarsFound: seen,
+          hint: seen.length === 0
+            ? 'No storage env vars visible. They are not scoped to this environment, or the deployment predates them — redeploy.'
+            : 'If backend is still memory with vars listed, the deployed _store.js is an older copy.'
+        });
+      }
       const rec = await readState();
       return send(res, 200, {
         rev: rec ? rec.rev : 0,
@@ -73,4 +88,3 @@ function readBody(req) {
     req.on('error', reject);
   });
 }
-
