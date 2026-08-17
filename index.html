@@ -730,12 +730,24 @@ class Component extends DCLogic {
 
     const feed = [];
     data.tournaments.forEach(t => {
+      const L = t.rounds.length;
       t.rounds.forEach((rd, r) => rd.forEach(m => {
         if (m.winner && !m.bye && m.ts) {
           const sl = this.scoreline(m);
-          feed.push({ ts: m.ts, comp: t.name, title: m.winner + '  def.  ' + this.loser(m), sub: this.roundLabel(rd.length) + (sl ? ' · ' + sl : ''), gold: r >= t.rounds.length - 2, open: () => this.openT(t.id) });
+          const toFinal = (r === L - 2) ? ' · advances to the Final' : '';
+          feed.push({ ts: m.ts, comp: t.name, title: m.winner + '  def.  ' + this.loser(m), sub: this.roundLabel(rd.length) + (sl ? ' · ' + sl : '') + toFinal, gold: r >= L - 2, open: () => this.openT(t.id) });
         }
       }));
+      if (L >= 2) {
+        const fin = t.rounds[L - 1][0];
+        if (fin && fin.a && fin.b && !fin.winner) {
+          const semis = t.rounds[L - 2].filter(m => m.winner && m.ts);
+          if (semis.length) {
+            feed.push({ ts: Math.max(...semis.map(m => m.ts)) + 1, comp: t.name,
+              title: fin.a + ' will face ' + fin.b + ' in the Final', sub: 'Final set', gold: true, open: () => this.openT(t.id) });
+          }
+        }
+      }
       const last = t.rounds[t.rounds.length - 1][0];
       if (last.winner && last.ts) feed.push({ ts: last.ts + 1, comp: t.name, title: '🏆 ' + last.winner + ' wins it all', sub: 'Tournament champion', gold: true, open: () => this.openT(t.id) });
     });
