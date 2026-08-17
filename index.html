@@ -114,14 +114,14 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
       </div>
       <div style="display:flex;flex-direction:column;gap:10px;padding:0 16px">
         <sc-for list="{{ upNext }}" as="u" hint-placeholder-count="3">
-          <button onClick="{{ u.open }}" style="text-align:left;background:#151d29;border:1px solid rgba(243,242,242,0.12);border-top:2px solid #ec3013;padding:14px 16px;cursor:pointer;color:#f3f2f2">
+          <button onClick="{{ u.open }}" style="text-align:left;background:#151d29;border:1px solid rgba(243,242,242,0.12);border-top:2px solid #ec3013;animation:{{ u.topAnim }};padding:14px 16px;cursor:pointer;color:#f3f2f2">
             <div style="display:flex;justify-content:space-between;gap:8px">
               <span style="font-size:9px;letter-spacing:1.5px;color:#ec3013;font-weight:700;text-transform:uppercase">{{ u.comp }}</span>
               <span style="font-size:9px;letter-spacing:1.5px;color:#8b93a1;font-weight:700;text-transform:uppercase;flex:none">{{ u.round }}</span>
             </div>
             <div style="display:flex;align-items:center;gap:10px;margin-top:10px">
               <span style="flex:1;font-weight:900;font-style:italic;font-size:16px;text-transform:uppercase;line-height:1.15">{{ u.a }}</span>
-              <span style="flex:none;color:#ec3013;font-weight:900;font-size:11px">VS</span>
+              <span style="flex:none;color:#ec3013;font-weight:900;font-size:11px;animation:{{ u.vsAnim }}">VS</span>
               <span style="flex:1;text-align:right;font-weight:900;font-style:italic;font-size:16px;text-transform:uppercase;line-height:1.15">{{ u.b }}</span>
             </div>
           </button>
@@ -283,6 +283,7 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
           </button>
           <sc-if value="{{ adminOn }}" hint-placeholder-val="{{ false }}">
             <button onClick="{{ c.remove }}" title="Remove competition" style="position:absolute;top:44px;right:12px;width:28px;height:28px;background:rgba(236,48,19,0.12);border:1px solid rgba(236,48,19,0.6);color:#ec3013;font-size:13px;font-weight:800;cursor:pointer;border-radius:6px">✕</button>
+            <button onClick="{{ c.feature }}" title="Feature on the big screen" style="position:absolute;top:78px;right:12px;width:28px;height:28px;background:{{ c.featBg }};border:1px solid {{ c.featBorder }};color:{{ c.featColor }};font-size:15px;font-weight:800;cursor:pointer;border-radius:6px;line-height:1">{{ c.featLabel }}</button>
           </sc-if>
         </div>
       </sc-for>
@@ -315,8 +316,8 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
             <sc-for list="{{ cBoard }}" as="row" hint-placeholder-count="5">
               <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;border-bottom:1px solid rgba(243,242,242,0.07);background:{{ row.bg }}">
                 <span style="width:24px;font-weight:900;font-style:italic;color:{{ row.rankColor }};font-size:14px">{{ row.rank }}</span>
-                <span style="flex:1;min-width:0"><span style="font-weight:700;font-size:14px">{{ row.name }}</span><span style="font-size:10.5px;color:#8b93a1;margin-left:8px">{{ row.meta }}</span></span>
-                <span style="font-weight:900;font-size:14px;color:#ec3013;flex:none">{{ row.score }}</span>
+                <span style="flex:1;min-width:0"><span style="font-weight:700;font-size:14px;color:{{ row.nameColor }}">{{ row.name }}</span><span style="font-size:10.5px;color:#8b93a1;margin-left:8px">{{ row.meta }}</span></span>
+                <span style="font-weight:900;font-size:14px;color:{{ row.scoreColor }};flex:none">{{ row.score }}</span>
               </div>
             </sc-for>
           </div>
@@ -476,7 +477,9 @@ class Component extends DCLogic {
     const t3 = { id: 'cod', name: 'Call of Duty', seeding: 'order', scored: false, entrants: cod, rounds: this.genBracket(cod, 'order') };
     this.playPicks(t3, [0, 0, 1, 1, 0], now - 5 * H);
     const competitions = [
-      { id: 'bench', name: 'Benchpress', unit: 'LBS', hasBW: true, board: [{ name: 'Moses Grant', bw: '224', score: '315' }, { name: 'Dre Whitfield', bw: '198', score: '295' }, { name: 'Tony Alvarez', bw: '205', score: '285' }, { name: 'Cal Whitaker', bw: '187', score: '275' }, { name: 'Ben Hastings', bw: '176', score: '255' }], updates: [{ ts: now - 2 * H, text: 'Moses Grant takes the lead with a 315 lb press. Finals round at 4 PM.' }, { ts: now - 6 * H, text: 'Qualifying open at the main stage — 3 attempts each.' }] },
+      { id: 'bench1823', name: 'Benchpress 18-23', unit: 'LBS', hasBW: true, dots: true, board: [{ name: 'Dre Whitfield', bw: '198', score: '295' }, { name: 'Ben Hastings', bw: '176', score: '255' }], updates: [{ ts: now - 6 * H, text: 'Qualifying open at the main stage — 3 attempts each.' }] },
+      { id: 'bench2445', name: 'Benchpress 24-45', unit: 'LBS', hasBW: true, dots: true, board: [{ name: 'Moses Grant', bw: '224', score: '315' }, { name: 'Tony Alvarez', bw: '205', score: '285' }], updates: [{ ts: now - 2 * H, text: 'Moses Grant takes the lead with a 315 lb press. Finals round at 4 PM.' }] },
+      { id: 'bench45', name: 'Benchpress 45+', unit: 'LBS', hasBW: true, dots: true, board: [{ name: 'Cal Whitaker', bw: '187', score: '275' }], updates: [{ ts: now - 5 * H, text: 'Masters flight lifts at 2 PM.' }] },
       { id: 'crucible', name: 'Crucible', unit: 'TIME', lowerBetter: true, board: [{ name: 'Isaiah Cole', score: '8:42' }, { name: 'Marcus Reed', score: '9:15' }, { name: 'Ty Renner', score: '9:58' }, { name: 'Omar Fields', score: '11:03' }], updates: [{ ts: now - 90 * 60000, text: 'Station 3 (rope climb) is live. Isaiah Cole sets the pace at 8:42.' }] },
       { id: 'wick', name: 'John Wick Challenge', unit: 'TIME', lowerBetter: true, board: [{ name: 'Ray Delgado', score: '1:42' }, { name: 'Jake Rollins', score: '1:58' }, { name: 'Kev Marsh', score: '2:07' }], updates: [{ ts: now - 40 * 60000, text: 'Ray Delgado sets the course record: 1:42. Heats continue through 6 PM.' }, { ts: now - 4 * H, text: 'Course walkthrough at the pavilion. Closed-course rules — eye protection required.' }] }
     ];
@@ -512,6 +515,20 @@ class Component extends DCLogic {
 
   // When scores are entered, they are the source of truth. Tapping the wrong
   // name and then typing 21-7 the other way should advance the 21.
+  LB_PER_KG = 2.20462262;
+  dots(bwLb, liftLb) {
+    const bwl = parseFloat(bwLb), lfl = parseFloat(liftLb);
+    if (!isFinite(bwl) || !isFinite(lfl) || bwl <= 0 || lfl <= 0) return null;
+    const x = bwl / this.LB_PER_KG, w = lfl / this.LB_PER_KG;
+    const d = -0.000001093 * x * x * x * x
+            + 0.0007391293 * x * x * x
+            - 0.1918759221 * x * x
+            + 24.0900756 * x
+            - 307.75076;
+    if (!(d > 0)) return null;
+    return Math.round(500 * w / d * 100) / 100;
+  }
+  dotsStr(bw, lift) { const v = this.dots(bw, lift); return v == null ? '—' : v.toFixed(2); }
   scoreWinner(cf) {
     if (!cf || cf.kind !== 'advance') return cf ? cf.winner : null;
     if (!cf.scored) return cf.winner;
@@ -675,11 +692,21 @@ class Component extends DCLogic {
     const upNext = [];
     data.tournaments.forEach(t => {
       let pick = null;
-      if (t.featured) { const fm = (t.rounds[t.featured.r] || [])[t.featured.i]; if (fm && fm.a && fm.b && !fm.winner) pick = { m: fm, rd: t.rounds[t.featured.r] }; }
+      if (t.featured) { const fm = (t.rounds[t.featured.r] || [])[t.featured.i]; if (fm && fm.a && fm.b && !fm.winner) pick = { m: fm, rd: t.rounds[t.featured.r], ri: t.featured.r }; }
       if (!pick) {
-        for (const rd of t.rounds) { for (const m of rd) { if (m.a && m.b && !m.winner) { pick = { m, rd }; break; } } if (pick) break; }
+        for (let r = 0; r < t.rounds.length && !pick; r++) {
+          for (const m of t.rounds[r]) { if (m.a && m.b && !m.winner) { pick = { m, rd: t.rounds[r], ri: r }; break; } }
+        }
       }
-      if (pick) upNext.push({ comp: t.name, a: pick.m.a, b: pick.m.b, round: this.roundLabel(pick.rd.length), open: () => this.openT(t.id) });
+      if (pick) {
+        const big = pick.ri >= t.rounds.length - 2;
+        upNext.push({
+          comp: t.name, a: pick.m.a, b: pick.m.b, round: this.roundLabel(pick.rd.length),
+          topAnim: big ? 'redline 2.4s ease-in-out infinite' : 'none',
+          vsAnim: big ? 'vsblink 2.4s ease-in-out infinite' : 'none',
+          open: () => this.openT(t.id)
+        });
+      }
     });
     base.upNext = upNext;
     base.hasUpNext = base.upNext.length > 0;
@@ -689,6 +716,7 @@ class Component extends DCLogic {
       const sorted = this.sortBoard(c);
       const top = sorted[0];
       const label = c.lowerBetter ? 'Fastest: ' : 'Leader: ';
+      if (c.dots) return label + top.name + ' · ' + this.dotsStr(top.bw, top.score) + ' pts';
       return label + top.name + ' · ' + top.score + (c.unit && c.unit !== 'TIME' ? ' ' + c.unit : '');
     };
     base.allComps = [
@@ -716,14 +744,19 @@ class Component extends DCLogic {
       const sortedB = this.sortBoard(c);
       const top = sortedB[0];
       return {
-        name: c.name, tag: c.board && c.board.length ? (c.unit === 'TIME' ? 'TIMED' : (c.unit ? 'LEADERBOARD · ' + c.unit : 'LEADERBOARD')) : 'UPDATES',
+        name: c.name, tag: c.board && c.board.length ? (c.dots ? 'DOTS · POINTS' : c.unit === 'TIME' ? 'TIMED' : (c.unit ? 'LEADERBOARD · ' + c.unit : 'LEADERBOARD')) : 'UPDATES',
         hasLeader: !!top,
         leaderKicker: c.lowerBetter ? 'Fastest' : 'Leader',
-        leader: top ? top.name + ' · ' + top.score + (c.unit && c.unit !== 'TIME' ? ' ' + c.unit : '') : '',
+        leader: top ? (c.dots ? top.name + ' · ' + this.dotsStr(top.bw, top.score) + ' pts' : top.name + ' · ' + top.score + (c.unit && c.unit !== 'TIME' ? ' ' + c.unit : '')) : '',
         latestKicker: c.updates[0] ? 'Latest · ' + this.rel(c.updates[0].ts) : 'Latest',
         latest: c.updates[0] ? c.updates[0].text : 'No updates yet',
         open: () => this.openC(c.id),
-        remove: () => this.setState({ confirm: { kind: 'delcomp', cid: c.id, name: c.name } })
+        remove: () => this.setState({ confirm: { kind: 'delcomp', cid: c.id, name: c.name } }),
+        featLabel: data.featuredComp === c.id ? '\u2605' : '\u2606',
+        featColor: data.featuredComp === c.id ? '#e8b44a' : '#8b93a1',
+        featBorder: data.featuredComp === c.id ? 'rgba(232,180,74,0.7)' : 'rgba(243,242,242,0.25)',
+        featBg: data.featuredComp === c.id ? 'rgba(232,180,74,0.15)' : 'rgba(243,242,242,0.06)',
+        feature: () => this.save({ ...data, featuredComp: data.featuredComp === c.id ? null : c.id })
       };
     });
     base.newCompName = s.newCompName;
@@ -731,7 +764,8 @@ class Component extends DCLogic {
     const typeDefs = [
       { id: 'timed', label: 'Timed', hint: 'Timed — m:ss or seconds, fastest wins.', unit: 'TIME', lowerBetter: true },
       { id: 'weight', label: 'Weight', hint: 'Weight — pounds, highest wins.', unit: 'LBS', lowerBetter: false },
-      { id: 'count', label: 'Count', hint: 'Count — reps or points, most wins.', unit: 'REPS', lowerBetter: false }
+      { id: 'count', label: 'Count', hint: 'Count — reps or points, most wins.', unit: 'REPS', lowerBetter: false },
+      { id: 'dots', label: 'Bench · DOTS', hint: 'Bench — body weight and lift in lbs, ranked on DOTS points.', unit: 'LBS', lowerBetter: false, hasBW: true, dots: true }
     ];
     base.compTypes = typeDefs.map(td => ({
       label: td.label,
@@ -743,7 +777,7 @@ class Component extends DCLogic {
     base.addComp = () => {
       const name = s.newCompName.trim(); if (!name) return;
       const td = typeDefs.find(x => x.id === s.newCompType) || typeDefs[0];
-      const d = { ...data, competitions: [...data.competitions, { id: 'c' + Date.now(), name, unit: td.unit, lowerBetter: td.lowerBetter, board: [], updates: [] }] };
+      const d = { ...data, competitions: [...data.competitions, { id: 'c' + Date.now(), name, unit: td.unit, lowerBetter: td.lowerBetter, hasBW: !!td.hasBW, dots: !!td.dots, board: [], updates: [] }] };
       this.setState({ newCompName: '' }); this.save(d);
     };
 
@@ -801,17 +835,21 @@ class Component extends DCLogic {
     base.cBoard = []; base.cUpdates = [];
     if (c && s.view === 'event') {
       base.cName = c.name;
-      base.cSub = c.unit === 'TIME' ? 'Timed competition · fastest wins' : (c.hasBW ? 'Max bench · body weight recorded' : (c.unit === 'LBS' ? 'Weight competition · highest wins' : c.unit === 'REPS' ? 'Count competition · most wins' : 'Leaderboard competition'));
+      base.cSub = c.dots ? 'Max bench · ranked on DOTS points' : c.unit === 'TIME' ? 'Timed competition · fastest wins' : (c.hasBW ? 'Max bench · body weight recorded' : (c.unit === 'LBS' ? 'Weight competition · highest wins' : c.unit === 'REPS' ? 'Count competition · most wins' : 'Leaderboard competition'));
       base.cHasBoard = s.adminOn || (c.board && c.board.length > 0);
       base.cHasBW = !!c.hasBW;
       base.scorePlaceholder = c.unit === 'TIME' ? 'm:ss' : 'Score';
       const sorted = this.sortBoard(c).slice(0, 5);
       base.cBoard = sorted.map((row, i) => ({
         rank: i + 1, name: row.name,
-        meta: row.bw ? 'BW ' + row.bw + ' LBS' : '',
-        score: row.score + (c.unit && c.unit !== 'TIME' ? ' ' + c.unit : ''),
+        meta: c.dots ? ('BW ' + (row.bw || '—') + ' · LIFT ' + row.score + ' LBS')
+                     : (row.bw ? 'BW ' + row.bw + ' LBS' : ''),
+        score: c.dots ? this.dotsStr(row.bw, row.score) + ' pts'
+                      : row.score + (c.unit && c.unit !== 'TIME' ? ' ' + c.unit : ''),
         rankColor: i === 0 ? '#e8b44a' : '#8b93a1',
-        bg: i === 0 ? 'rgba(236,48,19,0.08)' : 'transparent'
+        nameColor: i === 0 ? '#e8b44a' : '#f3f2f2',
+        scoreColor: i === 0 ? '#e8b44a' : '#ec3013',
+        bg: i === 0 ? 'rgba(232,180,74,0.08)' : 'transparent'
       }));
       base.cUpdates = c.updates.map(u => ({ time: this.rel(u.ts), text: u.text }));
       base.addBoardRow = () => {
@@ -832,7 +870,7 @@ class Component extends DCLogic {
         const after = this.sortBoard(c);
         const idx = after.indexOf(row);
         const prevIdx = before.indexOf(row.name);
-        const disp = scoreVal + (c.unit && c.unit !== 'TIME' ? ' ' + c.unit : '');
+        const disp = c.dots ? (this.dotsStr(row.bw, scoreVal) + ' pts (' + scoreVal + ' LBS)') : scoreVal + (c.unit && c.unit !== 'TIME' ? ' ' + c.unit : '');
         let text = null;
         if (idx === 0 && prevIdx !== 0) text = (c.lowerBetter ? 'New fastest time: ' : 'New leader: ') + row.name + ' · ' + disp;
         else if (idx === 0 && prevIdx === 0) text = row.name + ' extends the lead — ' + disp;
@@ -853,6 +891,10 @@ class Component extends DCLogic {
 
   sortBoard(c) {
     const rows = [...(c.board || [])];
+    if (c.dots) {
+      // Ranked on DOTS points, not raw weight. Unscorable rows sink.
+      return rows.sort((a, b) => (this.dots(b.bw, b.score) || -1) - (this.dots(a.bw, a.score) || -1));
+    }
     if (rows.every(r => this.parseScore(r.score) != null)) rows.sort((a, b) => c.lowerBetter ? this.parseScore(a.score) - this.parseScore(b.score) : this.parseScore(b.score) - this.parseScore(a.score));
     return rows;
   }

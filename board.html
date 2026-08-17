@@ -46,6 +46,30 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
   </sc-if>
 
   <sc-if value="{{ hasData }}" hint-placeholder-val="{{ true }}">
+      <sc-if value="{{ hasFeat }}" hint-placeholder-val="{{ false }}">
+      <div style="border:1px solid rgba(232,180,74,0.35);border-top:3px solid #e8b44a;padding:20px 26px;background:#0e141d">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px">
+          <div style="display:flex;align-items:center;gap:12px;min-width:0">
+            <span style="color:#e8b44a;font-size:22px;line-height:1;flex:none">&#9733;</span>
+            <span style="font-weight:900;font-style:italic;text-transform:uppercase;font-size:30px;line-height:1">{{ featName }}</span>
+          </div>
+          <span style="font-size:11px;letter-spacing:2px;color:#e8b44a;font-weight:700;flex:none">{{ featKicker }}</span>
+        </div>
+        <sc-if value="{{ featEmpty }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:14px;color:#5c6675;font-size:14px;letter-spacing:0.5px">No results yet</div>
+        </sc-if>
+        <div style="margin-top:14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:0 40px">
+          <sc-for list="{{ featRows }}" as="row" hint-placeholder-count="5">
+            <div style="display:flex;align-items:center;gap:14px;padding:9px 0;border-bottom:1px solid rgba(243,242,242,0.08)">
+              <span style="width:30px;font-weight:900;font-style:italic;color:{{ row.rankColor }};font-size:20px;flex:none">{{ row.rank }}</span>
+              <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><span style="font-weight:800;font-size:19px;color:{{ row.nameColor }}">{{ row.name }}</span><span style="font-size:11px;color:#8b93a1;margin-left:10px">{{ row.meta }}</span></span>
+              <span style="font-weight:900;font-size:20px;color:{{ row.scoreColor }};flex:none">{{ row.score }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px" ref="{{ gridRef }}">
       <sc-for list="{{ bPanels }}" as="p" hint-placeholder-count="3">
         <div style="border:1px solid rgba(243,242,242,0.12);border-top:2px solid #ec3013;padding:16px 18px;background:#0e141d;overflow:hidden;box-shadow:{{ p.shadow }};transition:box-shadow .5s ease">
@@ -112,8 +136,8 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
             <sc-for list="{{ lb.rows }}" as="row" hint-placeholder-count="5">
               <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(243,242,242,0.08)">
                 <span style="width:22px;font-weight:900;font-style:italic;color:{{ row.rankColor }};font-size:14px">{{ row.rank }}</span>
-                <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><span style="font-weight:700;font-size:14px">{{ row.name }}</span><span style="font-size:10px;color:#8b93a1;margin-left:7px">{{ row.meta }}</span></span>
-                <span style="font-weight:900;font-size:14px;color:#ec3013;flex:none">{{ row.score }}</span>
+                <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><span style="font-weight:700;font-size:14px;color:{{ row.nameColor }}">{{ row.name }}</span><span style="font-size:10px;color:#8b93a1;margin-left:7px">{{ row.meta }}</span></span>
+                <span style="font-weight:900;font-size:14px;color:{{ row.scoreColor }};flex:none">{{ row.score }}</span>
               </div>
             </sc-for>
           </div>
@@ -341,7 +365,9 @@ class Component extends DCLogic {
     const t3 = { id: 'cod', name: 'Call of Duty', seeding: 'order', scored: false, entrants: cod, rounds: this.genBracket(cod, 'order') };
     this.playPicks(t3, [0, 0, 1, 1, 0], now - 5 * H);
     const competitions = [
-      { id: 'bench', name: 'Benchpress', unit: 'LBS', hasBW: true, board: [{ name: 'Moses Grant', bw: '224', score: '315' }, { name: 'Dre Whitfield', bw: '198', score: '295' }, { name: 'Tony Alvarez', bw: '205', score: '285' }, { name: 'Cal Whitaker', bw: '187', score: '275' }, { name: 'Ben Hastings', bw: '176', score: '255' }], updates: [{ ts: now - 2 * H, text: 'Moses Grant takes the lead with a 315 lb press. Finals round at 4 PM.' }, { ts: now - 6 * H, text: 'Qualifying open at the main stage — 3 attempts each.' }] },
+      { id: 'bench1823', name: 'Benchpress 18-23', unit: 'LBS', hasBW: true, dots: true, board: [{ name: 'Dre Whitfield', bw: '198', score: '295' }, { name: 'Ben Hastings', bw: '176', score: '255' }], updates: [{ ts: now - 6 * H, text: 'Qualifying open at the main stage — 3 attempts each.' }] },
+      { id: 'bench2445', name: 'Benchpress 24-45', unit: 'LBS', hasBW: true, dots: true, board: [{ name: 'Moses Grant', bw: '224', score: '315' }, { name: 'Tony Alvarez', bw: '205', score: '285' }], updates: [{ ts: now - 2 * H, text: 'Moses Grant takes the lead with a 315 lb press. Finals round at 4 PM.' }] },
+      { id: 'bench45', name: 'Benchpress 45+', unit: 'LBS', hasBW: true, dots: true, board: [{ name: 'Cal Whitaker', bw: '187', score: '275' }], updates: [{ ts: now - 5 * H, text: 'Masters flight lifts at 2 PM.' }] },
       { id: 'crucible', name: 'Crucible', unit: 'TIME', lowerBetter: true, board: [{ name: 'Isaiah Cole', score: '8:42' }, { name: 'Marcus Reed', score: '9:15' }, { name: 'Ty Renner', score: '9:58' }, { name: 'Omar Fields', score: '11:03' }], updates: [{ ts: now - 90 * 60000, text: 'Station 3 (rope climb) is live. Isaiah Cole sets the pace at 8:42.' }] },
       { id: 'wick', name: 'John Wick Challenge', unit: 'TIME', lowerBetter: true, board: [{ name: 'Ray Delgado', score: '1:42' }, { name: 'Jake Rollins', score: '1:58' }, { name: 'Kev Marsh', score: '2:07' }], updates: [{ ts: now - 40 * 60000, text: 'Ray Delgado sets the course record: 1:42. Heats continue through 6 PM.' }, { ts: now - 4 * H, text: 'Course walkthrough at the pavilion. Closed-course rules — eye protection required.' }] }
     ];
@@ -359,6 +385,7 @@ class Component extends DCLogic {
   parseScore(s) { const m = /^(\d+):(\d\d)/.exec(String(s)); if (m) return +m[1] * 60 + +m[2]; const f = parseFloat(s); return isNaN(f) ? null : f; }
   sortBoard(c) {
     const rows = [...(c.board || [])];
+    if (c.dots) return rows.sort((a, b) => (this.dots(b.bw, b.score) || -1) - (this.dots(a.bw, a.score) || -1));
     if (rows.every(r => this.parseScore(r.score) != null)) rows.sort((a, b) => c.lowerBetter ? this.parseScore(a.score) - this.parseScore(b.score) : this.parseScore(b.score) - this.parseScore(a.score));
     return rows;
   }
@@ -370,6 +397,20 @@ class Component extends DCLogic {
   }
   champion(t) { return t.rounds[t.rounds.length - 1][0].winner || null; }
   loser(m) { return m.winner === m.a ? m.b : m.a; }
+  LB_PER_KG = 2.20462262;
+  dots(bwLb, liftLb) {
+    const bwl = parseFloat(bwLb), lfl = parseFloat(liftLb);
+    if (!isFinite(bwl) || !isFinite(lfl) || bwl <= 0 || lfl <= 0) return null;
+    const x = bwl / this.LB_PER_KG, w = lfl / this.LB_PER_KG;
+    const d = -0.000001093 * x * x * x * x
+            + 0.0007391293 * x * x * x
+            - 0.1918759221 * x * x
+            + 24.0900756 * x
+            - 307.75076;
+    if (!(d > 0)) return null;
+    return Math.round(500 * w / d * 100) / 100;
+  }
+  dotsStr(bw, lift) { const v = this.dots(bw, lift); return v == null ? '—' : v.toFixed(2); }
   scoreline(m) {
     if (m.sa == null || m.sb == null) return null;
     const a = parseFloat(m.sa), b = parseFloat(m.sb);
@@ -413,11 +454,34 @@ class Component extends DCLogic {
       });
       return { name: t.name, status: this.tStatus(t), champion: this.champion(t), cols, h: g.h, scale: g.scale, tx: -Math.round(off), dur: ov ? ov.dur : 3, outerH: Math.ceil((g.h + 20) * g.scale) + 2, shadow: this.state.focusIdx === i ? '0 0 0 2px rgba(236,48,19,0.55)' : 'none' };
     });
-    base.lBoards = data.competitions.map(c => ({
+    const lbRows = (c, n) => this.sortBoard(c).slice(0, n).map((r, i) => ({
+      rank: i + 1, name: r.name,
+      meta: c.dots ? ('BW ' + (r.bw || '—') + ' · LIFT ' + r.score + ' LBS') : (r.bw ? 'BW ' + r.bw : ''),
+      score: c.dots ? this.dotsStr(r.bw, r.score) + ' pts' : r.score,
+      rankColor: i === 0 ? '#e8b44a' : '#8b93a1',
+      nameColor: i === 0 ? '#e8b44a' : '#f3f2f2',
+      scoreColor: i === 0 ? '#e8b44a' : '#ec3013'
+    }));
+    const lbKicker = (c) => (c.board && c.board.length)
+      ? (c.dots ? 'TOP 5 · DOTS POINTS' : c.lowerBetter ? 'FASTEST · TOP 5' : 'TOP 5' + (c.unit && c.unit !== 'TIME' ? ' · ' + c.unit : ''))
+      : 'AWAITING RESULTS';
+
+    // The featured competition is promoted to a full-width panel at the top and
+    // dropped from the grid below, so it isn't shown twice.
+    const feat = data.featuredComp ? data.competitions.find(c => c.id === data.featuredComp) : null;
+    base.hasFeat = !!feat;
+    if (feat) {
+      base.featName = feat.name;
+      base.featKicker = feat.dots ? 'DOTS POINTS' : lbKicker(feat).replace('TOP 5 · ', '').replace('TOP 5', 'LEADERBOARD');
+      base.featEmpty = !(feat.board && feat.board.length);
+      base.featRows = lbRows(feat, 10);
+    }
+
+    base.lBoards = data.competitions.filter(c => !feat || c.id !== feat.id).map(c => ({
       name: c.name,
       empty: !(c.board && c.board.length),
-      kicker: (c.board && c.board.length) ? (c.lowerBetter ? 'FASTEST · TOP 5' : 'TOP 5' + (c.unit && c.unit !== 'TIME' ? ' · ' + c.unit : '')) : 'AWAITING RESULTS',
-      rows: this.sortBoard(c).slice(0, 5).map((r, i) => ({ rank: i + 1, name: r.name, meta: r.bw ? 'BW ' + r.bw : '', score: r.score, rankColor: i === 0 ? '#e8b44a' : '#8b93a1' }))
+      kicker: lbKicker(c),
+      rows: lbRows(c, 5)
     }));
     const feed = [];
     data.tournaments.forEach(t => {
