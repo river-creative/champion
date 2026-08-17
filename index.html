@@ -26,6 +26,8 @@ input:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px soli
 @keyframes vsblink{0%,100%{opacity:1}45%{opacity:.18}}
 @keyframes bigmatch{0%,100%{box-shadow:0 0 0 1px rgba(236,48,19,.12)}50%{box-shadow:0 0 0 3px rgba(236,48,19,.95)}}
 @keyframes redline{0%,100%{border-color:rgba(236,48,19,.2)}50%{border-color:#ec3013}}
+@keyframes goldline{0%,100%{border-color:rgba(232,180,74,.28)}50%{border-color:#e8b44a}}
+@keyframes goldglow{0%,100%{opacity:.32;text-shadow:none}50%{opacity:1;text-shadow:0 0 14px rgba(232,180,74,.85)}}
 
 /* --- deploy fixes: full-page shell (Design exports are canvas-sized) --- */
 html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-webkit-text-size-adjust:100%}
@@ -114,14 +116,14 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
       </div>
       <div style="display:flex;flex-direction:column;gap:10px;padding:0 16px">
         <sc-for list="{{ upNext }}" as="u" hint-placeholder-count="3">
-          <button onClick="{{ u.open }}" style="text-align:left;background:#151d29;border:1px solid rgba(243,242,242,0.12);border-top:2px solid #ec3013;animation:{{ u.topAnim }};padding:14px 16px;cursor:pointer;color:#f3f2f2">
+          <button onClick="{{ u.open }}" style="text-align:left;background:#151d29;border:1px solid rgba(243,242,242,0.12);border-top:2px solid {{ u.topColor }};animation:{{ u.topAnim }};padding:14px 16px;cursor:pointer;color:#f3f2f2">
             <div style="display:flex;justify-content:space-between;gap:8px">
               <span style="font-size:9px;letter-spacing:1.5px;color:#ec3013;font-weight:700;text-transform:uppercase">{{ u.comp }}</span>
               <span style="font-size:9px;letter-spacing:1.5px;color:#8b93a1;font-weight:700;text-transform:uppercase;flex:none">{{ u.round }}</span>
             </div>
             <div style="display:flex;align-items:center;gap:10px;margin-top:10px">
               <span style="flex:1;font-weight:900;font-style:italic;font-size:16px;text-transform:uppercase;line-height:1.15">{{ u.a }}</span>
-              <span style="flex:none;color:#ec3013;font-weight:900;font-size:11px;animation:{{ u.vsAnim }}">VS</span>
+              <span style="flex:none;color:{{ u.vsColor }};font-weight:900;font-size:11px;animation:{{ u.vsAnim }}">VS</span>
               <span style="flex:1;text-align:right;font-weight:900;font-style:italic;font-size:16px;text-transform:uppercase;line-height:1.15">{{ u.b }}</span>
             </div>
           </button>
@@ -144,12 +146,12 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
     </div>
     <div style="display:flex;flex-direction:column;gap:6px;padding:0 16px">
       <sc-for list="{{ feed }}" as="f" hint-placeholder-count="6">
-        <button onClick="{{ f.open }}" style="text-align:left;background:#11161f;border:1px solid rgba(243,242,242,0.08);padding:8px 12px;cursor:pointer;color:#f3f2f2;display:flex;flex-direction:column;gap:2px" style-hover="border-color:#ec3013">
+        <button onClick="{{ f.open }}" style="text-align:left;background:#11161f;border:1px solid rgba(243,242,242,0.08);border-left:3px solid {{ f.edge }};padding:8px 12px;cursor:pointer;color:#f3f2f2;display:flex;flex-direction:column;gap:2px" style-hover="border-color:#ec3013">
           <div style="display:flex;justify-content:space-between;gap:8px">
-            <span style="font-size:8.5px;letter-spacing:1.5px;color:#ec3013;font-weight:700;text-transform:uppercase">{{ f.comp }}</span>
+            <span style="font-size:8.5px;letter-spacing:1.5px;color:{{ f.compColor }};font-weight:700;text-transform:uppercase">{{ f.comp }}</span>
             <span style="font-size:9px;color:#5c6675;flex:none">{{ f.time }}</span>
           </div>
-          <div style="font-weight:700;font-size:12px;line-height:1.35">{{ f.title }}</div>
+          <div style="font-weight:700;font-size:12px;line-height:1.35;color:{{ f.titleColor }}">{{ f.title }}</div>
           <div style="font-size:10px;color:#8b93a1">{{ f.sub }}</div>
         </button>
       </sc-for>
@@ -268,11 +270,17 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
   <sc-if value="{{ isEventList }}" hint-placeholder-val="{{ false }}">
     <div style="display:flex;flex-direction:column;gap:10px;padding:16px">
       <sc-for list="{{ competitions }}" as="c" hint-placeholder-count="3">
-        <div style="position:relative">
-          <button onClick="{{ c.open }}" style="display:block;width:100%;box-sizing:border-box;text-align:left;background:#151d29;border:1px solid rgba(243,242,242,0.12);border-left:2px solid #ec3013;padding:16px;cursor:pointer;color:#f3f2f2">
-            <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
-              <span style="font-weight:900;font-style:italic;text-transform:uppercase;font-size:17px">{{ c.name }}</span>
-              <span style="font-size:9px;letter-spacing:1.5px;color:#8b93a1;font-weight:700;flex:none">{{ c.tag }}</span>
+        <div data-comp-id="{{ c.id }}" style="display:flex;align-items:stretch;background:{{ c.dragBg }};border:1px solid {{ c.dragBorder }};border-left:2px solid #ec3013;transition:background .15s ease,border-color .15s ease">
+          <sc-if value="{{ adminOn }}" hint-placeholder-val="{{ false }}">
+            <button onPointerDown="{{ c.dragStart }}" title="Drag to reorder" style="flex:none;width:38px;background:rgba(243,242,242,0.04);border:none;border-right:1px solid rgba(243,242,242,0.08);color:#5c6675;font-size:17px;cursor:grab;touch-action:none;line-height:1">⋮⋮</button>
+          </sc-if>
+          <div onClick="{{ c.open }}" style="flex:1;min-width:0;box-sizing:border-box;text-align:left;padding:14px 16px;cursor:pointer;color:#f3f2f2">
+            <div style="display:flex;align-items:center;gap:9px">
+              <sc-if value="{{ adminOn }}" hint-placeholder-val="{{ false }}">
+                <button onClick="{{ c.feature }}" title="Feature on the big screen" style="flex:none;width:30px;height:30px;background:{{ c.featBg }};border:1px solid {{ c.featBorder }};color:{{ c.featColor }};font-size:15px;font-weight:800;cursor:pointer;border-radius:6px;line-height:1;padding:0">{{ c.featLabel }}</button>
+              </sc-if>
+              <span style="font-weight:900;font-style:italic;text-transform:uppercase;font-size:17px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ c.name }}</span>
+              <span style="font-size:9px;letter-spacing:1.5px;color:#8b93a1;font-weight:700;flex:none;margin-left:auto">{{ c.tag }}</span>
             </div>
             <sc-if value="{{ c.hasLeader }}" hint-placeholder-val="{{ true }}">
               <div style="margin-top:10px;font-size:8.5px;letter-spacing:1.5px;color:#ec3013;font-weight:700;text-transform:uppercase">{{ c.leaderKicker }}</div>
@@ -280,10 +288,11 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
             </sc-if>
             <div style="margin-top:8px;font-size:8.5px;letter-spacing:1.5px;color:#8b93a1;font-weight:700;text-transform:uppercase">{{ c.latestKicker }}</div>
             <div style="font-size:11.5px;color:#c8ccd4;margin-top:3px;line-height:1.4">{{ c.latest }}</div>
-          </button>
+          </div>
           <sc-if value="{{ adminOn }}" hint-placeholder-val="{{ false }}">
-            <button onClick="{{ c.remove }}" title="Remove competition" style="position:absolute;top:44px;right:12px;width:28px;height:28px;background:rgba(236,48,19,0.12);border:1px solid rgba(236,48,19,0.6);color:#ec3013;font-size:13px;font-weight:800;cursor:pointer;border-radius:6px">✕</button>
-            <button onClick="{{ c.feature }}" title="Feature on the big screen" style="position:absolute;top:78px;right:12px;width:28px;height:28px;background:{{ c.featBg }};border:1px solid {{ c.featBorder }};color:{{ c.featColor }};font-size:15px;font-weight:800;cursor:pointer;border-radius:6px;line-height:1">{{ c.featLabel }}</button>
+            <div style="flex:none;display:flex;align-items:center;padding:0 12px 0 6px">
+              <button onClick="{{ c.remove }}" title="Remove competition" style="width:30px;height:30px;background:rgba(236,48,19,0.12);border:1px solid rgba(236,48,19,0.6);color:#ec3013;font-size:13px;font-weight:800;cursor:pointer;border-radius:6px;padding:0">✕</button>
+            </div>
           </sc-if>
         </div>
       </sc-for>
@@ -371,7 +380,7 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;pin&quot;: {&quot;editor&quot;: &quot;text&quot;, &quot;default&quot;: &quot;Champs26&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Admin&quot;}, &quot;showBanner&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Layout&quot;}}">
 class Component extends DCLogic {
-  state = { view: 'home', tId: null, cId: null, adminOn: false, pinOk: false, pinOpen: false, pinVal: '', pinError: false, entrantsText: '', newCompName: '', newCompType: 'timed', boardName: '', boardBw: '', boardScore: '', updateText: '', zoom: 0.85, confirm: null, tdragFrom: null, tOverId: null, data: null };
+  state = { view: 'home', tId: null, cId: null, adminOn: false, pinOk: false, pinOpen: false, pinVal: '', pinError: false, entrantsText: '', newCompName: '', newCompType: 'timed', boardName: '', boardBw: '', boardScore: '', updateText: '', zoom: 0.85, confirm: null, tdragFrom: null, tOverId: null, cDragId: null, cOverId: null, data: null };
 
   componentDidMount() {
     // Paint instantly from the local cache, then reconcile with the server.
@@ -529,6 +538,51 @@ class Component extends DCLogic {
     return Math.round(500 * w / d * 100) / 100;
   }
   dotsStr(bw, lift) { const v = this.dots(bw, lift); return v == null ? '—' : v.toFixed(2); }
+  // A result is "gold" when it changes who is on top, or when it's a
+  // semifinal/final win. Older stored updates predate the flag, so the text
+  // prefixes written by addBoardRow are matched as a fallback.
+  // Pointer events rather than HTML5 drag-and-drop: the admin runs on a phone,
+  // where dragstart never fires.
+  compDragStart(id) {
+    return (e) => {
+      if (e.stopPropagation) e.stopPropagation();
+      if (e.preventDefault) e.preventDefault();
+      this.setState({ cDragId: id, cOverId: id });
+      const move = (ev) => {
+        const p = ev.touches ? ev.touches[0] : ev;
+        const el = document.elementFromPoint(p.clientX, p.clientY);
+        const host = el && el.closest ? el.closest('[data-comp-id]') : null;
+        const over = host ? host.getAttribute('data-comp-id') : null;
+        if (over && over !== this.state.cOverId) this.setState({ cOverId: over });
+        if (ev.cancelable) ev.preventDefault();
+      };
+      const up = () => {
+        window.removeEventListener('pointermove', move);
+        window.removeEventListener('pointerup', up);
+        window.removeEventListener('pointercancel', up);
+        const from = this.state.cDragId, to = this.state.cOverId;
+        this.setState({ cDragId: null, cOverId: null });
+        if (from && to && from !== to) this.moveComp(from, to);
+      };
+      window.addEventListener('pointermove', move, { passive: false });
+      window.addEventListener('pointerup', up);
+      window.addEventListener('pointercancel', up);
+    };
+  }
+  moveComp(fromId, toId) {
+    const data = this.state.data; if (!data) return;
+    const list = [...data.competitions];
+    const fi = list.findIndex(c => c.id === fromId), ti = list.findIndex(c => c.id === toId);
+    if (fi < 0 || ti < 0 || fi === ti) return;
+    const [item] = list.splice(fi, 1);
+    list.splice(ti, 0, item);
+    this.save({ ...data, competitions: list });
+  }
+  isGoldUpdate(u) {
+    if (u && u.gold) return true;
+    const t = (u && u.text) || '';
+    return /^New leader: |^New fastest time: / .test(t) || / extends the lead — /.test(t);
+  }
   scoreWinner(cf) {
     if (!cf || cf.kind !== 'advance') return cf ? cf.winner : null;
     if (!cf.scored) return cf.winner;
@@ -676,18 +730,23 @@ class Component extends DCLogic {
 
     const feed = [];
     data.tournaments.forEach(t => {
-      t.rounds.forEach(rd => rd.forEach(m => {
+      t.rounds.forEach((rd, r) => rd.forEach(m => {
         if (m.winner && !m.bye && m.ts) {
           const sl = this.scoreline(m);
-          feed.push({ ts: m.ts, comp: t.name, title: m.winner + '  def.  ' + this.loser(m), sub: this.roundLabel(rd.length) + (sl ? ' · ' + sl : ''), open: () => this.openT(t.id) });
+          feed.push({ ts: m.ts, comp: t.name, title: m.winner + '  def.  ' + this.loser(m), sub: this.roundLabel(rd.length) + (sl ? ' · ' + sl : ''), gold: r >= t.rounds.length - 2, open: () => this.openT(t.id) });
         }
       }));
       const last = t.rounds[t.rounds.length - 1][0];
-      if (last.winner && last.ts) feed.push({ ts: last.ts + 1, comp: t.name, title: '🏆 ' + last.winner + ' wins it all', sub: 'Tournament champion', open: () => this.openT(t.id) });
+      if (last.winner && last.ts) feed.push({ ts: last.ts + 1, comp: t.name, title: '🏆 ' + last.winner + ' wins it all', sub: 'Tournament champion', gold: true, open: () => this.openT(t.id) });
     });
-    data.competitions.forEach(c => c.updates.forEach(u => feed.push({ ts: u.ts, comp: c.name, title: u.text, sub: 'Update', open: () => this.openC(c.id) })));
+    data.competitions.forEach(c => c.updates.forEach(u => feed.push({ ts: u.ts, comp: c.name, title: u.text, sub: this.isGoldUpdate(u) ? 'Lead change' : 'Update', gold: this.isGoldUpdate(u), open: () => this.openC(c.id) })));
     feed.sort((a, b) => b.ts - a.ts);
-    base.feed = feed.slice(0, 20).map(f => ({ ...f, time: this.rel(f.ts) }));
+    base.feed = feed.slice(0, 20).map(f => ({
+      ...f, time: this.rel(f.ts),
+      titleColor: f.gold ? '#e8b44a' : '#f3f2f2',
+      compColor: f.gold ? '#e8b44a' : '#ec3013',
+      edge: f.gold ? '#e8b44a' : 'rgba(243,242,242,0.08)'
+    }));
 
     const upNext = [];
     data.tournaments.forEach(t => {
@@ -702,8 +761,10 @@ class Component extends DCLogic {
         const big = pick.ri >= t.rounds.length - 2;
         upNext.push({
           comp: t.name, a: pick.m.a, b: pick.m.b, round: this.roundLabel(pick.rd.length),
-          topAnim: big ? 'redline 2.4s ease-in-out infinite' : 'none',
-          vsAnim: big ? 'vsblink 2.4s ease-in-out infinite' : 'none',
+          topColor: big ? '#e8b44a' : '#ec3013',
+          topAnim: big ? 'goldline 2.4s ease-in-out infinite' : 'none',
+          vsColor: big ? '#e8b44a' : '#ec3013',
+          vsAnim: big ? 'goldglow 2.4s ease-in-out infinite' : 'none',
           open: () => this.openT(t.id)
         });
       }
@@ -751,12 +812,16 @@ class Component extends DCLogic {
         latestKicker: c.updates[0] ? 'Latest · ' + this.rel(c.updates[0].ts) : 'Latest',
         latest: c.updates[0] ? c.updates[0].text : 'No updates yet',
         open: () => this.openC(c.id),
-        remove: () => this.setState({ confirm: { kind: 'delcomp', cid: c.id, name: c.name } }),
+        id: c.id,
+        dragStart: this.compDragStart(c.id),
+        dragBg: s.cOverId === c.id && s.cDragId !== c.id ? 'rgba(232,180,74,0.10)' : '#151d29',
+        dragBorder: s.cDragId === c.id ? 'rgba(232,180,74,0.8)' : (s.cOverId === c.id ? 'rgba(232,180,74,0.5)' : 'rgba(243,242,242,0.12)'),
+        remove: (e) => { if (e && e.stopPropagation) e.stopPropagation(); this.setState({ confirm: { kind: 'delcomp', cid: c.id, name: c.name } }); },
         featLabel: data.featuredComp === c.id ? '\u2605' : '\u2606',
         featColor: data.featuredComp === c.id ? '#e8b44a' : '#8b93a1',
         featBorder: data.featuredComp === c.id ? 'rgba(232,180,74,0.7)' : 'rgba(243,242,242,0.25)',
         featBg: data.featuredComp === c.id ? 'rgba(232,180,74,0.15)' : 'rgba(243,242,242,0.06)',
-        feature: () => this.save({ ...data, featuredComp: data.featuredComp === c.id ? null : c.id })
+        feature: (e) => { if (e && e.stopPropagation) e.stopPropagation(); this.save({ ...data, featuredComp: data.featuredComp === c.id ? null : c.id }); }
       };
     });
     base.newCompName = s.newCompName;
@@ -851,7 +916,7 @@ class Component extends DCLogic {
         scoreColor: i === 0 ? '#e8b44a' : '#ec3013',
         bg: i === 0 ? 'rgba(232,180,74,0.08)' : 'transparent'
       }));
-      base.cUpdates = c.updates.map(u => ({ time: this.rel(u.ts), text: u.text }));
+      base.cUpdates = c.updates.map(u => ({ time: this.rel(u.ts), text: u.text, color: this.isGoldUpdate(u) ? '#e8b44a' : '#c8ccd4' }));
       base.addBoardRow = () => {
         if (!s.boardName.trim() || !s.boardScore.trim()) return;
         const name = s.boardName.trim(), scoreVal = s.boardScore.trim();
@@ -877,7 +942,7 @@ class Component extends DCLogic {
         else if (idx < 5 && prevIdx === -1) text = row.name + ' enters the top 5 — #' + (idx + 1) + ' at ' + disp;
         else if (idx < 5 && idx < prevIdx) text = row.name + ' moves up to #' + (idx + 1) + ' at ' + disp;
         else if (idx < 5 && idx === prevIdx) text = row.name + ' improves to ' + disp + ' — holds #' + (idx + 1);
-        if (text) c.updates = [{ ts: Date.now(), text, auto: true }, ...c.updates];
+        if (text) c.updates = [{ ts: Date.now(), text, auto: true, gold: idx === 0 }, ...c.updates];
         this.setState({ boardName: '', boardBw: '', boardScore: '' }); this.save({ ...data });
       };
       base.postUpdate = () => {
