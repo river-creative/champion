@@ -72,6 +72,8 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
 
   <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid rgba(243,242,242,0.1)">
     <div style="font-weight:900;font-style:italic;text-transform:uppercase;letter-spacing:1px;font-size:15px">{{ screenTitle }}</div>
+    <div style="display:flex;align-items:center;gap:10px;flex:none">
+      <button onClick="{{ openGuide }}" title="{{ guideTitle }}" aria-label="{{ guideTitle }}" style="flex:none;width:30px;height:30px;background:transparent;border:1px solid rgba(243,242,242,0.22);border-radius:50%;color:#8b93a1;font-size:14px;font-weight:800;font-style:italic;line-height:1;cursor:pointer;padding:0;opacity:0.65;transition:opacity .18s,color .18s,border-color .18s" style-hover="opacity:1;color:#ec3013;border-color:rgba(236,48,19,0.6)">?</button>
     <sc-if value="{{ bannerOff }}" hint-placeholder-val="{{ false }}">
       <button onClick="{{ toggleAdmin }}" title="{{ adminTitle }}" aria-label="{{ adminTitle }}" style="flex:none;background:none;border:none;padding:0;margin:0;line-height:0;cursor:pointer">
         <sc-if value="{{ adminOn }}" hint-placeholder-val="{{ false }}">
@@ -82,7 +84,25 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
         </sc-if>
       </button>
     </sc-if>
+    </div>
   </div>
+
+  <sc-if value="{{ guideOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;inset:0;background:rgba(10,15,22,0.9);z-index:50;display:flex;align-items:center;justify-content:center;padding:16px" onClick="{{ closeGuide }}">
+      <div style="background:#0a0f16;border:1px solid rgba(243,242,242,0.15);border-top:2px solid #ec3013;width:100%;max-width:980px;height:100%;max-height:88vh;display:flex;flex-direction:column;overflow:hidden" onClick="{{ stop }}">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border-bottom:1px solid rgba(243,242,242,0.12);flex:none">
+          <div style="min-width:0">
+            <div style="font-size:9px;letter-spacing:2px;color:#ec3013;font-weight:700;text-transform:uppercase">{{ guideHint }}</div>
+            <div style="font-weight:900;font-style:italic;text-transform:uppercase;font-size:16px;line-height:1.1;margin-top:2px">{{ guideTitle }}</div>
+          </div>
+          <button onClick="{{ closeGuide }}" title="Close" aria-label="Close" style="flex:none;width:34px;height:34px;background:rgba(236,48,19,0.12);border:1px solid rgba(236,48,19,0.6);color:#ec3013;font-size:15px;font-weight:800;cursor:pointer;border-radius:6px;padding:0;line-height:1">✕</button>
+        </div>
+        <div style="flex:1;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch;background:#0a0f16">
+          <iframe src="{{ guideSrc }}" title="{{ guideTitle }}" style="display:block;width:100%;height:100%;min-height:520px;border:none;background:#0a0f16"></iframe>
+        </div>
+      </div>
+    </div>
+  </sc-if>
 
   <sc-if value="{{ pinOpen }}" hint-placeholder-val="{{ false }}">
     <div style="position:fixed;inset:0;background:rgba(10,15,22,0.85);z-index:40;display:flex;align-items:center;justify-content:center" onClick="{{ closePin }}">
@@ -407,7 +427,7 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;pin&quot;: {&quot;editor&quot;: &quot;text&quot;, &quot;default&quot;: &quot;Champs26&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Admin&quot;}, &quot;showBanner&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Layout&quot;}}">
 class Component extends DCLogic {
-  state = { view: 'home', tId: null, cId: null, adminOn: false, pinOk: false, pinOpen: false, pinVal: '', pinError: false, entrantsText: '', newCompName: '', newCompType: 'timed', boardName: '', boardBw: '', boardScore: '', updateText: '', zoom: 0.85, confirm: null, tdragFrom: null, tOverId: null, cDragId: null, cOverId: null, data: null };
+  state = { view: 'home', tId: null, cId: null, adminOn: false, pinOk: false, pinOpen: false, pinVal: '', pinError: false, entrantsText: '', newCompName: '', newCompType: 'timed', boardName: '', boardBw: '', boardScore: '', updateText: '', zoom: 0.85, confirm: null, tdragFrom: null, tOverId: null, cDragId: null, cOverId: null, guideOpen: false, data: null };
 
   componentDidMount() {
     // Paint instantly from the local cache, then reconcile with the server.
@@ -433,8 +453,11 @@ class Component extends DCLogic {
       if (c) this.setState({ data: c });
     };
     window.addEventListener('storage', this._sh);
+
+    this._esc = (e) => { if (e.key === 'Escape' && this.state.guideOpen) this.setState({ guideOpen: false }); };
+    window.addEventListener('keydown', this._esc);
   }
-  componentWillUnmount() { clearInterval(this._poll); window.removeEventListener('storage', this._sh); }
+  componentWillUnmount() { clearInterval(this._poll); window.removeEventListener('storage', this._sh); window.removeEventListener('keydown', this._esc); }
 
   LS = 'champion-app-v2';
   loadData() {
@@ -691,6 +714,12 @@ class Component extends DCLogic {
     const cf = s.confirm;
     const base = {
       showBanner, bannerOff: !showBanner, adminOff: !s.adminOn, stop: (e) => e.stopPropagation(),
+      guideOpen: s.guideOpen,
+      guideSrc: s.guideOpen ? (s.adminOn ? 'booth.html' : 'user.html') : '',
+      guideTitle: s.adminOn ? 'Booth Manager Guide' : 'Attendee Guide',
+      guideHint: s.adminOn ? 'Running a station' : 'How to use Champion',
+      openGuide: () => this.setState({ guideOpen: true }),
+      closeGuide: () => this.setState({ guideOpen: false }),
       dragOver: (e) => e.preventDefault(),
       pinOpen: s.pinOpen, pinVal: s.pinVal, pinError: s.pinError,
       onPinVal: (e) => this.setState({ pinVal: e.target.value, pinError: false }),
