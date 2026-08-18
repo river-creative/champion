@@ -88,8 +88,8 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
   </div>
 
   <sc-if value="{{ guideOpen }}" hint-placeholder-val="{{ false }}">
-    <div style="position:fixed;inset:0;background:rgba(10,15,22,0.9);z-index:50;display:flex;align-items:center;justify-content:center;padding:16px" onClick="{{ closeGuide }}">
-      <div style="background:#0a0f16;border:1px solid rgba(243,242,242,0.15);border-top:2px solid #ec3013;width:100%;max-width:980px;height:100%;max-height:88vh;display:flex;flex-direction:column;overflow:hidden" onClick="{{ stop }}">
+    <div style="position:fixed;inset:0;background:rgba(10,15,22,0.9);z-index:50;display:flex;align-items:center;justify-content:center;padding:10px" onClick="{{ closeGuide }}">
+      <div style="background:#0a0f16;border:1px solid rgba(243,242,242,0.15);border-top:2px solid #ec3013;width:100%;max-width:900px;height:100%;max-height:94vh;display:flex;flex-direction:column;overflow:hidden" onClick="{{ stop }}">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border-bottom:1px solid rgba(243,242,242,0.12);flex:none">
           <div style="min-width:0">
             <div style="font-size:9px;letter-spacing:2px;color:#ec3013;font-weight:700;text-transform:uppercase">{{ guideHint }}</div>

@@ -28,6 +28,10 @@ a:hover{color:var(--text)}
 ::selection{background:var(--flame); color:#fff}
 
 .wrap{max-width:1180px; margin:0 auto; padding:0 clamp(16px,4vw,40px)}
+/* grid items default to min-width:auto, so a wide image would widen the
+   whole column past its container. */
+.body > main{min-width:0}
+img{max-width:100%; height:auto}
 
 .top{border-bottom:2px solid var(--gold); background:linear-gradient(180deg,#0d131c,var(--ink))}
 .top .wrap{padding-top:clamp(40px,7vw,74px); padding-bottom:clamp(30px,5vw,52px)}
@@ -109,6 +113,28 @@ code{background:#0d131c; border:1px solid var(--line); padding:2px 6px; font-siz
 footer{border-top:1px solid var(--line); padding:30px 0 60px; color:var(--dim); font-size:12px}
 footer a{font-weight:700}
 
+/* ---------- shown inside the app's guide modal ---------- */
+.framed .rail{display:none}
+.framed .body{grid-template-columns:1fr; gap:0; padding:26px 0 40px}
+.framed .wrap{max-width:760px; padding:0 24px}
+.framed .top .wrap{padding-top:34px; padding-bottom:30px}
+.framed h1{font-size:38px; line-height:1.04}
+.framed .lede{margin-top:16px; font-size:15px}
+.framed .cta{margin-top:20px; padding:13px 20px}
+.framed section{padding-bottom:44px}
+.framed h2{font-size:26px}
+.framed .sub{margin-bottom:18px}
+.framed .grid2{grid-template-columns:1fr; gap:14px}
+.framed .card{padding:16px 18px; margin:14px 0}
+.framed .shot{padding:14px}
+.framed footer{padding:24px 0 34px}
+@media (min-width:640px){
+  .framed .wrap{padding:0 40px}
+  .framed h1{font-size:52px}
+  .framed h2{font-size:31px}
+  .framed .grid2{grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px}
+}
+
 @media (max-width:820px){
   .body{grid-template-columns:1fr; padding-top:26px}
   .rail{display:none}
@@ -119,6 +145,10 @@ footer a{font-weight:700}
   html{scroll-behavior:auto}
 }
 </style>
+<script>
+/* Set before paint so framed layout never flashes the standalone one. */
+try { if (window.self !== window.top) document.documentElement.className += ' framed'; } catch (e) { document.documentElement.className += ' framed'; }
+</script>
 </head>
 <body>
 
