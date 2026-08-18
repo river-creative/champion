@@ -59,16 +59,29 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
         <img src="banner-word.png" alt="CHAMPION" style="display:block;width:210px;max-width:100%">
         <div style="font-size:9px;letter-spacing:2px;color:#8b93a1;font-weight:600;text-transform:uppercase;margin-top:7px">Men's Conference 2026 · Tampa, FL · Sept 2–5</div>
       </div>
-      <img src="rmi-logo.png" alt="Revival Ministries International" style="flex:none;width:64px;opacity:0.92">
+      <button onClick="{{ toggleAdmin }}" title="{{ adminTitle }}" aria-label="{{ adminTitle }}" style="flex:none;background:none;border:none;padding:0;margin:0;line-height:0;cursor:pointer;border-radius:8px">
+        <sc-if value="{{ adminOn }}" hint-placeholder-val="{{ false }}">
+          <span style="display:block;width:64px;height:45px;background:#e8b44a;-webkit-mask:url(rmi-logo.png) center/contain no-repeat;mask:url(rmi-logo.png) center/contain no-repeat;filter:drop-shadow(0 0 10px rgba(232,180,74,0.55))"></span>
+        </sc-if>
+        <sc-if value="{{ adminOff }}" hint-placeholder-val="{{ true }}">
+          <img src="rmi-logo.png" alt="Revival Ministries International" style="display:block;width:64px;opacity:0.92">
+        </sc-if>
+      </button>
     </div>
   </sc-if>
 
   <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid rgba(243,242,242,0.1)">
     <div style="font-weight:900;font-style:italic;text-transform:uppercase;letter-spacing:1px;font-size:15px">{{ screenTitle }}</div>
-    <button onClick="{{ toggleAdmin }}" style="display:flex;align-items:center;gap:6px;background:{{ adminBtnBg }};color:{{ adminBtnColor }};border:1px solid rgba(243,242,242,0.2);padding:6px 10px;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5l8-3z"></path></svg>
-      {{ adminLabel }}
-    </button>
+    <sc-if value="{{ bannerOff }}" hint-placeholder-val="{{ false }}">
+      <button onClick="{{ toggleAdmin }}" title="{{ adminTitle }}" aria-label="{{ adminTitle }}" style="flex:none;background:none;border:none;padding:0;margin:0;line-height:0;cursor:pointer">
+        <sc-if value="{{ adminOn }}" hint-placeholder-val="{{ false }}">
+          <span style="display:block;width:34px;height:24px;background:#e8b44a;-webkit-mask:url(rmi-logo.png) center/contain no-repeat;mask:url(rmi-logo.png) center/contain no-repeat"></span>
+        </sc-if>
+        <sc-if value="{{ adminOff }}" hint-placeholder-val="{{ true }}">
+          <img src="rmi-logo.png" alt="Admin" style="display:block;width:34px;opacity:0.7">
+        </sc-if>
+      </button>
+    </sc-if>
   </div>
 
   <sc-if value="{{ pinOpen }}" hint-placeholder-val="{{ false }}">
@@ -677,7 +690,7 @@ class Component extends DCLogic {
     const showBanner = this.props.showBanner ?? true;
     const cf = s.confirm;
     const base = {
-      showBanner, stop: (e) => e.stopPropagation(),
+      showBanner, bannerOff: !showBanner, adminOff: !s.adminOn, stop: (e) => e.stopPropagation(),
       dragOver: (e) => e.preventDefault(),
       pinOpen: s.pinOpen, pinVal: s.pinVal, pinError: s.pinError,
       onPinVal: (e) => this.setState({ pinVal: e.target.value, pinError: false }),
@@ -686,8 +699,7 @@ class Component extends DCLogic {
       toggleAdmin: () => { if (s.adminOn) this.setState({ adminOn: false }); else if (s.pinOk) this.setState({ adminOn: true }); else this.setState({ pinOpen: true, pinVal: '', pinError: false }); },
       adminOn: s.adminOn,
       adminLabel: s.adminOn ? 'Admin On' : 'Admin',
-      adminBtnBg: s.adminOn ? '#ec3013' : 'transparent',
-      adminBtnColor: s.adminOn ? '#fff' : '#8b93a1',
+      adminTitle: s.adminOn ? 'Admin is on — tap to turn off' : 'Admin',
       goHome: () => this.setState({ view: 'home' }),
       goBrackets: () => this.setState({ view: 'brackets' }),
       goEvents: () => this.setState({ view: 'events' }),
