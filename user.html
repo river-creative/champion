@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Champion App — Attendee Guide</title>
+<link rel="stylesheet" href="fonts.css">
+<style>
+:root{
+  --ink:#0a0f16; --panel:#0e141d; --card:#151d29; --sunk:#11161f;
+  --flame:#ec3013; --gold:#e8b44a;
+  --text:#f3f2f2; --mute:#8b93a1; --dim:#5c6675;
+  --line:rgba(243,242,242,.12); --hair:rgba(243,242,242,.07);
+  --rail:82px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth; -webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--ink); color:var(--text);
+  font-family:'Archivo',system-ui,-apple-system,'Segoe UI',sans-serif;
+  -webkit-font-smoothing:antialiased; line-height:1.6;
+}
+h1,h2,h3{margin:0; font-weight:900; font-style:italic; text-transform:uppercase; line-height:1.02}
+p{margin:0 0 14px}
+a{color:var(--flame)}
+a:hover{color:var(--text)}
+::selection{background:var(--flame); color:#fff}
+
+.wrap{max-width:1180px; margin:0 auto; padding:0 clamp(16px,4vw,40px)}
+
+/* ---------- masthead ---------- */
+.top{border-bottom:2px solid var(--flame); background:linear-gradient(180deg,#0d131c,var(--ink))}
+.top .wrap{padding-top:clamp(40px,7vw,74px); padding-bottom:clamp(30px,5vw,52px)}
+.eyebrow{font-size:10px; letter-spacing:3px; color:var(--flame); font-weight:800; text-transform:uppercase}
+h1{font-size:clamp(46px,11vw,104px); letter-spacing:-.02em; margin:14px 0 0}
+h1 .thin{-webkit-text-stroke:1.5px var(--flame); color:transparent; display:block}
+.lede{max-width:56ch; margin-top:20px; font-size:clamp(15px,2.2vw,18px); color:#c8ccd4}
+.cta{
+  display:inline-flex; align-items:center; gap:12px; margin-top:26px;
+  background:var(--flame); color:#fff; text-decoration:none;
+  padding:15px 24px; font-weight:900; letter-spacing:1.6px; text-transform:uppercase; font-size:12px;
+  border:2px solid var(--flame); transition:background .18s, color .18s, transform .18s;
+}
+.cta:hover{background:transparent; color:var(--flame); transform:translateX(4px)}
+.cta span{font-size:16px; line-height:1}
+.nolink{margin-top:14px; font-size:12px; color:var(--dim); letter-spacing:.4px}
+
+/* ---------- bracket rail + sections ---------- */
+.body{display:grid; grid-template-columns:var(--rail) 1fr; gap:clamp(16px,3vw,44px); padding:clamp(34px,6vw,64px) 0 90px}
+.rail{position:sticky; top:0; align-self:start; height:100vh; padding-top:46px; display:flex; flex-direction:column}
+.seed{position:relative; padding:0 0 0 2px; height:52px; display:flex; align-items:center}
+.seed b{
+  font-size:11px; font-weight:900; font-style:italic; color:var(--dim);
+  letter-spacing:1px; transition:color .25s; z-index:1; background:var(--ink); padding-right:7px;
+}
+.seed::before{content:''; position:absolute; left:20px; right:0; top:50%; height:1px; background:var(--hair)}
+.seed::after{content:''; position:absolute; left:calc(100% - 1px); top:50%; bottom:-52px; width:1px; background:var(--hair)}
+.seed:last-child::after{display:none}
+.seed.on b{color:var(--flame)}
+.seed.on::before{background:var(--flame)}
+
+section{scroll-margin-top:24px; padding-bottom:clamp(46px,7vw,78px)}
+section > .kicker{font-size:10px; letter-spacing:2.6px; color:var(--flame); font-weight:800; text-transform:uppercase}
+h2{font-size:clamp(28px,5.4vw,46px); margin:10px 0 4px}
+.sub{color:var(--mute); font-size:14px; margin-bottom:22px}
+
+/* ---------- content bits ---------- */
+.card{background:var(--card); border:1px solid var(--line); border-top:2px solid var(--flame); padding:20px 22px; margin:18px 0}
+.card.gold{border-top-color:var(--gold)}
+h3{font-size:17px; margin:0 0 8px}
+ul,ol{margin:0 0 14px; padding-left:20px}
+li{margin-bottom:7px}
+li::marker{color:var(--flame); font-weight:800}
+.grid2{display:grid; grid-template-columns:repeat(auto-fit,minmax(258px,1fr)); gap:16px}
+.tag{display:inline-block; font-size:9.5px; letter-spacing:1.6px; font-weight:800; text-transform:uppercase; padding:4px 9px; border:1px solid; margin-right:6px}
+.tag.red{color:var(--flame); border-color:rgba(236,48,19,.5); background:rgba(236,48,19,.1)}
+.tag.gold{color:var(--gold); border-color:rgba(232,180,74,.5); background:rgba(232,180,74,.1)}
+.note{border-left:3px solid var(--gold); background:rgba(232,180,74,.07); padding:13px 16px; margin:18px 0; font-size:14px}
+.note b{color:var(--gold)}
+
+/* ---------- live UI replicas ---------- */
+.shot{background:var(--panel); border:1px solid var(--line); padding:16px; margin:18px 0}
+.shot .cap{font-size:9.5px; letter-spacing:2px; color:var(--dim); text-transform:uppercase; font-weight:700; margin-bottom:12px}
+.match{background:var(--card); border:1px solid rgba(236,48,19,.55); border-radius:6px; overflow:hidden; max-width:260px}
+.match.hot{animation:bigmatch 2.4s ease-in-out infinite}
+.match .r{display:flex; justify-content:space-between; align-items:center; gap:6px; padding:8px 10px; font-size:12.5px; font-weight:700}
+.match .r+.r{border-top:1px solid var(--hair)}
+.match .r.win{color:var(--flame)}
+.match .r.lose{color:var(--dim)}
+.match .cap2{font-size:8.5px; letter-spacing:1.6px; color:var(--flame); font-weight:800; padding:6px 10px 0}
+.lb{border:1px solid var(--line)}
+.lb .row{display:flex; align-items:center; gap:12px; padding:10px 12px; border-bottom:1px solid var(--hair)}
+.lb .row:last-child{border-bottom:none}
+.lb .row.first{background:rgba(232,180,74,.08)}
+.lb .n{width:22px; font-weight:900; font-style:italic; font-size:14px; color:var(--mute)}
+.lb .row.first .n,.lb .row.first .nm{color:var(--gold)}
+.lb .nm{flex:1; min-width:0; font-weight:700; font-size:13.5px}
+.lb .meta{font-size:10px; color:var(--mute); margin-left:8px; font-weight:400}
+.lb .sc{font-weight:900; font-size:13.5px; color:var(--flame)}
+.lb .row.first .sc{color:var(--gold)}
+.next{border-top:2px solid var(--gold); background:var(--card); padding:12px 14px; max-width:330px; animation:goldline 2.4s ease-in-out infinite}
+.next .k{display:flex; justify-content:space-between; font-size:8.5px; letter-spacing:1.5px; font-weight:800; text-transform:uppercase; color:var(--flame)}
+.next .k i{font-style:normal; color:var(--dim); letter-spacing:0}
+.next .m{display:flex; align-items:center; gap:8px; margin-top:6px; font-weight:700; font-size:13px}
+.next .vs{color:var(--gold); font-weight:900; font-style:italic; font-size:10px; animation:goldglow 2.4s ease-in-out infinite}
+.feedrow{background:var(--sunk); border:1px solid var(--hair); border-left:3px solid var(--hair); padding:9px 12px; margin-bottom:7px}
+.feedrow.g{border-left-color:var(--gold)}
+.feedrow .c{font-size:8.5px; letter-spacing:1.5px; color:var(--flame); font-weight:800; text-transform:uppercase}
+.feedrow.g .c{color:var(--gold)}
+.feedrow .t{font-size:12.5px; font-weight:700; margin-top:2px}
+.feedrow.g .t{color:var(--gold)}
+.feedrow .s{font-size:10px; color:var(--mute)}
+.podium{display:flex; flex-direction:column; gap:9px; max-width:430px}
+.podium .p{border:1px solid var(--line); background:var(--sunk); padding:8px 10px; text-align:center}
+.podium .p.one{border-color:rgba(232,180,74,.45); background:rgba(232,180,74,.09); box-shadow:0 0 18px rgba(232,180,74,.18); width:calc(50% - 5px); margin:0 auto}
+.podium .p .rk{font-weight:900; font-style:italic; font-size:13px; color:var(--mute)}
+.podium .p.one .rk,.podium .p.one .nm2,.podium .p.one .sc2{color:var(--gold)}
+.podium .p .nm2{font-weight:800; text-transform:uppercase; font-size:16px; line-height:1.1}
+.podium .p .sc2{font-weight:900; font-size:15px; color:var(--flame)}
+.podium .pair{display:grid; grid-template-columns:1fr 1fr; gap:9px}
+
+@keyframes bigmatch{0%,100%{box-shadow:0 0 0 1px rgba(236,48,19,.12)}50%{box-shadow:0 0 0 3px rgba(236,48,19,.95)}}
+@keyframes goldline{0%,100%{border-top-color:rgba(232,180,74,.28)}50%{border-top-color:var(--gold)}}
+@keyframes goldglow{0%,100%{opacity:.32;text-shadow:none}50%{opacity:1;text-shadow:0 0 14px rgba(232,180,74,.85)}}
+
+.reveal{opacity:0; transform:translateY(14px); transition:opacity .5s ease, transform .5s ease}
+.reveal.in{opacity:1; transform:none}
+
+footer{border-top:1px solid var(--line); padding:30px 0 60px; color:var(--dim); font-size:12px}
+footer a{font-weight:700}
+
+@media (max-width:820px){
+  .body{grid-template-columns:1fr; padding-top:26px}
+  .rail{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none !important; transition:none !important}
+  .reveal{opacity:1; transform:none}
+  html{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="eyebrow">Men's Conference 2026 · Tampa, FL · Sept 2–5</div>
+    <h1>Champion<span class="thin">Attendee Guide</span></h1>
+    <p class="lede">Every bracket, every leaderboard, every result — live on your phone and on the big screen in the room. Nothing to install and no account to make.</p>
+    <a class="cta" href="https://champion-conf.vercel.app/">Open the Champion App <span>→</span></a>
+    <div class="nolink">Works in any browser. Add it to your home screen if you want it one tap away.</div>
+  </div>
+</header>
+
+<div class="wrap body">
+  <nav class="rail" aria-label="Sections">
+    <a class="seed" href="#start"><b>01</b></a>
+    <a class="seed" href="#home"><b>02</b></a>
+    <a class="seed" href="#brackets"><b>03</b></a>
+    <a class="seed" href="#compete"><b>04</b></a>
+    <a class="seed" href="#dots"><b>05</b></a>
+    <a class="seed" href="#scoreboard"><b>06</b></a>
+    <a class="seed" href="#colors"><b>07</b></a>
+    <a class="seed" href="#faq"><b>08</b></a>
+  </nav>
+
+  <main>
+
+  <section id="start" class="reveal">
+    <div class="kicker">Getting in</div>
+    <h2>Open it and you're in</h2>
+    <p class="sub">No login, no download, no code to enter.</p>
+    <ol>
+      <li>Open <a href="https://champion-conf.vercel.app/">champion-conf.vercel.app</a> in your phone's browser.</li>
+      <li>That's it — you're looking at live results.</li>
+      <li>Optional: tap your browser's share menu and choose <b>Add to Home Screen</b> so it opens like an app.</li>
+    </ol>
+    <p>The app updates itself every few seconds. You never need to pull down to refresh or hunt for a reload button — if a match is scored at the pavilion, your screen catches up on its own.</p>
+    <div class="note"><b>Booth managers enter results.</b> You'll see an Admin control in the app; it's for the crew running each station and needs a PIN. Everything else is yours to browse freely.</div>
+  </section>
+
+  <section id="home" class="reveal">
+    <div class="kicker">Tab one</div>
+    <h2>Home</h2>
+    <p class="sub">The two questions everybody asks: what just happened, and what's on next.</p>
+
+    <div class="grid2">
+      <div>
+        <h3>Up Next</h3>
+        <p>Matches that are ready to run, one from each bracket before any bracket repeats — so nothing hogs the list. A gold bar and a pulsing <b>VS</b> mark a semifinal or a final.</p>
+      </div>
+      <div class="shot">
+        <div class="cap">Up Next</div>
+        <div class="next">
+          <div class="k"><span>FC World Cup</span><i>Semifinals</i></div>
+          <div class="m"><span>Marcus Reed</span><span class="vs">VS</span><span>Jake Rollins</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid2" style="margin-top:22px">
+      <div>
+        <h3>Latest Results</h3>
+        <p>Every finished match and every leaderboard change, newest first. Entries turn <b style="color:var(--gold)">gold</b> when they matter most: a new leader, a semifinal or final win, a champion crowned.</p>
+      </div>
+      <div class="shot">
+        <div class="cap">Latest Results</div>
+        <div class="feedrow g">
+          <div class="c">Call of Duty</div>
+          <div class="t">Squad Alpha will face Squad Golf in the Final</div>
+          <div class="s">Final set</div>
+        </div>
+        <div class="feedrow">
+          <div class="c">College Football Playoff</div>
+          <div class="t">Wes Hargrove def. Kev Marsh</div>
+          <div class="s">Round of 16 · 38–10</div>
+        </div>
+      </div>
+    </div>
+    <p>Tap any result to jump straight to that bracket or leaderboard.</p>
+  </section>
+
+  <section id="brackets" class="reveal">
+    <div class="kicker">Tab two</div>
+    <h2>Brackets</h2>
+    <p class="sub">Tournament trees — who's playing, who won, who's still alive.</p>
+
+    <div class="grid2">
+      <div>
+        <p>Pick a tournament to see the full tree. Pinch or use the zoom controls to fit it on your screen, and drag sideways to follow it toward the final.</p>
+        <h3>Reading a match</h3>
+        <ul>
+          <li>Two names stacked — the winner is in <b style="color:var(--flame)">red</b>, the loser greyed.</li>
+          <li>Scores appear beside the names when the tournament tracks them.</li>
+          <li><span class="tag red">Up Next</span> means it hasn't been played yet.</li>
+          <li><span class="tag gold">★ Featured</span> is the match the crew wants you watching.</li>
+          <li>A <b>pulsing red outline</b> means semifinal or final.</li>
+        </ul>
+      </div>
+      <div class="shot">
+        <div class="cap">Semifinal, still to play</div>
+        <div class="match hot">
+          <div class="cap2">★ Featured</div>
+          <div class="r win"><span>Marcus Reed</span><span>—</span></div>
+          <div class="r"><span>Jake Rollins</span><span>—</span></div>
+        </div>
+        <div style="height:14px"></div>
+        <div class="cap">Finished match</div>
+        <div class="match">
+          <div class="r win"><span>Wes Hargrove</span><span>38</span></div>
+          <div class="r lose"><span>Kev Marsh</span><span>10</span></div>
+        </div>
+      </div>
+    </div>
+    <p>A <b>BYE</b> means nobody was drawn against that competitor and they advance automatically. It's part of the draw, not a mistake.</p>
+  </section>
+
+  <section id="compete" class="reveal">
+    <div class="kicker">Tab three</div>
+    <h2>Compete</h2>
+    <p class="sub">Leaderboard events — bench press, obstacle courses, timed challenges.</p>
+    <p>Each competition shows its own top five, plus a running feed of updates from the crew at that station. The tag under the title tells you how it's judged: fastest time wins, heaviest lift wins, most reps wins, or ranked on DOTS points.</p>
+
+    <div class="shot">
+      <div class="cap">Benchpress 24–45 · top five</div>
+      <div class="lb">
+        <div class="row first"><span class="n">1</span><span class="nm">Moses Grant <span class="meta">BW 224 · LIFT 315 LBS</span></span><span class="sc">89.09 pts</span></div>
+        <div class="row"><span class="n">2</span><span class="nm">Tony Alvarez <span class="meta">BW 205 · LIFT 285 LBS</span></span><span class="sc">84.12 pts</span></div>
+        <div class="row"><span class="n">3</span><span class="nm">Cal Whitaker <span class="meta">BW 187 · LIFT 275 LBS</span></span><span class="sc">83.55 pts</span></div>
+      </div>
+    </div>
+    <p>First place is always <b style="color:var(--gold)">gold</b> — rank, name and score together — so the leader is obvious at a glance, on your phone and across the room.</p>
+  </section>
+
+  <section id="dots" class="reveal">
+    <div class="kicker">Bench press</div>
+    <h2>How DOTS works</h2>
+    <p class="sub">Why the biggest lift isn't automatically first place.</p>
+    <p>Raw pounds reward the heaviest guy in the room. DOTS is the formula competitive powerlifting uses to compare lifters fairly across body weights: it takes what you lifted, weighs it against what you weigh, and returns a single number of points.</p>
+    <ul>
+      <li>Your row shows all three: <b>body weight</b>, <b>weight lifted</b>, and <b>DOTS points</b>.</li>
+      <li>Ranking is on points, never on raw pounds.</li>
+      <li>A 260 lb lifter pressing 340 can finish behind a 150 lb lifter pressing 260. That's the formula working, not a bug.</li>
+    </ul>
+    <div class="note"><b>Three age categories.</b> Bench press runs as 18–23, 24–45 and 45+, each with its own leaderboard and its own champion. Check you're looking at your category before you compare yourself to anyone.</div>
+  </section>
+
+  <section id="scoreboard" class="reveal">
+    <div class="kicker">In the room</div>
+    <h2>The Scoreboard</h2>
+    <p class="sub">The big screen. Same data as your phone, built to be read from the back row.</p>
+    <p>You don't need to do anything to use the Scoreboard — just look up. It runs itself and shows the same live results you have in your hand.</p>
+
+    <div class="grid2">
+      <div>
+        <h3>What it cycles through</h3>
+        <ul>
+          <li><b>Featured competition</b> — one leaderboard promoted to full width across the top, when the crew has chosen one.</li>
+          <li><b>Brackets</b> — each tournament takes its turn, panning across if it's too wide to fit, or lighting up round by round if it isn't.</li>
+          <li><b>Leaderboards</b> — the top five of every competition.</li>
+          <li><b>Latest / Up Next</b> — one panel that swaps every two minutes, scrolling gently before it changes.</li>
+        </ul>
+      </div>
+      <div class="shot">
+        <div class="cap">Featured competition</div>
+        <div class="podium">
+          <div class="p one"><div class="rk">1</div><div class="nm2">Moses Grant</div><div class="sc2">89.09 pts</div></div>
+          <div class="pair">
+            <div class="p"><div class="rk">2</div><div class="nm2">Tony Alvarez</div><div class="sc2">84.12 pts</div></div>
+            <div class="p"><div class="rk">3</div><div class="nm2">Cal Whitaker</div><div class="sc2">83.55 pts</div></div>
+          </div>
+          <div class="pair">
+            <div class="p"><div class="rk">4</div><div class="nm2">Dre Whitfield</div><div class="sc2">81.40 pts</div></div>
+            <div class="p"><div class="rk">5</div><div class="nm2">Ben Hastings</div><div class="sc2">78.92 pts</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p>The leader sits alone at the top, then second and third, then fourth and fifth. If your name is in gold up there, the whole room can see it.</p>
+  </section>
+
+  <section id="colors" class="reveal">
+    <div class="kicker">Shorthand</div>
+    <h2>What the colours mean</h2>
+    <p class="sub">Two accents, used consistently everywhere.</p>
+    <div class="grid2">
+      <div class="card">
+        <h3 style="color:var(--flame)">Red</h3>
+        <p style="margin:0">Live and active. Winners' names, scores, competition labels, the <b>Up Next</b> tag, and the pulsing outline on a semifinal or final match card.</p>
+      </div>
+      <div class="card gold">
+        <h3 style="color:var(--gold)">Gold</h3>
+        <p style="margin:0">First place and milestones. The leader of any leaderboard, a featured competition, a new #1, a semifinal or final win, and a champion crowned.</p>
+      </div>
+    </div>
+    <p>If something on screen is gold, it's worth looking at.</p>
+  </section>
+
+  <section id="faq" class="reveal">
+    <div class="kicker">Quick answers</div>
+    <h2>Common questions</h2>
+
+    <div class="card">
+      <h3>My result isn't showing yet</h3>
+      <p style="margin:0">Results appear once the crew at that station enters them, which can lag the actual lift or match by a few minutes. If it's still missing after that, ask at the booth.</p>
+    </div>
+    <div class="card">
+      <h3>The screen looks stuck</h3>
+      <p style="margin:0">Close the tab and open <a href="https://champion-conf.vercel.app/">the app</a> again. It reloads in a second and picks up everything current.</p>
+    </div>
+    <div class="card">
+      <h3>Can I fix a wrong score?</h3>
+      <p style="margin:0">Not from your phone — corrections go through the booth so the record stays consistent. Bring it to the crew at that station and they'll sort it.</p>
+    </div>
+    <div class="card">
+      <h3>Do I need wifi?</h3>
+      <p style="margin:0">Any connection works, wifi or cellular. The app is small and light on data.</p>
+    </div>
+    <div class="card">
+      <h3>Where's the bracket I was watching?</h3>
+      <p style="margin:0">Brackets tab, then pick the tournament by name. The app remembers nothing between visits, so it always opens on Home.</p>
+    </div>
+  </section>
+
+  <footer>
+    <p style="margin:0 0 6px"><b>Champion</b> · Men's Conference 2026 · Revival Ministries International</p>
+    <p style="margin:0"><a href="https://champion-conf.vercel.app/">champion-conf.vercel.app</a> — questions at any competition booth.</p>
+  </footer>
+
+  </main>
+</div>
+
+<script>
+(function(){
+  var secs = [].slice.call(document.querySelectorAll('section'));
+  var seeds = [].slice.call(document.querySelectorAll('.seed'));
+  var reveals = [].slice.call(document.querySelectorAll('.reveal'));
+
+  if (!('IntersectionObserver' in window)) {
+    reveals.forEach(function(el){ el.classList.add('in'); });
+    return;
+  }
+  var show = new IntersectionObserver(function(es){
+    es.forEach(function(e){ if (e.isIntersecting) { e.target.classList.add('in'); show.unobserve(e.target); } });
+  }, { rootMargin: '0px 0px -12% 0px' });
+  reveals.forEach(function(el){ show.observe(el); });
+
+  var spy = new IntersectionObserver(function(es){
+    es.forEach(function(e){
+      if (!e.isIntersecting) return;
+      var i = secs.indexOf(e.target);
+      seeds.forEach(function(s, n){ s.classList.toggle('on', n === i); });
+    });
+  }, { rootMargin: '-45% 0px -50% 0px' });
+  secs.forEach(function(s){ spy.observe(s); });
+})();
+</script>
+</body>
+</html>

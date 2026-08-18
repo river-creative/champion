@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Champion App — Booth Manager Guide</title>
+<link rel="stylesheet" href="fonts.css">
+<style>
+:root{
+  --ink:#0a0f16; --panel:#0e141d; --card:#151d29; --sunk:#11161f;
+  --flame:#ec3013; --gold:#e8b44a;
+  --text:#f3f2f2; --mute:#8b93a1; --dim:#5c6675;
+  --line:rgba(243,242,242,.12); --hair:rgba(243,242,242,.07);
+  --rail:82px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth; -webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--ink); color:var(--text);
+  font-family:'Archivo',system-ui,-apple-system,'Segoe UI',sans-serif;
+  -webkit-font-smoothing:antialiased; line-height:1.6;
+}
+h1,h2,h3{margin:0; font-weight:900; font-style:italic; text-transform:uppercase; line-height:1.02}
+p{margin:0 0 14px}
+a{color:var(--flame)}
+a:hover{color:var(--text)}
+::selection{background:var(--flame); color:#fff}
+
+.wrap{max-width:1180px; margin:0 auto; padding:0 clamp(16px,4vw,40px)}
+
+.top{border-bottom:2px solid var(--gold); background:linear-gradient(180deg,#0d131c,var(--ink))}
+.top .wrap{padding-top:clamp(40px,7vw,74px); padding-bottom:clamp(30px,5vw,52px)}
+.eyebrow{font-size:10px; letter-spacing:3px; color:var(--gold); font-weight:800; text-transform:uppercase}
+h1{font-size:clamp(40px,9.5vw,92px); letter-spacing:-.02em; margin:14px 0 0}
+h1 .thin{-webkit-text-stroke:1.5px var(--gold); color:transparent; display:block}
+.lede{max-width:58ch; margin-top:20px; font-size:clamp(15px,2.2vw,18px); color:#c8ccd4}
+.cta{
+  display:inline-flex; align-items:center; gap:12px; margin-top:26px;
+  background:var(--flame); color:#fff; text-decoration:none;
+  padding:15px 24px; font-weight:900; letter-spacing:1.6px; text-transform:uppercase; font-size:12px;
+  border:2px solid var(--flame); transition:background .18s, color .18s, transform .18s;
+}
+.cta:hover{background:transparent; color:var(--flame); transform:translateX(4px)}
+.cta span{font-size:16px; line-height:1}
+
+.body{display:grid; grid-template-columns:var(--rail) 1fr; gap:clamp(16px,3vw,44px); padding:clamp(34px,6vw,64px) 0 90px}
+.rail{position:sticky; top:0; align-self:start; height:100vh; padding-top:46px; display:flex; flex-direction:column}
+.seed{position:relative; padding:0 0 0 2px; height:50px; display:flex; align-items:center; text-decoration:none}
+.seed b{font-size:11px; font-weight:900; font-style:italic; color:var(--dim); letter-spacing:1px; transition:color .25s; z-index:1; background:var(--ink); padding-right:7px}
+.seed::before{content:''; position:absolute; left:20px; right:0; top:50%; height:1px; background:var(--hair)}
+.seed::after{content:''; position:absolute; left:calc(100% - 1px); top:50%; bottom:-50px; width:1px; background:var(--hair)}
+.seed:last-child::after{display:none}
+.seed.on b{color:var(--gold)}
+.seed.on::before{background:var(--gold)}
+
+section{scroll-margin-top:24px; padding-bottom:clamp(46px,7vw,78px)}
+section > .kicker{font-size:10px; letter-spacing:2.6px; color:var(--gold); font-weight:800; text-transform:uppercase}
+h2{font-size:clamp(27px,5.2vw,44px); margin:10px 0 4px}
+.sub{color:var(--mute); font-size:14px; margin-bottom:22px}
+
+.card{background:var(--card); border:1px solid var(--line); border-top:2px solid var(--flame); padding:20px 22px; margin:18px 0}
+.card.gold{border-top-color:var(--gold)}
+h3{font-size:17px; margin:0 0 8px}
+ul,ol{margin:0 0 14px; padding-left:20px}
+li{margin-bottom:7px}
+li::marker{color:var(--gold); font-weight:800}
+.grid2{display:grid; grid-template-columns:repeat(auto-fit,minmax(262px,1fr)); gap:16px}
+.note{border-left:3px solid var(--gold); background:rgba(232,180,74,.07); padding:13px 16px; margin:18px 0; font-size:14px}
+.note b{color:var(--gold)}
+.warn{border-left:3px solid var(--flame); background:rgba(236,48,19,.08); padding:13px 16px; margin:18px 0; font-size:14px}
+.warn b{color:var(--flame)}
+code{background:#0d131c; border:1px solid var(--line); padding:2px 6px; font-size:12.5px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; color:var(--gold)}
+
+.btn{display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:6px; font-weight:800; font-size:13px; vertical-align:middle; margin:0 3px}
+.btn.x{background:rgba(236,48,19,.12); border:1px solid rgba(236,48,19,.6); color:var(--flame)}
+.btn.st{background:rgba(232,180,74,.15); border:1px solid rgba(232,180,74,.7); color:var(--gold)}
+.btn.gr{background:rgba(243,242,242,.04); border:1px solid var(--line); color:var(--dim)}
+
+.shot{background:var(--panel); border:1px solid var(--line); padding:16px; margin:18px 0}
+.shot .cap{font-size:9.5px; letter-spacing:2px; color:var(--dim); text-transform:uppercase; font-weight:700; margin-bottom:12px}
+.compcard{display:flex; align-items:stretch; background:var(--card); border:1px solid var(--line); border-left:2px solid var(--flame)}
+.compcard .grip{flex:none; width:34px; background:rgba(243,242,242,.04); border-right:1px solid var(--hair); color:var(--dim); display:flex; align-items:center; justify-content:center; font-size:15px}
+.compcard .mid{flex:1; min-width:0; padding:12px 14px}
+.compcard .ttl{display:flex; align-items:center; gap:9px}
+.compcard .nm{font-weight:900; font-style:italic; text-transform:uppercase; font-size:15px}
+.compcard .tg{font-size:9px; letter-spacing:1.5px; color:var(--mute); font-weight:700; margin-left:auto}
+.compcard .del{flex:none; display:flex; align-items:center; padding:0 11px 0 5px}
+.compcard .lt{font-size:11px; color:#c8ccd4; margin-top:4px}
+.lbrow{display:flex; align-items:center; gap:11px; padding:9px 11px; border-bottom:1px solid var(--hair); background:rgba(232,180,74,.08)}
+.lbrow.p{background:transparent}
+.lbrow .n{width:20px; font-weight:900; font-style:italic; font-size:13px; color:var(--gold)}
+.lbrow.p .n{color:var(--mute)}
+.lbrow .nm{flex:1; min-width:0; font-weight:700; font-size:13px; color:var(--gold)}
+.lbrow.p .nm{color:var(--text)}
+.lbrow .sc{font-weight:900; font-size:13px; color:var(--gold)}
+.lbrow.p .sc{color:var(--flame)}
+
+.step{display:flex; gap:16px; padding:16px 0; border-bottom:1px solid var(--hair)}
+.step:last-child{border-bottom:none}
+.step .no{flex:none; width:34px; height:34px; border:1px solid var(--gold); color:var(--gold); display:flex; align-items:center; justify-content:center; font-weight:900; font-style:italic; font-size:14px}
+.step .tx{flex:1; min-width:0}
+.step .tx b{display:block; font-size:14.5px; margin-bottom:3px}
+.step .tx span{font-size:13.5px; color:#c8ccd4}
+
+.reveal{opacity:0; transform:translateY(14px); transition:opacity .5s ease, transform .5s ease}
+.reveal.in{opacity:1; transform:none}
+
+footer{border-top:1px solid var(--line); padding:30px 0 60px; color:var(--dim); font-size:12px}
+footer a{font-weight:700}
+
+@media (max-width:820px){
+  .body{grid-template-columns:1fr; padding-top:26px}
+  .rail{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none !important; transition:none !important}
+  .reveal{opacity:1; transform:none}
+  html{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="eyebrow">Booth Manager Guide · Men's Conference 2026</div>
+    <h1>Champion<span class="thin">Run the board</span></h1>
+    <p class="lede">You enter the results. Everything the room sees — every phone, and the Scoreboard on the wall — comes from what you type at your station. This is how to do it quickly and how to fix it when it goes wrong.</p>
+    <a class="cta" href="https://champion-conf.vercel.app/">Open the Champion App <span>→</span></a>
+  </div>
+</header>
+
+<div class="wrap body">
+  <nav class="rail" aria-label="Sections">
+    <a class="seed" href="#admin"><b>01</b></a>
+    <a class="seed" href="#matches"><b>02</b></a>
+    <a class="seed" href="#bracketadmin"><b>03</b></a>
+    <a class="seed" href="#comps"><b>04</b></a>
+    <a class="seed" href="#results"><b>05</b></a>
+    <a class="seed" href="#fixing"><b>06</b></a>
+    <a class="seed" href="#scoreboard"><b>07</b></a>
+    <a class="seed" href="#reset"><b>08</b></a>
+    <a class="seed" href="#trouble"><b>09</b></a>
+  </nav>
+
+  <main>
+
+  <section id="admin" class="reveal">
+    <div class="kicker">Before anything else</div>
+    <h2>Turn Admin on</h2>
+    <p class="sub">Nothing can be entered or changed until you do.</p>
+    <ol>
+      <li>Open <a href="https://champion-conf.vercel.app/">the Champion App</a>.</li>
+      <li>Tap <b>ADMIN</b> in the top right.</li>
+      <li>Enter the PIN you were given at check-in.</li>
+    </ol>
+    <p>With Admin on you'll see entry fields, the drag handle <span class="btn gr">⋮⋮</span>, the feature star <span class="btn st">☆</span>, and delete buttons <span class="btn x">✕</span>. With it off the app looks exactly as attendees see it.</p>
+    <div class="warn"><b>The PIN is not in this document.</b> Don't write it on anything that stays at the booth, and don't leave a phone unlocked and unattended with Admin on. Anyone with the PIN can rewrite results for every station.</div>
+    <div class="note"><b>The PIN does two jobs.</b> It unlocks the controls, and it authorises your device to publish. Enter it once per device per session — if your saves stop appearing on the Scoreboard, re-enter it first.</div>
+  </section>
+
+  <section id="matches" class="reveal">
+    <div class="kicker">Brackets</div>
+    <h2>Scoring a match</h2>
+    <p class="sub">The most common thing you'll do all weekend.</p>
+
+    <div class="step"><div class="no">1</div><div class="tx"><b>Open the tournament</b><span>Brackets tab, then the tournament by name.</span></div></div>
+    <div class="step"><div class="no">2</div><div class="tx"><b>Tap either competitor in the match</b><span>A confirmation opens. Tapping a name doesn't score anything on its own.</span></div></div>
+    <div class="step"><div class="no">3</div><div class="tx"><b>Enter both scores if the tournament tracks them</b><span>The dialog updates live to show who will advance.</span></div></div>
+    <div class="step"><div class="no">4</div><div class="tx"><b>Confirm</b><span>The winner moves to the next round and the result publishes to every device within about three seconds.</span></div></div>
+
+    <div class="note"><b>The scores decide the winner, not the name you tapped.</b> Tap Marcus Reed, then enter 7 for him and 21 for Jake Rollins, and Jake advances. The dialog tells you who's going through before you confirm — read that line. Ties and blank scores fall back to the name you tapped.</div>
+
+    <h3 style="margin-top:26px">Featuring a match</h3>
+    <p>Tap the <span class="btn st">☆</span> on any unplayed match to mark it as the one to watch. It jumps to the front of Up Next everywhere, on phones and on the Scoreboard. One featured match per tournament — starring another moves it.</p>
+
+    <h3>Fixing the wrong matchup</h3>
+    <p>Drag one competitor's name onto another to swap them. You'll be asked to confirm, because it changes who plays whom. Use this when someone is entered in the wrong slot, before the match is played.</p>
+  </section>
+
+  <section id="bracketadmin" class="reveal">
+    <div class="kicker">Brackets</div>
+    <h2>Setting up a tournament</h2>
+    <p class="sub">Entrants in, bracket out.</p>
+    <ol>
+      <li>Open the tournament and find the <b>Entrants</b> box (Admin only).</li>
+      <li>Type or paste the names, <b>one per line</b>.</li>
+      <li>Tap <b>Apply</b>.</li>
+    </ol>
+    <p>The bracket regenerates from that list. If the count isn't a power of two the app adds byes automatically — a competitor with a <b>BYE</b> advances without playing, which is normal.</p>
+    <div class="warn"><b>Apply wipes the tournament.</b> Every score, every winner, every featured pick for that tournament is deleted and the tree is rebuilt from scratch. Use it to set up or to reset — never to add one late entry mid-competition, because you'll lose every result already recorded.</div>
+  </section>
+
+  <section id="comps" class="reveal">
+    <div class="kicker">Compete</div>
+    <h2>Managing competitions</h2>
+    <p class="sub">Adding, ordering, featuring, removing.</p>
+
+    <div class="shot">
+      <div class="cap">Competition card, Admin on</div>
+      <div class="compcard">
+        <div class="grip">⋮⋮</div>
+        <div class="mid">
+          <div class="ttl"><span class="btn st">★</span><span class="nm">Benchpress 24-45</span><span class="tg">DOTS · POINTS</span></div>
+          <div class="lt">Leader: Moses Grant · 89.09 pts</div>
+        </div>
+        <div class="del"><span class="btn x">✕</span></div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div>
+        <h3><span class="btn gr">⋮⋮</span> Reorder</h3>
+        <p>Press and drag the handle to move a competition up or down. The order you set here is the order the Scoreboard uses. Put whatever is running right now near the top.</p>
+      </div>
+      <div>
+        <h3><span class="btn st">☆</span> Feature</h3>
+        <p>Promotes one competition to a full-width panel across the top of the Scoreboard, showing five places instead of the usual top five in a small card. Tap again to clear it. Only one at a time.</p>
+      </div>
+    </div>
+
+    <h3 style="margin-top:22px">Adding a competition</h3>
+    <p>Scroll to <b>Add Competition</b>, type the name exactly as it should appear on the big screen, then pick the type:</p>
+    <ul>
+      <li><b>Timed</b> — m:ss or seconds, fastest wins.</li>
+      <li><b>Weight</b> — pounds, heaviest wins.</li>
+      <li><b>Count</b> — reps or points, most wins.</li>
+      <li><b>Bench · DOTS</b> — body weight and lift in pounds, ranked on DOTS points.</li>
+    </ul>
+    <p>The type sets how the leaderboard sorts and which fields you get. It can't be changed afterwards — to switch, delete and recreate.</p>
+
+    <div class="warn"><b><span class="btn x">✕</span> deletes everything.</b> Removing a competition takes its leaderboard and its whole update history with it. To empty a competition but keep it, use <b>Clear results</b> instead — see the next section.</div>
+  </section>
+
+  <section id="results" class="reveal">
+    <div class="kicker">Compete</div>
+    <h2>Entering results</h2>
+    <p class="sub">Three fields and a plus button.</p>
+    <ol>
+      <li>Open the competition.</li>
+      <li>Type the competitor's <b>name</b>.</li>
+      <li>Enter <b>BW</b> (body weight) if the competition asks for it, then the <b>score</b>.</li>
+      <li>Tap <b>+</b>.</li>
+    </ol>
+    <p>The leaderboard re-sorts immediately and the app writes an update automatically — a new leader, a move into the top five, a personal improvement. Those updates are what fill the Latest panel on the Scoreboard, so you rarely need to post anything by hand.</p>
+
+    <div class="shot">
+      <div class="cap">Leaderboard, Admin on — every place is visible</div>
+      <div style="border:1px solid var(--line)">
+        <div class="lbrow"><span class="n">1</span><span class="nm">Moses Grant</span><span class="sc">89.09 pts</span><span class="btn x">✕</span></div>
+        <div class="lbrow p"><span class="n">2</span><span class="nm">Tony Alvarez</span><span class="sc">84.12 pts</span><span class="btn x">✕</span></div>
+        <div class="lbrow p"><span class="n">3</span><span class="nm">Cal Whitaker</span><span class="sc">83.55 pts</span><span class="btn x">✕</span></div>
+      </div>
+    </div>
+
+    <div class="note"><b>Admin sees every place; attendees see the top five.</b> That's deliberate — you need to reach the person sitting in ninth to fix their score.</div>
+
+    <h3 style="margin-top:22px">Posting an update by hand</h3>
+    <p>Use the <b>Post update</b> box for anything the scores can't say: "Station 3 opens at 2 PM", "Masters flight delayed 20 minutes". It appears in Latest on every phone and on the Scoreboard.</p>
+  </section>
+
+  <section id="fixing" class="reveal">
+    <div class="kicker">Corrections</div>
+    <h2>Fixing a mistake</h2>
+    <p class="sub">Typos happen at speed. All of them are recoverable.</p>
+
+    <div class="card">
+      <h3>Wrong score for someone already on the board</h3>
+      <p style="margin:0">Re-enter the <b>same name</b> with the correct score and tap <b>+</b>. It overwrites their row rather than adding a second one. Names match regardless of capitalisation.</p>
+    </div>
+
+    <div class="card">
+      <h3>Someone shouldn't be on this leaderboard</h3>
+      <p style="margin:0">Tap the <span class="btn x">✕</span> at the end of their row and confirm. Only that result is removed.</p>
+    </div>
+
+    <div class="card">
+      <h3>A bad update is still showing on the big screen</h3>
+      <p style="margin:0">Deleting a result does <b>not</b> delete the update it generated. If a bogus "New leader" line is still up there, scroll to Updates and tap the <span class="btn x">✕</span> on that entry too. <b>Fixing a bad score is usually two deletions</b> — the row and the update.</p>
+    </div>
+
+    <div class="card gold">
+      <h3>Start this competition over</h3>
+      <p style="margin:0"><b>Clear results</b>, under the entry fields, empties the leaderboard and the updates while keeping the competition itself — same name, same type, same settings. This is the one to use between sessions or when practice data needs to go.</p>
+    </div>
+
+    <div class="card">
+      <h3>Wrong winner advanced in a bracket</h3>
+      <p style="margin:0">Reapply the entrants list to rebuild that tournament, then re-enter the results. There's no undo on a single match, so it's worth reading the confirmation line before you tap through.</p>
+    </div>
+  </section>
+
+  <section id="scoreboard" class="reveal">
+    <div class="kicker">The big screen</div>
+    <h2>The Scoreboard</h2>
+    <p class="sub">Runs itself once it's up. Your job is to get it up and leave it alone.</p>
+
+    <div class="step"><div class="no">1</div><div class="tx"><b>Open the Scoreboard on the display machine</b><span>Use the address the tech team gives you — it's not linked from here or from the app.</span></div></div>
+    <div class="step"><div class="no">2</div><div class="tx"><b>Go fullscreen</b><span>F11 on Windows, Ctrl+Cmd+F on Mac. Hide the cursor by leaving it still.</span></div></div>
+    <div class="step"><div class="no">3</div><div class="tx"><b>Stop the display sleeping</b><span>Set the machine to never sleep and disable the screensaver before the session starts, not during it.</span></div></div>
+    <div class="step"><div class="no">4</div><div class="tx"><b>Hard-refresh once</b><span>Ctrl+Shift+R. This clears any old cached copy — the single most common reason a Scoreboard looks frozen.</span></div></div>
+    <div class="step"><div class="no">5</div><div class="tx"><b>Confirm it's live</b><span>Enter one test result at a booth and watch it appear. Then remove the test row.</span></div></div>
+
+    <h3 style="margin-top:26px">What it does on its own</h3>
+    <ul>
+      <li><b>Featured competition</b> — full width across the top, when one is starred. Leader centred, then 2 and 3, then 4 and 5.</li>
+      <li><b>Brackets</b> — each tournament takes a turn every two minutes. Wide brackets pan across; ones that already fit light up round by round instead.</li>
+      <li><b>Leaderboards</b> — top five of every competition, in the order you set with the drag handle.</li>
+      <li><b>Latest / Up Next</b> — swaps every two minutes, holding still for 90 seconds then scrolling slowly for the last 30.</li>
+      <li><b>Up Next</b> — one match from each bracket before any bracket repeats, later rounds first, featured matches first of all.</li>
+    </ul>
+    <p>Semifinals and finals glow gold. New leaders, semifinal and final wins, and champions appear in gold in Latest. Nothing on the Scoreboard needs a click.</p>
+  </section>
+
+  <section id="reset" class="reveal">
+    <div class="kicker">September 1</div>
+    <h2>Clearing the practice data</h2>
+    <p class="sub">Do this the day before, not on the morning of.</p>
+    <ol>
+      <li>Admin on.</li>
+      <li><b>Each bracket</b> → Entrants box → paste the real roster → <b>Apply</b>. This clears every practice result for that tournament.</li>
+      <li><b>Each competition</b> → <b>Clear results</b> → confirm.</li>
+      <li>Delete competitions you don't need with <span class="btn x">✕</span>; add the ones you do.</li>
+      <li>Set the running order with the drag handle, and star the competition that should lead the Scoreboard.</li>
+      <li>Open the Scoreboard and confirm it matches.</li>
+    </ol>
+    <p>Budget fifteen minutes. Doing it a day early means any surprise is a problem you have time to solve.</p>
+  </section>
+
+  <section id="trouble" class="reveal">
+    <div class="kicker">When something's off</div>
+    <h2>Troubleshooting</h2>
+
+    <div class="card">
+      <h3>My entries aren't reaching the Scoreboard</h3>
+      <p style="margin:0">Re-enter the PIN — that's what authorises your device to publish. If it still doesn't stick, check you have a connection and try one entry again.</p>
+    </div>
+    <div class="card">
+      <h3>The Scoreboard is showing old data</h3>
+      <p style="margin:0">Hard-refresh it: <code>Ctrl+Shift+R</code>. A cached page is far more common than a real fault.</p>
+    </div>
+    <div class="card">
+      <h3>Two people are entering the same competition</h3>
+      <p style="margin:0">Last save wins. That's intentional — an entry never silently reverts under your hands — but agree who owns each station so you're not overwriting each other.</p>
+    </div>
+    <div class="card">
+      <h3>Everything looks broken</h3>
+      <p style="margin:0">Close the tab, reopen <a href="https://champion-conf.vercel.app/">the app</a>, re-enter the PIN. Your data lives on the server, not on your phone — nothing is lost by reloading.</p>
+    </div>
+    <div class="card gold">
+      <h3>Still stuck</h3>
+      <p style="margin:0">Get the tech team. Don't start deleting competitions to try to fix a display problem — that destroys real results and won't help.</p>
+    </div>
+  </section>
+
+  <footer>
+    <p style="margin:0 0 6px"><b>Champion</b> · Booth Manager Guide · Revival Ministries International</p>
+    <p style="margin:0"><a href="https://champion-conf.vercel.app/">champion-conf.vercel.app</a> — keep the PIN off the booth table.</p>
+  </footer>
+
+  </main>
+</div>
+
+<script>
+(function(){
+  var secs = [].slice.call(document.querySelectorAll('section'));
+  var seeds = [].slice.call(document.querySelectorAll('.seed'));
+  var reveals = [].slice.call(document.querySelectorAll('.reveal'));
+
+  if (!('IntersectionObserver' in window)) {
+    reveals.forEach(function(el){ el.classList.add('in'); });
+    return;
+  }
+  var show = new IntersectionObserver(function(es){
+    es.forEach(function(e){ if (e.isIntersecting) { e.target.classList.add('in'); show.unobserve(e.target); } });
+  }, { rootMargin: '0px 0px -12% 0px' });
+  reveals.forEach(function(el){ show.observe(el); });
+
+  var spy = new IntersectionObserver(function(es){
+    es.forEach(function(e){
+      if (!e.isIntersecting) return;
+      var i = secs.indexOf(e.target);
+      seeds.forEach(function(s, n){ s.classList.toggle('on', n === i); });
+    });
+  }, { rootMargin: '-45% 0px -50% 0px' });
+  secs.forEach(function(s){ spy.observe(s); });
+})();
+</script>
+</body>
+</html>
