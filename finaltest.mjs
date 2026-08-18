@@ -26,7 +26,7 @@ const pass = (n, c, x = '') => console.log((c ? 'PASS' : 'FAIL') + '  ' + n.padE
 /* ------------------------------------------------- leader card dimensions */
 console.log('\n-- featured leader card --');
 const bh = fs.readFileSync('./board.html', 'utf8');
-const top = bh.slice(bh.indexOf('margin-top:18px;display:flex'), bh.indexOf('{{ featSecond }}'));
+const top = bh.slice(bh.indexOf('margin-top:12px;display:flex'), bh.indexOf('{{ featSecond }}'));
 const second = bh.slice(bh.indexOf('{{ featSecond }}'), bh.indexOf('{{ featThird }}'));
 
 const grab = (block, re) => (block.match(re) || [])[1];
@@ -37,8 +37,8 @@ pass('leader name type matches 2nd/3rd',
 pass('leader score type matches', grab(top, /font-weight:900;font-size:(\d+)px;color:\{\{ row\.scoreColor/) ===
      grab(second, /font-weight:900;font-size:(\d+)px;color:\{\{ row\.scoreColor/),
      'both ' + grab(top, /font-weight:900;font-size:(\d+)px;color:\{\{ row\.scoreColor/) + 'px');
-pass('leader padding matches', top.includes('padding:11px 16px') && second.includes('padding:11px 16px'));
-pass('leader is half-width like the pairs', top.includes('width:calc(50% - 7px)'));
+pass('leader padding matches', top.includes('padding:8px 12px') && second.includes('padding:8px 12px'));
+pass('leader is half-width like the pairs', top.includes('width:calc(50% - 5px)'));
 pass('leader stays centred', top.includes('justify-content:center'));
 pass('gold treatment kept', top.includes('rgba(232,180,74,0.45)') && top.includes('box-shadow:0 0 18px rgba(232,180,74,0.18)'));
 pass('no oversized type left behind', !top.includes('font-size:34px') && !top.includes('font-size:30px'));

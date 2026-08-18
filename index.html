@@ -327,6 +327,9 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
                 <span style="width:24px;font-weight:900;font-style:italic;color:{{ row.rankColor }};font-size:14px">{{ row.rank }}</span>
                 <span style="flex:1;min-width:0"><span style="font-weight:700;font-size:14px;color:{{ row.nameColor }}">{{ row.name }}</span><span style="font-size:10.5px;color:#8b93a1;margin-left:8px">{{ row.meta }}</span></span>
                 <span style="font-weight:900;font-size:14px;color:{{ row.scoreColor }};flex:none">{{ row.score }}</span>
+                <sc-if value="{{ adminOn }}" hint-placeholder-val="{{ false }}">
+                  <button onClick="{{ row.remove }}" title="Remove this result" style="flex:none;width:26px;height:26px;background:rgba(236,48,19,0.12);border:1px solid rgba(236,48,19,0.55);color:#ec3013;font-size:11px;font-weight:800;cursor:pointer;border-radius:6px;padding:0;line-height:1">✕</button>
+                </sc-if>
               </div>
             </sc-for>
           </div>
@@ -338,6 +341,12 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
               </sc-if>
               <input value="{{ boardScore }}" onChange="{{ onBoardScore }}" placeholder="{{ scorePlaceholder }}" style="flex:1;min-width:0;background:#0d131c;border:1px solid rgba(243,242,242,0.2);color:#f3f2f2;padding:9px;font-size:12px">
               <button onClick="{{ addBoardRow }}" style="flex:none;background:#ec3013;color:#fff;border:none;padding:9px 14px;font-weight:900;cursor:pointer">+</button>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:10px">
+              <span style="font-size:10px;color:#5c6675;letter-spacing:0.5px">Re-enter a name to overwrite that result. Admin sees every place, not just the top 5.</span>
+              <sc-if value="{{ cCanClear }}" hint-placeholder-val="{{ true }}">
+                <button onClick="{{ clearComp }}" style="flex:none;background:none;border:1px solid rgba(236,48,19,0.55);color:#ec3013;padding:7px 12px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;font-size:9.5px;cursor:pointer;border-radius:6px">Clear results</button>
+              </sc-if>
             </div>
           </sc-if>
         </div>
@@ -352,9 +361,14 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
         </sc-if>
         <div style="display:flex;flex-direction:column;gap:8px">
           <sc-for list="{{ cUpdates }}" as="u" hint-placeholder-count="3">
-            <div style="background:#151d29;border:1px solid rgba(243,242,242,0.1);padding:11px 13px">
-              <div style="font-size:10px;color:#8b93a1;margin-bottom:4px">{{ u.time }}</div>
-              <div style="font-size:13px;line-height:1.45">{{ u.text }}</div>
+            <div style="background:#151d29;border:1px solid rgba(243,242,242,0.1);padding:11px 13px;display:flex;align-items:flex-start;gap:10px">
+              <div style="flex:1;min-width:0">
+                <div style="font-size:10px;color:#8b93a1;margin-bottom:4px">{{ u.time }}</div>
+                <div style="font-size:13px;line-height:1.45;color:{{ u.color }}">{{ u.text }}</div>
+              </div>
+              <sc-if value="{{ adminOn }}" hint-placeholder-val="{{ false }}">
+                <button onClick="{{ u.remove }}" title="Remove this update" style="flex:none;width:26px;height:26px;background:rgba(236,48,19,0.12);border:1px solid rgba(236,48,19,0.55);color:#ec3013;font-size:11px;font-weight:800;cursor:pointer;border-radius:6px;padding:0;line-height:1">✕</button>
+              </sc-if>
             </div>
           </sc-for>
         </div>
@@ -683,8 +697,15 @@ class Component extends DCLogic {
       navEventColor: (s.view === 'events' || s.view === 'event') ? '#ec3013' : '#8b93a1',
       screenTitle: { home: 'Dashboard', brackets: 'Brackets', bracket: 'Bracket', events: 'Competitions', event: 'Competition' }[s.view],
       confirmOpen: !!cf,
-      confirmTitle: cf ? (cf.kind === 'advance' ? 'Advance competitor' : cf.kind === 'swap' ? 'Match change' : 'Remove competition') : '',
-      confirmBody: cf ? (cf.kind === 'advance' ? this.scoreWinner(cf) + ' wins over ' + (this.scoreWinner(cf) === cf.aName ? cf.bName : cf.aName) + ' and moves to the next round.' : cf.kind === 'swap' ? 'Swap ' + cf.n1 + ' with ' + cf.n2 + '? This changes the matchups.' : 'Remove "' + cf.name + '" and all of its results? This cannot be undone.') : '',
+      confirmTitle: cf ? ({ advance: 'Advance competitor', swap: 'Match change', delcomp: 'Remove competition',
+        delrow: 'Remove result', clearcomp: 'Clear all results', delupdate: 'Remove update' }[cf.kind] || 'Confirm') : '',
+      confirmBody: cf ? (
+        cf.kind === 'advance' ? this.scoreWinner(cf) + ' wins over ' + (this.scoreWinner(cf) === cf.aName ? cf.bName : cf.aName) + ' and moves to the next round.'
+        : cf.kind === 'swap' ? 'Swap ' + cf.n1 + ' with ' + cf.n2 + '? This changes the matchups.'
+        : cf.kind === 'delrow' ? 'Remove ' + cf.name + ' from this leaderboard? Their result and rank are deleted. Any update mentioning them stays until you remove it.'
+        : cf.kind === 'clearcomp' ? 'Delete every result and update in "' + cf.name + '"? The competition itself stays, with its name and type. This cannot be undone.'
+        : cf.kind === 'delupdate' ? 'Remove this update?  "' + (cf.text || '').slice(0, 90) + '"'
+        : 'Remove "' + cf.name + '" and all of its results? This cannot be undone.') : '',
       confirmScored: !!(cf && cf.kind === 'advance' && cf.scored),
       confirmAName: cf && cf.aName || '', confirmBName: cf && cf.bName || '',
       confirmSa: cf ? cf.sa : '', confirmSb: cf ? cf.sb : '',
@@ -696,6 +717,15 @@ class Component extends DCLogic {
         if (c.kind === 'delcomp') {
           const d = { ...data, competitions: data.competitions.filter(x => x.id !== c.cid) };
           this.setState({ confirm: null }); this.save(d); return;
+        }
+        if (c.kind === 'delrow' || c.kind === 'clearcomp' || c.kind === 'delupdate') {
+          const comps = data.competitions.map(x => {
+            if (x.id !== c.cid) return x;
+            if (c.kind === 'delrow') return { ...x, board: (x.board || []).filter(r => r.name !== c.name) };
+            if (c.kind === 'clearcomp') return { ...x, board: [], updates: [] };
+            return { ...x, updates: (x.updates || []).filter(u => u.ts !== c.ts) };
+          });
+          this.setState({ confirm: null }); this.save({ ...data, competitions: comps }); return;
         }
         const t = data.tournaments.find(x => x.id === s.tId); if (!t) { this.setState({ confirm: null }); return; }
         if (c.kind === 'advance') {
@@ -916,7 +946,7 @@ class Component extends DCLogic {
       base.cHasBoard = s.adminOn || (c.board && c.board.length > 0);
       base.cHasBW = !!c.hasBW;
       base.scorePlaceholder = c.unit === 'TIME' ? 'm:ss' : 'Score';
-      const sorted = this.sortBoard(c).slice(0, 5);
+      const sorted = s.adminOn ? this.sortBoard(c) : this.sortBoard(c).slice(0, 5);
       base.cBoard = sorted.map((row, i) => ({
         rank: i + 1, name: row.name,
         meta: c.dots ? ('BW ' + (row.bw || '—') + ' · LIFT ' + row.score + ' LBS')
@@ -926,9 +956,13 @@ class Component extends DCLogic {
         rankColor: i === 0 ? '#e8b44a' : '#8b93a1',
         nameColor: i === 0 ? '#e8b44a' : '#f3f2f2',
         scoreColor: i === 0 ? '#e8b44a' : '#ec3013',
-        bg: i === 0 ? 'rgba(232,180,74,0.08)' : 'transparent'
+        bg: i === 0 ? 'rgba(232,180,74,0.08)' : 'transparent',
+        remove: () => this.setState({ confirm: { kind: 'delrow', cid: c.id, name: row.name } })
       }));
-      base.cUpdates = c.updates.map(u => ({ time: this.rel(u.ts), text: u.text, color: this.isGoldUpdate(u) ? '#e8b44a' : '#c8ccd4' }));
+      base.cRowCount = (c.board || []).length;
+      base.cCanClear = !!((c.board && c.board.length) || (c.updates && c.updates.length));
+      base.clearComp = () => this.setState({ confirm: { kind: 'clearcomp', cid: c.id, name: c.name } });
+      base.cUpdates = c.updates.map(u => ({ time: this.rel(u.ts), text: u.text, color: this.isGoldUpdate(u) ? '#e8b44a' : '#c8ccd4', remove: () => this.setState({ confirm: { kind: 'delupdate', cid: c.id, ts: u.ts, text: u.text } }) }));
       base.addBoardRow = () => {
         if (!s.boardName.trim() || !s.boardScore.trim()) return;
         const name = s.boardName.trim(), scoreVal = s.boardScore.trim();
