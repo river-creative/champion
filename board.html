@@ -102,9 +102,9 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
 
     <div style="flex:1;min-height:0" ref="{{ gridRef }}">
     <sc-if value="{{ stageBrackets }}" hint-placeholder-val="{{ true }}">
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;height:100%;align-items:stretch">
       <sc-for list="{{ bPanels }}" as="p" hint-placeholder-count="3">
-        <div style="border:1px solid rgba(243,242,242,0.12);border-top:2px solid #ec3013;padding:16px 18px;background:#0e141d;overflow:hidden;box-shadow:{{ p.shadow }};transition:box-shadow .5s ease">
+        <div style="border:1px solid rgba(243,242,242,0.12);border-top:2px solid #ec3013;padding:16px 18px;background:#0e141d;overflow:hidden;box-shadow:{{ p.shadow }};transition:box-shadow .5s ease;display:flex;flex-direction:column">
           <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px">
             <span style="font-weight:900;font-style:italic;text-transform:uppercase;font-size:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.name }}</span>
             <span style="font-size:10px;letter-spacing:2px;color:#8b93a1;font-weight:700;text-transform:uppercase;flex:none">{{ p.status }}</span>
@@ -112,7 +112,7 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
           <sc-if value="{{ p.champion }}" hint-placeholder-val="{{ false }}">
             <div style="margin-top:8px;display:inline-block;background:#ec3013;color:#fff;font-size:11px;font-weight:800;letter-spacing:1.5px;padding:4px 10px;text-transform:uppercase">🏆 CHAMPION: {{ p.champion }}</div>
           </sc-if>
-          <div style="margin-top:14px;overflow:hidden;height:{{ p.outerH }}px">
+          <div style="margin-top:14px;overflow:hidden;flex:1;min-height:0">
           <div style="display:flex;width:max-content;transform:scale({{ p.z }}) translate({{ p.tx }}px,{{ p.ty }}px);transform-origin:0 0;transition:transform {{ p.dur }}s ease-in-out">
             <sc-for list="{{ p.cols }}" as="col" hint-placeholder-count="3">
               <sc-if value="{{ col.isRound }}" hint-placeholder-val="{{ true }}">
@@ -181,35 +181,35 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
         </sc-if>
         <sc-if value="{{ lb.isNews }}" hint-placeholder-val="{{ false }}">
       <div style="border:1px solid rgba(243,242,242,0.12);border-top:2px solid #ec3013;padding:16px 18px;background:#0e141d;overflow:hidden;display:flex;flex-direction:column">
-        <div style="display:flex;align-items:center;gap:8px;flex:none">
-          <span style="width:8px;height:8px;background:#ec3013;animation:livepulse 1.6s infinite"></span>
-          <span style="font-weight:900;font-style:italic;text-transform:uppercase;font-size:18px">{{ newsTitle }}</span>
+        <div style="display:flex;align-items:center;gap:10px;flex:none">
+          <span style="width:10px;height:10px;background:#ec3013;animation:livepulse 1.6s infinite"></span>
+          <span style="font-weight:900;font-style:italic;text-transform:uppercase;font-size:22px">{{ newsTitle }}</span>
         </div>
-        <div style="margin-top:12px;height:214px;overflow:hidden">
-          <div ref="{{ newsRef }}" style="display:flex;flex-direction:column;gap:8px;transform:translateY(-{{ newsY }}px);transition:transform {{ newsDur }}s linear">
+        <div ref="{{ newsViewRef }}" style="margin-top:14px;flex:1;min-height:0;overflow:hidden">
+          <div ref="{{ newsRef }}" style="display:flex;flex-direction:column;gap:12px;transform:translateY(-{{ newsY }}px);transition:transform {{ newsDur }}s linear">
             <sc-if value="{{ newsIsLatest }}" hint-placeholder-val="{{ true }}">
               <sc-for list="{{ feed }}" as="f" hint-placeholder-count="5">
-                <div style="border-bottom:1px solid rgba(243,242,242,0.08);padding-bottom:7px">
-                  <div style="display:flex;justify-content:space-between;gap:8px">
-                    <span style="font-size:8.5px;letter-spacing:1.5px;color:{{ f.compColor }};font-weight:700;text-transform:uppercase">{{ f.comp }}</span>
-                    <span style="font-size:9px;color:#5c6675;flex:none">{{ f.time }}</span>
+                <div style="border-bottom:1px solid rgba(243,242,242,0.08);padding-bottom:11px">
+                  <div style="display:flex;justify-content:space-between;gap:10px">
+                    <span style="font-size:11px;letter-spacing:1.5px;color:{{ f.compColor }};font-weight:700;text-transform:uppercase">{{ f.comp }}</span>
+                    <span style="font-size:11px;color:#5c6675;flex:none">{{ f.time }}</span>
                   </div>
-                  <div style="font-weight:700;font-size:11.5px;line-height:1.35;margin-top:2px;color:{{ f.titleColor }}">{{ f.title }}</div>
+                  <div style="font-weight:700;font-size:17px;line-height:1.35;margin-top:4px;color:{{ f.titleColor }}">{{ f.title }}</div>
                 </div>
               </sc-for>
             </sc-if>
             <sc-if value="{{ newsIsNext }}" hint-placeholder-val="{{ false }}">
               <sc-for list="{{ upNext }}" as="u" hint-placeholder-count="5">
-                <div style="border-top:{{ u.topW }}px solid {{ u.topColor }};animation:{{ u.topAnim }};padding-top:{{ u.topPad }}px;border-bottom:1px solid {{ u.lineColor }};padding-bottom:7px">
-                  <div style="display:flex;justify-content:space-between;gap:8px">
-                    <span style="font-size:8.5px;letter-spacing:1.5px;color:#ec3013;font-weight:700;text-transform:uppercase">{{ u.comp }}</span>
-                    <span style="font-size:9px;color:#5c6675;flex:none">{{ u.round }}</span>
+                <div style="border-top:{{ u.topW }}px solid {{ u.topColor }};animation:{{ u.topAnim }};padding-top:{{ u.topPad }}px;border-bottom:1px solid {{ u.lineColor }};padding-bottom:11px">
+                  <div style="display:flex;justify-content:space-between;gap:10px">
+                    <span style="font-size:11px;letter-spacing:1.5px;color:#ec3013;font-weight:700;text-transform:uppercase">{{ u.comp }}</span>
+                    <span style="font-size:11px;color:#5c6675;flex:none">{{ u.round }}</span>
                   </div>
-                  <div style="display:flex;align-items:center;gap:6px;margin-top:3px">
-                    <span style="flex:none;color:#ec3013;font-size:10px">{{ u.star }}</span>
-                    <span style="font-weight:700;font-size:11.5px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ u.a }}</span>
-                    <span style="flex:none;font-size:9.5px;font-weight:900;font-style:italic;text-transform:uppercase;color:{{ u.vsColor }};animation:{{ u.vsAnim }}">vs</span>
-                    <span style="font-weight:700;font-size:11.5px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ u.b }}</span>
+                  <div style="display:flex;align-items:center;gap:8px;margin-top:5px">
+                    <span style="flex:none;color:#ec3013;font-size:14px">{{ u.star }}</span>
+                    <span style="font-weight:700;font-size:17px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ u.a }}</span>
+                    <span style="flex:none;font-size:13px;font-weight:900;font-style:italic;text-transform:uppercase;color:{{ u.vsColor }};animation:{{ u.vsAnim }}">vs</span>
+                    <span style="font-weight:700;font-size:17px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ u.b }}</span>
                   </div>
                 </div>
               </sc-for>
@@ -235,10 +235,15 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
 class Component extends DCLogic {
   state = { data: null, now: Date.now(), panelW: 0, panelH: 0, offs: {}, focusIdx: -1, sweepCol: -1, stage: 'brackets', compPage: 0, newsMode: 'latest', newsY: 0, newsDur: 0 };
   LS = 'champion-app-v2';
+  PANEL_CHROME = 92;                 // title, padding and margins around the tree
   measure = () => {
     const el = this._grid; if (!el) return;
     const pw = Math.floor((el.clientWidth - 40) / 3) - 38;
-    if (Math.abs(pw - (this.state.panelW || 0)) > 2) this.setState({ panelW: pw });
+    const ph = Math.max(180, el.clientHeight - this.PANEL_CHROME);
+    const patch = {};
+    if (Math.abs(pw - (this.state.panelW || 0)) > 2) patch.panelW = pw;
+    if (Math.abs(ph - (this.state.panelH || 0)) > 2) patch.panelH = ph;
+    if (Object.keys(patch).length) this.setState(patch);
   };
   gridRef = (el) => { this._grid = el; if (el) this.measure(); };
   componentDidMount() {
@@ -257,14 +262,16 @@ class Component extends DCLogic {
 
   // Latest <-> Up Next rotation. Each panel holds still, then creeps down at
   // 15 px/s through the final 30s so the tail is readable before the swap.
-  NEWS_VH = 214; NEWS_PERIOD = 120000; NEWS_LEAD = 30000; NEWS_SPEED = 15;
+  NEWS_VH = 214; NEWS_PERIOD = 90000; NEWS_LEAD = 30000; NEWS_SPEED = 15;
+  newsViewRef = (el) => { this._newsView = el; };
   newsRef = (el) => { this._news = el; };
   newsCycle = () => {
     clearTimeout(this._nt);
     this.setState({ newsY: 0, newsDur: 0 });
     this._nt = setTimeout(() => {
       const el = this._news;
-      const over = el ? Math.max(0, el.scrollHeight - this.NEWS_VH) : 0;
+      const vh = (this._newsView && this._newsView.clientHeight) || this.NEWS_VH;
+      const over = el ? Math.max(0, el.scrollHeight - vh) : 0;
       const dist = Math.min(over, this.NEWS_SPEED * (this.NEWS_LEAD / 1000));
       if (dist > 2) this.setState({ newsY: Math.round(dist), newsDur: dist / this.NEWS_SPEED });
       this._nt = setTimeout(() => {
@@ -278,7 +285,11 @@ class Component extends DCLogic {
     const pw = this.state.panelW || 480;
     const L = t.rounds.length;
     const totalW = L * this.RW + (L - 1) * this.CW;
-    const scale = Math.min(1, pw / (2 * this.RW + this.CW));
+    const h0 = Math.max(2, t.rounds[0].length) * 52;
+    const availH = this.state.panelH || 320;
+    // Fill the panel: as large as the width or the height allows, whichever
+    // runs out first, so the whole tree is legible in the overview.
+    const scale = Math.max(0.55, Math.min(pw / totalW, availH / (h0 + 20)));
     const view = pw / scale;
     const maxOff = Math.max(0, totalW - view);
     let hi = 0;
@@ -287,59 +298,70 @@ class Component extends DCLogic {
     if (fin.winner || fin.a || fin.b) hi = L - 1;
     const colRight = hi * (this.RW + this.CW) + this.RW;
     const staticOff = Math.min(maxOff, Math.max(0, colRight - view));
-    const h = Math.max(2, t.rounds[0].length) * 52;
-    return { scale, totalW, maxOff, staticOff, h, outerH: Math.ceil((h + 20) * scale) + 2 };
+    // Short trees would otherwise hang from the top of a tall panel.
+    const centerY = Math.max(0, (availH / scale - (h0 + 20)) / 2);
+    return { scale, totalW, maxOff, staticOff, h: h0, outerH: availH, centerY };
   }
 
   // Frame one round column: how far to scale up, and where to sit so the
   // column is centred without running off either edge of the tree.
-  PHASE_MAX = 3.0; PHASE_MIN = 1.12; PHASE_FILL = 0.68; PHASE_CARD = 34; PHASE_VSPEED = 90; PHASE_PAN_MAX = 6;
+  PHASE_MAX = 2.2; PHASE_MIN = 1.12; PHASE_FILL = 0.6; PHASE_CARD = 34; PHASE_PAD = 10;
+  PHASE_VSPEED = 80; PHASE_PAN_MAX = 7;
   phaseView(g, r, n) {
     const pw = this.state.panelW || 480;
     const H = g.outerH;
 
-    // Matches in a round are spread evenly down the full tree height, so the
-    // band they actually occupy is what has to fit - not the column box.
-    const slice = g.h / Math.max(1, n);
-    const top = 20 + Math.max(0, (slice - this.PHASE_CARD) / 2);
-    const bottom = 20 + slice * (Math.max(1, n) - 1) + (slice + this.PHASE_CARD) / 2;
-    const band = Math.max(this.PHASE_CARD, bottom - top);
-
-    // Zoom as far as the width allows, but never past the point where the
-    // whole phase stops fitting vertically. Later rounds hold fewer matches,
-    // so they end up bigger - which is the effect we want anyway.
-    let z = Math.min((pw * this.PHASE_FILL) / this.RW, H / band);
-    z = Math.max(this.PHASE_MIN, Math.min(this.PHASE_MAX, z));
+    let z = Math.max(this.PHASE_MIN, Math.min(this.PHASE_MAX, (pw * this.PHASE_FILL) / this.RW));
 
     const centre = r * (this.RW + this.CW) + this.RW / 2;
     const minTx = Math.min(0, pw / z - g.totalW);
     const tx = Math.max(minTx, Math.min(0, pw / (2 * z) - centre));
 
+    // The band this round's matches actually occupy, with a little air so a
+    // card never sits flush against the top or bottom edge of the panel.
+    const slice = g.h / Math.max(1, n);
+    const top = 20 + Math.max(0, (slice - this.PHASE_CARD) / 2) - this.PHASE_PAD;
+    const bottom = 20 + slice * (Math.max(1, n) - 1) + (slice + this.PHASE_CARD) / 2 + this.PHASE_PAD;
+    const band = bottom - top;
+
     const win = H / z;
     const floor = Math.min(0, win - (g.h + 20));
     const clampY = (y) => Math.max(floor, Math.min(0, y));
-    const tyStart = clampY(-(top + band / 2 - win / 2));      // centred on the band
-    const tyEnd = band > win ? clampY(-(bottom - win)) : tyStart;
-    return { z, tx, tyStart, tyEnd };
+
+    if (band <= win) {
+      const mid = clampY(-(top + band / 2 - win / 2));
+      return { z, tx, tyStart: mid, tyEnd: mid };   // whole phase already visible
+    }
+    return { z, tx, tyStart: clampY(-top), tyEnd: clampY(-(bottom - win)) };
   }
+
 
   // Groups of three, except the tail: the last page is the final two boards
   // plus the news panel, so the rotation always ends on Latest / Up Next.
   pagesFrom(boards) {
     const news = { isNews: true, isBoard: false };
+    const cell = (b, k) => ({ ...b, isBoard: true, isNews: false, key: b.name + '#' + k });
     if (!boards.length) return [[news]];
-    const cell = (b) => ({ ...b, isBoard: true, isNews: false });
     if (boards.length <= 2) return [[...boards.map(cell), news]];
+
+    // Every page carries three cells. The last one is two boards plus the news
+    // panel, so the board slots have to come to 3k+2 — short of that we wrap
+    // around and show an earlier competition again rather than leave a gap.
+    const k = Math.ceil((boards.length - 2) / 3);
+    const slots = 3 * k + 2;
+    const filled = [];
+    for (let i = 0; i < slots; i++) filled.push(cell(boards[i % boards.length], i));
+
     const pages = [];
-    const head = boards.slice(0, boards.length - 2);
-    for (let i = 0; i < head.length; i += 3) pages.push(head.slice(i, i + 3).map(cell));
-    pages.push([...boards.slice(boards.length - 2).map(cell), news]);
+    for (let i = 0; i < 3 * k; i += 3) pages.push(filled.slice(i, i + 3));
+    pages.push([...filled.slice(3 * k), news]);
     return pages;
   }
+
   compPages() { const d = this.state.data; if (!d) return []; const feat = d.featuredComp;
     return this.pagesFrom(d.competitions.filter(c => !feat || c.id !== feat)); }
   setView(i, v) { this.setState({ offs: { ...(this.state.offs || {}), [i]: v } }); }
-  COMP_PERIOD = 120000; PHASE_IN = 1500; PHASE_HOLD = 2400; PHASE_OUT = 2200; PHASE_TAIL = 1400;
+  COMP_PERIOD = 90000; PHASE_IN = 1500; PHASE_HOLD = 2400; PHASE_OUT = 2200; PHASE_TAIL = 1400;
 
   // Walk every bracket, zooming through its rounds so the cards are legible
   // from the back of the room, then hand the stage over to the competitions.
@@ -363,7 +385,7 @@ class Component extends DCLogic {
         if (c >= t.rounds.length) {
           // back to the overview before moving on
           this.setState({ sweepCol: -1 });
-          this.setView(i, { z: g.scale, tx: -g.staticOff, ty: 0, dur: 1.1 });
+          this.setView(i, { z: g.scale, tx: -g.staticOff, ty: g.centerY, dur: 1.1 });
           k++;
           this._ct = setTimeout(step, this.PHASE_OUT);
           return;
@@ -374,7 +396,7 @@ class Component extends DCLogic {
         this.setView(i, { z: pv.z, tx: pv.tx, ty: pv.tyStart, dur: 1.1 });
         this._ct = setTimeout(() => {
           if (pv.tyEnd < pv.tyStart - 2) {
-            // taller than the frame even at minimum zoom: ease down through it
+            // taller than the frame: travel down so every match is seen whole
             const dur = Math.min(this.PHASE_PAN_MAX, (pv.tyStart - pv.tyEnd) * pv.z / this.PHASE_VSPEED);
             this.setView(i, { z: pv.z, tx: pv.tx, ty: pv.tyEnd, dur });
             c++;
@@ -565,7 +587,7 @@ class Component extends DCLogic {
     const base = { hasData: !!data, noData: !data, bPanels: [], lBoards: [], feed: [], upNext: [], upNextEmpty: true,
                    gridRef: this.gridRef, newsRef: this.newsRef,
                    newsTitle: latest ? 'Latest' : 'Up Next', newsIsLatest: latest, newsIsNext: !latest,
-                   newsY: this.state.newsY, newsDur: this.state.newsDur };
+                   newsY: this.state.newsY, newsDur: this.state.newsDur, newsViewRef: this.newsViewRef };
     if (!data) return base;
     base.bPanels = data.tournaments.map((t, i) => {
       const g = this.geom(t);
@@ -579,7 +601,7 @@ class Component extends DCLogic {
           matches: rd.map(m => this.mv(m, r >= t.rounds.length - 2)) });
         if (r < t.rounds.length - 1) cols.push({ isRound: false, isConn: true, cells: Array.from({ length: rd.length / 2 }, () => ({})) });
       });
-      const view = ov || { z: g.scale, tx: -g.staticOff, ty: 0, dur: 3 };
+      const view = ov || { z: g.scale, tx: -g.staticOff, ty: g.centerY, dur: 3 };
       return { name: t.name, status: this.tStatus(t), champion: this.champion(t), cols, h: g.h,
         z: view.z, tx: Math.round(view.tx), ty: Math.round(view.ty), dur: view.dur,
         outerH: g.outerH, shadow: this.state.focusIdx === i ? '0 0 0 2px rgba(236,48,19,0.55)' : 'none' };
