@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>window.__resources={};</script>
+<script src="sync.js"></script>
+<script src="react.production.min.js"></script>
+<script src="react-dom.production.min.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="ds-styles.css">
+<script src="ds-bundle.js"></script>
+<link rel="stylesheet" href="fonts.css">
+<style>
+body{margin:0;background:#0d2748;font-family:'Archivo',sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#ff4a2e}a:hover{color:#ffab1f}
+::selection{background:#ff4a2e;color:#fff}
+@keyframes livepulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+/* ---- stadium cabinet ---- */
+body{background:#0d2748}
+#dc-root>.sc-host>div{
+  background:
+    linear-gradient(180deg,#17406e 0%,#0f2c50 30%,#0a2140 100%) !important;
+}
+/* riveted housing edge around the whole board */
+#dc-root::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:8;
+  box-shadow:inset 0 0 0 6px #0a1c33, inset 0 0 0 9px #274e82;
+}
+/* the tube: fine scanlines and a little bloom */
+#dc-root::after{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:9;
+  background:
+    repeating-linear-gradient(0deg,rgba(0,0,0,.22) 0px,rgba(0,0,0,.22) 1px,transparent 1px,transparent 3px),
+    radial-gradient(ellipse at 50% 40%,rgba(255,171,31,.05),transparent 62%);
+}
+@keyframes ledflicker{0%,100%{opacity:1}96%{opacity:1}97%{opacity:.9}98%{opacity:1}}
+@keyframes vsblink{0%,100%{opacity:1}45%{opacity:.18}}
+@keyframes bigmatch{0%,100%{box-shadow:0 0 0 1px rgba(255,74,46,.12)}50%{box-shadow:0 0 0 3px rgba(255,74,46,.95)}}
+@keyframes redline{0%,100%{border-color:rgba(255,74,46,.2)}50%{border-color:#ff4a2e}}
+@keyframes goldline{0%,100%{border-color:rgba(60,224,105,.28)}50%{border-color:#3ce069}}
+@keyframes goldglow{0%,100%{opacity:.32;text-shadow:none}50%{opacity:1;text-shadow:0 0 14px rgba(60,224,105,.85)}}
+
+/* --- deploy fixes: full-page shell (Design exports are canvas-sized) --- */
+html,body{margin:0;padding:0;height:100%;background:#0d2748;overflow-x:hidden;-webkit-text-size-adjust:100%}
+#dc-root,#dc-root>.sc-host{min-height:100dvh;display:block}
+#dc-root>.sc-host>div,#dc-root>div{
+  width:100%!important;max-width:none!important;margin:0!important;min-height:100dvh!important;
+}
+</style>
+</helmet>
+<div style="height:100vh;height:100dvh;overflow:hidden;background:#0d2748;color:#ffab1f;padding:26px 32px 0;box-sizing:border-box;display:flex;flex-direction:column;gap:18px">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:24px;border-bottom:2px solid #ff4a2e;padding-bottom:18px">
+    <div style="display:flex;align-items:flex-end;gap:20px;min-width:0">
+      <img src="banner-word.png" alt="CHAMPION" style="display:block;height:56px">
+      <div style="font-size:13px;letter-spacing:3px;color:#6f8bb3;font-weight:600;text-transform:uppercase;padding-bottom:6px;white-space:nowrap">Men's Conference 2026 · Tampa, FL · Sept 2–5</div>
+    </div>
+    <img src="rmi-logo.png" alt="Revival Ministries International" style="flex:none;width:92px;opacity:0.92">
+  </div>
+
+  <sc-if value="{{ noData }}" hint-placeholder-val="{{ false }}">
+    <div style="border:1px dashed rgba(255,171,31,0.25);padding:40px;text-align:center;color:#6f8bb3;font-size:16px;letter-spacing:1px">Waiting for competition data — open the CHAMPION app on this device once to publish it.</div>
+  </sc-if>
+
+  <sc-if value="{{ hasData }}" hint-placeholder-val="{{ true }}">
+    <div style="flex:1;min-height:0;display:flex;flex-direction:column;gap:18px">
+      <sc-if value="{{ hasFeat }}" hint-placeholder-val="{{ false }}">
+      <div style="border:3px solid #3ce069;border-radius:7px;box-shadow:0 0 0 3px #0a1c33,0 8px 20px rgba(0,0,0,.55),inset 0 0 44px rgba(0,0,0,.55),0 0 26px rgba(60,224,105,.22);padding:13px 18px;background:#04101f;background-image:radial-gradient(circle,rgba(255,171,31,.07) 1px,transparent 1px);background-size:4px 4px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px">
+          <div style="display:flex;align-items:center;gap:10px;min-width:0">
+            <span style="color:#3ce069;font-size:18px;line-height:1;flex:none">&#9733;</span>
+            <span style="font-weight:700;text-transform:uppercase;font-size:27px;line-height:1;font-family:Georgia,'Times New Roman',serif;font-style:normal;color:#ffd23f;text-shadow:0 2px 0 #06101f,0 0 20px rgba(255,210,63,.35);letter-spacing:0.5px;">{{ featName }}</span>
+          </div>
+          <span style="font-size:11px;letter-spacing:2px;color:#3ce069;font-weight:700;flex:none">{{ featKicker }}</span>
+        </div>
+        <sc-if value="{{ featEmpty }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:10px;color:#3d5c86;font-size:14px;letter-spacing:0.5px">No results yet</div>
+        </sc-if>
+        <div style="margin-top:12px;display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;justify-content:center">
+            <sc-for list="{{ featTop }}" as="row" hint-placeholder-count="1">
+              <div style="width:calc(50% - 5px);box-sizing:border-box;display:flex;flex-direction:column;align-items:center;text-align:center;gap:1px;padding:8px 12px;border:2px solid #3ce069;border-radius:5px;background:rgba(60,224,105,0.10);box-shadow:inset 0 0 26px rgba(60,224,105,.14),0 0 20px rgba(60,224,105,.28)">
+                <span style="font-weight:700;font-family:'Courier New',ui-monospace,monospace;letter-spacing:-0.5px;color:{{ row.rankColor }};font-size:16px">{{ row.rank }}</span>
+                <span style="font-weight:700;text-transform:uppercase;font-size:21px;font-family:'Courier New',ui-monospace,monospace;letter-spacing:1.2px;line-height:1.1;color:{{ row.nameColor }}">{{ row.name }}</span>
+                <span style="font-size:11px;color:#6f8bb3">{{ row.meta }}</span>
+                <span style="font-weight:700;font-size:23px;font-family:'Courier New',ui-monospace,monospace;letter-spacing:-0.5px;text-shadow:0 0 10px currentColor;color:{{ row.scoreColor }}">{{ row.score }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <sc-if value="{{ featHasSecond }}" hint-placeholder-val="{{ true }}">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+              <sc-for list="{{ featSecond }}" as="row" hint-placeholder-count="2">
+                <div style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:1px;padding:8px 12px;border:2px solid rgba(198,214,236,0.45);border-radius:5px;background:#071a2e">
+                  <span style="font-weight:700;font-family:'Courier New',ui-monospace,monospace;letter-spacing:-0.5px;color:{{ row.rankColor }};font-size:16px">{{ row.rank }}</span>
+                  <span style="font-weight:700;text-transform:uppercase;font-size:21px;font-family:'Courier New',ui-monospace,monospace;letter-spacing:1.2px;line-height:1.1;color:{{ row.nameColor }}">{{ row.name }}</span>
+                  <span style="font-size:11px;color:#6f8bb3">{{ row.meta }}</span>
+                  <span style="font-weight:700;font-size:23px;font-family:'Courier New',ui-monospace,monospace;letter-spacing:-0.5px;text-shadow:0 0 10px currentColor;color:{{ row.scoreColor }}">{{ row.score }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{ featHasThird }}" hint-placeholder-val="{{ true }}">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+              <sc-for list="{{ featThird }}" as="row" hint-placeholder-count="2">
+                <div style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:1px;padding:7px 10px;border:2px solid rgba(198,214,236,0.32);border-radius:5px;background:#061524">
+                  <span style="font-weight:700;font-family:'Courier New',ui-monospace,monospace;letter-spacing:-0.5px;color:{{ row.rankColor }};font-size:14px">{{ row.rank }}</span>
+                  <span style="font-weight:700;text-transform:uppercase;font-size:17px;font-family:'Courier New',ui-monospace,monospace;letter-spacing:1.2px;line-height:1.1;color:{{ row.nameColor }}">{{ row.name }}</span>
+                  <span style="font-size:10px;color:#6f8bb3">{{ row.meta }}</span>
+                  <span style="font-weight:700;font-size:20px;font-family:'Courier New',ui-monospace,monospace;letter-spacing:-0.5px;text-shadow:0 0 10px currentColor;color:{{ row.scoreColor }}">{{ row.score }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+    </sc-if>
+
+    <div style="flex:1;min-height:0" ref="{{ gridRef }}">
+    <sc-if value="{{ stageBrackets }}" hint-placeholder-val="{{ true }}">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;height:100%;align-items:stretch">
+      <sc-for list="{{ bPanels }}" as="p" hint-placeholder-count="3">
+        <div style="border:3px solid #c6d6ec;border-radius:7px;box-shadow:0 0 0 3px #0a1c33,0 8px 20px rgba(0,0,0,.55),inset 0 0 44px rgba(0,0,0,.55);padding:16px 18px;background:#04101f;background-image:radial-gradient(circle,rgba(255,171,31,.07) 1px,transparent 1px);background-size:4px 4px;overflow:hidden;box-shadow:{{ p.shadow }};transition:box-shadow .5s ease;display:flex;flex-direction:column">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px">
+            <span style="font-weight:700;text-transform:uppercase;font-size:21px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:Georgia,'Times New Roman',serif;font-style:normal;color:#ffd23f;text-shadow:0 2px 0 #06101f,0 0 20px rgba(255,210,63,.35);letter-spacing:0.5px;">{{ p.name }}</span>
+            <span style="font-size:10px;letter-spacing:2px;color:#6f8bb3;font-weight:700;text-transform:uppercase;flex:none">{{ p.status }}</span>
+          </div>
+          <sc-if value="{{ p.champion }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:8px;display:inline-block;background:#ff4a2e;color:#fff;font-size:11px;font-weight:800;letter-spacing:1.5px;padding:4px 10px;text-transform:uppercase">🏆 CHAMPION: {{ p.champion }}</div>
+          </sc-if>
+          <div style="margin-top:14px;overflow:hidden;flex:1;min-height:0">
+          <div style="display:flex;width:max-content;transform:scale({{ p.z }}) translate({{ p.tx }}px,{{ p.ty }}px);transform-origin:0 0;transition:transform {{ p.dur }}s ease-in-out">
+            <sc-for list="{{ p.cols }}" as="col" hint-placeholder-count="3">
+              <sc-if value="{{ col.isRound }}" hint-placeholder-val="{{ true }}">
+                <div style="width:122px;flex:none;display:flex;flex-direction:column;background:{{ col.colBg }};transition:background .5s ease">
+                  <div style="height:20px;font-size:8.5px;letter-spacing:1.5px;color:{{ col.labelColor }};font-weight:700;text-transform:uppercase;text-align:center;transition:color .5s ease">{{ col.label }}</div>
+                  <div style="height:{{ p.h }}px;display:flex;flex-direction:column">
+                    <sc-for list="{{ col.matches }}" as="m" hint-placeholder-count="2">
+                      <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:2px 1px">
+                        <div style="background:#071a2e;border:1px solid {{ m.border }};border-radius:4px;overflow:hidden;box-shadow:inset 0 0 18px rgba(0,0,0,.55);animation:{{ m.cardAnim }}">
+                          <div style="display:flex;justify-content:space-between;align-items:center;gap:3px;padding:3px 7px;font-size:10.5px;font-weight:700;font-family:'Courier New',ui-monospace,monospace;letter-spacing:0.3px;text-transform:uppercase;color:{{ m.aColor }};border-bottom:1px solid rgba(255,171,31,0.07)">
+                            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ m.aName }}</span>
+                            <span style="flex:none;display:flex;gap:4px;align-items:center"><span style="color:#ffc451;font-weight:800;font-size:10px">{{ m.aScore }}</span><span style="color:#ff4a2e;font-weight:900">{{ m.aMark }}</span></span>
+                          </div>
+                          <div style="display:flex;justify-content:space-between;align-items:center;gap:3px;padding:3px 7px;font-size:10.5px;font-weight:700;font-family:'Courier New',ui-monospace,monospace;letter-spacing:0.3px;text-transform:uppercase;color:{{ m.bColor }}">
+                            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ m.bName }}</span>
+                            <span style="flex:none;display:flex;gap:4px;align-items:center"><span style="color:#ffc451;font-weight:800;font-size:10px">{{ m.bScore }}</span><span style="color:#ff4a2e;font-weight:900">{{ m.bMark }}</span></span>
+                          </div>
+                        </div>
+                      </div>
+                    </sc-for>
+                  </div>
+                </div>
+              </sc-if>
+              <sc-if value="{{ col.isConn }}" hint-placeholder-val="{{ false }}">
+                <div style="width:14px;flex:none;display:flex;flex-direction:column">
+                  <div style="height:20px"></div>
+                  <div style="height:{{ p.h }}px;display:flex;flex-direction:column">
+                    <sc-for list="{{ col.cells }}" as="cc" hint-placeholder-count="1">
+                      <div style="flex:1;display:flex;align-items:center">
+                        <div style="width:100%;height:50%;border-top:2px solid #33405a;border-bottom:2px solid #33405a;border-right:2px solid #33405a;box-sizing:border-box"></div>
+                      </div>
+                    </sc-for>
+                  </div>
+                </div>
+              </sc-if>
+            </sc-for>
+          </div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ stageComps }}" hint-placeholder-val="{{ false }}">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;height:100%;align-items:stretch">
+      <sc-for list="{{ pageCells }}" as="lb" hint-placeholder-count="3">
+        <sc-if value="{{ lb.isBoard }}" hint-placeholder-val="{{ true }}">
+        <div style="border:3px solid #c6d6ec;border-radius:7px;box-shadow:0 0 0 3px #0a1c33,0 8px 20px rgba(0,0,0,.55),inset 0 0 44px rgba(0,0,0,.55);padding:18px 20px;background:#04101f;background-image:radial-gradient(circle,rgba(255,171,31,.07) 1px,transparent 1px);background-size:4px 4px;display:flex;flex-direction:column;overflow:hidden">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
+            <span style="font-weight:700;text-transform:uppercase;font-size:23px;font-family:Georgia,'Times New Roman',serif;font-style:normal;color:#ffd23f;text-shadow:0 2px 0 #06101f,0 0 20px rgba(255,210,63,.35);letter-spacing:0.5px;">{{ lb.name }}</span>
+            <span style="font-size:10px;letter-spacing:1.5px;color:#6f8bb3;font-weight:700;flex:none">{{ lb.kicker }}</span>
+          </div>
+          <sc-if value="{{ lb.empty }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:14px;color:#3d5c86;font-size:14px;letter-spacing:0.5px">No results yet</div>
+          </sc-if>
+          <div style="margin-top:14px;flex:1;min-height:0;display:flex;flex-direction:column;justify-content:space-evenly">
+            <sc-for list="{{ lb.rows }}" as="row" hint-placeholder-count="5">
+              <div style="display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid rgba(111,139,179,0.30)">
+                <span style="width:30px;font-weight:700;font-family:'Courier New',ui-monospace,monospace;letter-spacing:-0.5px;color:{{ row.rankColor }};font-size:21px">{{ row.rank }}</span>
+                <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><span style="font-weight:700;font-size:20px;font-family:'Courier New',ui-monospace,monospace;letter-spacing:0.8px;text-transform:uppercase;color:{{ row.nameColor }}">{{ row.name }}</span><span style="font-size:12px;color:#6f8bb3;margin-left:9px">{{ row.meta }}</span></span>
+                <span style="font-weight:700;font-size:24px;font-family:'Courier New',ui-monospace,monospace;letter-spacing:-0.5px;text-shadow:0 0 10px currentColor;color:{{ row.scoreColor }};flex:none">{{ row.score }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        </sc-if>
+        <sc-if value="{{ lb.isNews }}" hint-placeholder-val="{{ false }}">
+      <div style="border:3px solid #c6d6ec;border-radius:7px;box-shadow:0 0 0 3px #0a1c33,0 8px 20px rgba(0,0,0,.55),inset 0 0 44px rgba(0,0,0,.55);padding:16px 18px;background:#04101f;background-image:radial-gradient(circle,rgba(255,171,31,.07) 1px,transparent 1px);background-size:4px 4px;overflow:hidden;display:flex;flex-direction:column">
+        <div style="display:flex;align-items:center;gap:10px;flex:none">
+          <span style="width:10px;height:10px;background:#ff4a2e;animation:livepulse 1.6s infinite"></span>
+          <span style="font-weight:700;text-transform:uppercase;font-size:23px;font-family:Georgia,'Times New Roman',serif;font-style:normal;color:#ffd23f;text-shadow:0 2px 0 #06101f,0 0 20px rgba(255,210,63,.35);letter-spacing:0.5px;">{{ newsTitle }}</span>
+        </div>
+        <div ref="{{ newsViewRef }}" style="margin-top:14px;flex:1;min-height:0;overflow:hidden">
+          <div ref="{{ newsRef }}" style="display:flex;flex-direction:column;gap:12px;transform:translateY(-{{ newsY }}px);transition:transform {{ newsDur }}s linear">
+            <sc-if value="{{ newsIsLatest }}" hint-placeholder-val="{{ true }}">
+              <sc-for list="{{ feed }}" as="f" hint-placeholder-count="5">
+                <div style="border-bottom:1px solid rgba(111,139,179,0.30);padding-bottom:11px">
+                  <div style="display:flex;justify-content:space-between;gap:10px">
+                    <span style="font-size:11px;letter-spacing:1.5px;color:{{ f.compColor }};font-weight:700;text-transform:uppercase">{{ f.comp }}</span>
+                    <span style="font-size:11px;color:#3d5c86;flex:none">{{ f.time }}</span>
+                  </div>
+                  <div style="font-weight:700;font-size:16px;line-height:1.4;margin-top:5px;font-family:'Courier New',ui-monospace,monospace;text-transform:uppercase;letter-spacing:0.4px;color:{{ f.titleColor }}">{{ f.title }}</div>
+                </div>
+              </sc-for>
+            </sc-if>
+            <sc-if value="{{ newsIsNext }}" hint-placeholder-val="{{ false }}">
+              <sc-for list="{{ upNext }}" as="u" hint-placeholder-count="5">
+                <div style="border-top:{{ u.topW }}px solid {{ u.topColor }};animation:{{ u.topAnim }};padding-top:{{ u.topPad }}px;border-bottom:1px solid {{ u.lineColor }};padding-bottom:11px">
+                  <div style="display:flex;justify-content:space-between;gap:10px">
+                    <span style="font-size:11px;letter-spacing:1.5px;color:#ff4a2e;font-weight:700;text-transform:uppercase">{{ u.comp }}</span>
+                    <span style="font-size:11px;color:#3d5c86;flex:none">{{ u.round }}</span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:8px;margin-top:5px">
+                    <span style="flex:none;color:#ff4a2e;font-size:14px">{{ u.star }}</span>
+                    <span style="font-weight:700;font-size:16px;font-family:'Courier New',ui-monospace,monospace;text-transform:uppercase;letter-spacing:0.6px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ u.a }}</span>
+                    <span style="flex:none;font-size:13px;font-weight:900;font-style:italic;text-transform:uppercase;color:{{ u.vsColor }};animation:{{ u.vsAnim }}">vs</span>
+                    <span style="font-weight:700;font-size:16px;font-family:'Courier New',ui-monospace,monospace;text-transform:uppercase;letter-spacing:0.6px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ u.b }}</span>
+                  </div>
+                </div>
+              </sc-for>
+              <sc-if value="{{ upNextEmpty }}" hint-placeholder-val="{{ false }}">
+                <div style="color:#3d5c86;font-size:12px;letter-spacing:0.5px">No matches queued</div>
+              </sc-if>
+            </sc-if>
+          </div>
+        </div>
+      </div>
+        </sc-if>
+      </sc-for>
+    </div>
+    </sc-if>
+    </div>
+
+    </div>
+    <div style="flex:none;height:14px;margin:0 -32px;background:#ffd23f;background-image:repeating-linear-gradient(90deg,rgba(10,28,51,.9) 0 6px,transparent 6px 34px);box-shadow:inset 0 3px 0 rgba(255,255,255,.35),inset 0 -3px 0 rgba(0,0,0,.35)"></div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{}">
+class Component extends DCLogic {
+  state = { data: null, now: Date.now(), panelW: 0, panelH: 0, offs: {}, focusIdx: -1, sweepCol: -1, stage: 'brackets', compPage: 0, newsMode: 'latest', newsY: 0, newsDur: 0 };
+  LS = 'champion-app-v2';
+  PANEL_CHROME = 92;                 // title, padding and margins around the tree
+  measure = () => {
+    const el = this._grid; if (!el) return;
+    const pw = Math.floor((el.clientWidth - 40) / 3) - 38;
+    const ph = Math.max(180, el.clientHeight - this.PANEL_CHROME);
+    const patch = {};
+    if (Math.abs(pw - (this.state.panelW || 0)) > 2) patch.panelW = pw;
+    if (Math.abs(ph - (this.state.panelH || 0)) > 2) patch.panelH = ph;
+    if (Object.keys(patch).length) this.setState(patch);
+  };
+  gridRef = (el) => { this._grid = el; if (el) this.measure(); };
+  componentDidMount() {
+    const upd = () => {
+      this.setState({ data: this.loadData(), now: Date.now() });
+      ChampSync.pull().then((r) => { if (r && r.data) this.setState({ data: r.data }); });
+    };
+    upd();
+    this._i = setInterval(upd, 3000);
+    this._sh = (e) => { if (!e.key || e.key === this.LS) upd(); };
+    window.addEventListener('storage', this._sh);
+    window.addEventListener('resize', this.measure);
+    this._ct = setTimeout(this.cycle, 8000);
+  }
+  componentWillUnmount() { clearInterval(this._i); clearTimeout(this._ct); clearTimeout(this._nt); window.removeEventListener('storage', this._sh); window.removeEventListener('resize', this.measure); }
+
+  // Latest <-> Up Next rotation. Each panel holds still, then creeps down at
+  // 15 px/s through the final 30s so the tail is readable before the swap.
+  NEWS_VH = 214; NEWS_PERIOD = 90000; NEWS_LEAD = 30000; NEWS_SPEED = 15;
+  newsViewRef = (el) => { this._newsView = el; };
+  newsRef = (el) => { this._news = el; };
+  newsCycle = () => {
+    clearTimeout(this._nt);
+    this.setState({ newsY: 0, newsDur: 0 });
+    this._nt = setTimeout(() => {
+      const el = this._news;
+      const vh = (this._newsView && this._newsView.clientHeight) || this.NEWS_VH;
+      const over = el ? Math.max(0, el.scrollHeight - vh) : 0;
+      const dist = Math.min(over, this.NEWS_SPEED * (this.NEWS_LEAD / 1000));
+      if (dist > 2) this.setState({ newsY: Math.round(dist), newsDur: dist / this.NEWS_SPEED });
+      this._nt = setTimeout(() => {
+        this.setState({ newsMode: this.state.newsMode === 'latest' ? 'upnext' : 'latest' });
+      }, this.NEWS_LEAD);
+    }, this.NEWS_PERIOD - this.NEWS_LEAD);
+  };
+
+  RW = 122; CW = 14;
+  geom(t) {
+    const pw = this.state.panelW || 480;
+    const L = t.rounds.length;
+    const totalW = L * this.RW + (L - 1) * this.CW;
+    const h0 = Math.max(2, t.rounds[0].length) * 52;
+    const availH = this.state.panelH || 320;
+    // Fill the panel: as large as the width or the height allows, whichever
+    // runs out first, so the whole tree is legible in the overview.
+    const scale = Math.max(0.55, Math.min(pw / totalW, availH / (h0 + 20)));
+    const view = pw / scale;
+    const maxOff = Math.max(0, totalW - view);
+    let hi = 0;
+    t.rounds.forEach((rd, r) => { if (rd.some(m => m.winner && !m.bye)) hi = r; });
+    const fin = t.rounds[L - 1][0];
+    if (fin.winner || fin.a || fin.b) hi = L - 1;
+    const colRight = hi * (this.RW + this.CW) + this.RW;
+    const staticOff = Math.min(maxOff, Math.max(0, colRight - view));
+    // Short trees would otherwise hang from the top of a tall panel.
+    const centerY = Math.max(0, (availH / scale - (h0 + 20)) / 2);
+    return { scale, totalW, maxOff, staticOff, h: h0, outerH: availH, centerY };
+  }
+
+  // Frame one round column: how far to scale up, and where to sit so the
+  // column is centred without running off either edge of the tree.
+  PHASE_MAX = 2.2; PHASE_MIN = 1.12; PHASE_FILL = 0.6; PHASE_CARD = 34; PHASE_PAD = 10;
+  PHASE_VSPEED = 80; PHASE_PAN_MAX = 7;
+  phaseView(g, r, n) {
+    const pw = this.state.panelW || 480;
+    const H = g.outerH;
+
+    let z = Math.max(this.PHASE_MIN, Math.min(this.PHASE_MAX, (pw * this.PHASE_FILL) / this.RW));
+
+    const centre = r * (this.RW + this.CW) + this.RW / 2;
+    const minTx = Math.min(0, pw / z - g.totalW);
+    const tx = Math.max(minTx, Math.min(0, pw / (2 * z) - centre));
+
+    // The band this round's matches actually occupy, with a little air so a
+    // card never sits flush against the top or bottom edge of the panel.
+    const slice = g.h / Math.max(1, n);
+    const top = 20 + Math.max(0, (slice - this.PHASE_CARD) / 2) - this.PHASE_PAD;
+    const bottom = 20 + slice * (Math.max(1, n) - 1) + (slice + this.PHASE_CARD) / 2 + this.PHASE_PAD;
+    const band = bottom - top;
+
+    const win = H / z;
+    const floor = Math.min(0, win - (g.h + 20));
+    const clampY = (y) => Math.max(floor, Math.min(0, y));
+
+    if (band <= win) {
+      const mid = clampY(-(top + band / 2 - win / 2));
+      return { z, tx, tyStart: mid, tyEnd: mid };   // whole phase already visible
+    }
+    return { z, tx, tyStart: clampY(-top), tyEnd: clampY(-(bottom - win)) };
+  }
+
+
+  // Groups of three, except the tail: the last page is the final two boards
+  // plus the news panel, so the rotation always ends on Latest / Up Next.
+  pagesFrom(boards) {
+    const news = { isNews: true, isBoard: false };
+    const cell = (b, k) => ({ ...b, isBoard: true, isNews: false, key: b.name + '#' + k });
+    if (!boards.length) return [[news]];
+    if (boards.length <= 2) return [[...boards.map(cell), news]];
+
+    // Every page carries three cells. The last one is two boards plus the news
+    // panel, so the board slots have to come to 3k+2 — short of that we wrap
+    // around and show an earlier competition again rather than leave a gap.
+    const k = Math.ceil((boards.length - 2) / 3);
+    const slots = 3 * k + 2;
+    const filled = [];
+    for (let i = 0; i < slots; i++) filled.push(cell(boards[i % boards.length], i));
+
+    const pages = [];
+    for (let i = 0; i < 3 * k; i += 3) pages.push(filled.slice(i, i + 3));
+    pages.push([...filled.slice(3 * k), news]);
+    return pages;
+  }
+
+  compPages() { const d = this.state.data; if (!d) return []; const feat = d.featuredComp;
+    return this.pagesFrom(d.competitions.filter(c => !feat || c.id !== feat)); }
+  setView(i, v) { this.setState({ offs: { ...(this.state.offs || {}), [i]: v } }); }
+  COMP_PERIOD = 90000; PHASE_IN = 1500; PHASE_HOLD = 2400; PHASE_OUT = 2200; PHASE_TAIL = 1400;
+
+  // Walk every bracket, zooming through its rounds so the cards are legible
+  // from the back of the room, then hand the stage over to the competitions.
+  cycle = () => {
+    clearTimeout(this._ct);
+    const data = this.state.data;
+    if (!data) { this._ct = setTimeout(this.cycle, 3000); return; }
+    if (!data.tournaments.length) { this.toComps(); return; }
+
+    this.setState({ stage: 'brackets' });
+    const seq = data.tournaments.map((t, i) => ({ i, t, g: this.geom(t) }));
+    let k = 0;
+
+    const step = () => {
+      if (k >= seq.length) { this.setState({ offs: {}, focusIdx: -1, sweepCol: -1 }); this.toComps(); return; }
+      const { i, t, g } = seq[k];
+      this.setState({ focusIdx: i });
+
+      let c = 0;
+      const phase = () => {
+        if (c >= t.rounds.length) {
+          // back to the overview before moving on
+          this.setState({ sweepCol: -1 });
+          this.setView(i, { z: g.scale, tx: -g.staticOff, ty: g.centerY, dur: 1.1 });
+          k++;
+          this._ct = setTimeout(step, this.PHASE_OUT);
+          return;
+        }
+        const rd = t.rounds[c];
+        const pv = this.phaseView(g, c, rd.length);
+        this.setState({ sweepCol: c });
+        this.setView(i, { z: pv.z, tx: pv.tx, ty: pv.tyStart, dur: 1.1 });
+        this._ct = setTimeout(() => {
+          if (pv.tyEnd < pv.tyStart - 2) {
+            // taller than the frame: travel down so every match is seen whole
+            const dur = Math.min(this.PHASE_PAN_MAX, (pv.tyStart - pv.tyEnd) * pv.z / this.PHASE_VSPEED);
+            this.setView(i, { z: pv.z, tx: pv.tx, ty: pv.tyEnd, dur });
+            c++;
+            this._ct = setTimeout(phase, dur * 1000 + this.PHASE_TAIL);
+          } else {
+            c++;
+            this._ct = setTimeout(phase, this.PHASE_HOLD);
+          }
+        }, this.PHASE_IN);
+      };
+      phase();
+    };
+    step();
+  };
+
+  toComps = () => {
+    clearTimeout(this._ct);
+    const pages = this.compPages();
+    if (!pages.length) { this._ct = setTimeout(this.cycle, 4000); return; }
+    this.setState({ stage: 'comps', compPage: 0, offs: {}, focusIdx: -1, sweepCol: -1 });
+    this.newsFor(0, pages.length);
+    let p = 0;
+    const tick = () => {
+      p++;
+      if (p >= pages.length) { this.cycle(); return; }
+      this.setState({ compPage: p });
+      this.newsFor(p, pages.length);
+      this._ct = setTimeout(tick, this.COMP_PERIOD);
+    };
+    this._ct = setTimeout(tick, this.COMP_PERIOD);
+  };
+
+  // The news panel only rides along on the final page, so start its hold-then-
+  // scroll run when that page appears rather than on a free-running timer.
+  newsFor(page, total) {
+    clearTimeout(this._nt);
+    if (page === total - 1) this.newsCycle();
+    else this.setState({ newsY: 0, newsDur: 0 });
+  }
+  loadData() {
+    if (!ChampSync.demo()) { const c = ChampSync.cacheGet(); if (c) return c; }
+    const d = this.seedData();
+    ChampSync.cacheSet(d);
+    return d;
+  }
+  seedOrderArr(n) { let r = [0]; while (r.length < n) { const m = r.length * 2; r = r.flatMap(x => [x, m - 1 - x]); } return r; }
+  genBracket(names, mode) {
+    let list = names.filter(Boolean);
+    if (mode === 'random') { list = [...list]; for (let i = list.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [list[i], list[j]] = [list[j], list[i]]; } }
+    const size = Math.pow(2, Math.ceil(Math.log2(Math.max(2, list.length))));
+    const order = this.seedOrderArr(size);
+    const slots = order.map(i => list[i] || null);
+    const rounds = []; let cur = [];
+    for (let i = 0; i < size; i += 2) {
+      const a = slots[i], b = slots[i + 1];
+      const m = { a, b, winner: null, bye: false, ts: null, sa: null, sb: null };
+      if (a && !b) { m.winner = a; m.bye = true; }
+      if (b && !a) { m.winner = b; m.bye = true; }
+      cur.push(m);
+    }
+    rounds.push(cur);
+    while (cur.length > 1) {
+      const next = [];
+      for (let j = 0; j < cur.length; j += 2) next.push({ a: cur[j].winner || null, b: cur[j + 1].winner || null, winner: null, bye: false, ts: null, sa: null, sb: null });
+      rounds.push(next); cur = next;
+    }
+    return rounds;
+  }
+  clearMatch(t, r, i) {
+    const m = t.rounds[r][i]; if (!m || !m.winner) return;
+    const w = m.winner; m.winner = null; m.ts = null; m.sa = null; m.sb = null;
+    if (r + 1 < t.rounds.length) {
+      const nm = t.rounds[r + 1][i >> 1], side = i % 2 ? 'b' : 'a';
+      if (nm[side] === w) { this.clearMatch(t, r + 1, i >> 1); nm[side] = null; }
+    }
+  }
+  setWinner(t, r, i, name, ts, sa, sb) {
+    const m = t.rounds[r][i];
+    if (m.winner && m.winner !== name) this.clearMatch(t, r, i);
+    m.winner = name; m.ts = ts || Date.now();
+    if (sa !== undefined && sa !== '') m.sa = sa;
+    if (sb !== undefined && sb !== '') m.sb = sb;
+    if (r + 1 < t.rounds.length) {
+      const nm = t.rounds[r + 1][i >> 1], side = i % 2 ? 'b' : 'a';
+      if (nm[side] && nm[side] !== name) this.clearMatch(t, r + 1, i >> 1);
+      nm[side] = name;
+    }
+  }
+  playPicks(t, picks, baseTs, scoreFn) {
+    let k = 0;
+    t.rounds.forEach((rd, r) => rd.forEach((m, i) => {
+      if (k < picks.length && m.a && m.b && !m.winner) {
+        const winB = !!picks[k], winner = winB ? m.b : m.a;
+        let sa, sb;
+        if (scoreFn) { const [ws, ls] = scoreFn(k); sa = winB ? ls : ws; sb = winB ? ws : ls; }
+        this.setWinner(t, r, i, winner, baseTs + k * 41 * 60000, sa, sb);
+        k++;
+      }
+    }));
+  }
+
+  seedData() {
+    const now = Date.now(), H = 3600000;
+    const fc = ['Marcus Reed', 'Tony Alvarez', 'Dre Whitfield', 'Sam Okafor', 'Jake Rollins', 'Chris Beam', 'Eli Vance', 'Pete Coker', 'Luis Ortega', 'Ben Hastings', 'Coby Marsh', 'Trent Dawes', 'Omar Fields', 'Nick Sowell', 'Ray Delgado', 'Josh Tran'];
+    const cfp = ['Vic Lawson', 'Andre Boone', 'Cal Whitaker', 'Moses Grant', 'Ty Renner', 'Dan Pruitt', 'Kev Marsh', 'Isaiah Cole', 'Reggie Fox', 'Wes Hargrove', 'Milo Barnes', 'Judah Kemp'];
+    const cod = ['Squad Alpha', 'Squad Bravo', 'Squad Charlie', 'Squad Delta', 'Squad Echo', 'Squad Foxtrot', 'Squad Golf', 'Squad Hotel'];
+    const t1 = { id: 'fc', name: 'FC World Cup', seeding: 'order', scored: true, entrants: fc, rounds: this.genBracket(fc, 'order') };
+    this.playPicks(t1, [0, 1, 0, 0, 1, 0, 1, 0, 0, 1], now - 26 * H, k => [String(2 + (k % 3)), String(k % 2)]);
+    const t2 = { id: 'cfp', name: 'College Football Playoff', seeding: 'order', scored: true, entrants: cfp, rounds: this.genBracket(cfp, 'order') };
+    this.playPicks(t2, [0, 1, 1], now - 8 * H, k => [String(24 + (k % 3) * 7), String(10 + (k % 2) * 7)]);
+    const t3 = { id: 'cod', name: 'Call of Duty', seeding: 'order', scored: false, entrants: cod, rounds: this.genBracket(cod, 'order') };
+    this.playPicks(t3, [0, 0, 1, 1, 0], now - 5 * H);
+    const competitions = [
+      { id: 'bench1823', name: 'Benchpress 18-23', unit: 'LBS', hasBW: true, dots: true, board: [{ name: 'Dre Whitfield', bw: '198', score: '295' }, { name: 'Ben Hastings', bw: '176', score: '255' }], updates: [{ ts: now - 6 * H, text: 'Qualifying open at the main stage — 3 attempts each.' }] },
+      { id: 'bench2445', name: 'Benchpress 24-45', unit: 'LBS', hasBW: true, dots: true, board: [{ name: 'Moses Grant', bw: '224', score: '315' }, { name: 'Tony Alvarez', bw: '205', score: '285' }], updates: [{ ts: now - 2 * H, text: 'Moses Grant takes the lead with a 315 lb press. Finals round at 4 PM.' }] },
+      { id: 'bench45', name: 'Benchpress 45+', unit: 'LBS', hasBW: true, dots: true, board: [{ name: 'Cal Whitaker', bw: '187', score: '275' }], updates: [{ ts: now - 5 * H, text: 'Masters flight lifts at 2 PM.' }] },
+      { id: 'crucible', name: 'Crucible', unit: 'TIME', lowerBetter: true, board: [{ name: 'Isaiah Cole', score: '8:42' }, { name: 'Marcus Reed', score: '9:15' }, { name: 'Ty Renner', score: '9:58' }, { name: 'Omar Fields', score: '11:03' }], updates: [{ ts: now - 90 * 60000, text: 'Station 3 (rope climb) is live. Isaiah Cole sets the pace at 8:42.' }] },
+      { id: 'wick', name: 'John Wick Challenge', unit: 'TIME', lowerBetter: true, board: [{ name: 'Ray Delgado', score: '1:42' }, { name: 'Jake Rollins', score: '1:58' }, { name: 'Kev Marsh', score: '2:07' }], updates: [{ ts: now - 40 * 60000, text: 'Ray Delgado sets the course record: 1:42. Heats continue through 6 PM.' }, { ts: now - 4 * H, text: 'Course walkthrough at the pavilion. Closed-course rules — eye protection required.' }] }
+    ];
+    return { tournaments: [t1, t2, t3], competitions };
+  }
+
+  roundLabel(count) { return { 1: 'Final', 2: 'Semifinals', 4: 'Quarterfinals', 8: 'Round of 16', 16: 'Round of 32' }[count] || 'Round'; }
+  rel(ts) {
+    const d = Date.now() - ts;
+    if (d < 90000) return 'just now';
+    if (d < 3600000) return Math.round(d / 60000) + 'm ago';
+    if (d < 86400000) return Math.round(d / 3600000) + 'h ago';
+    return Math.round(d / 86400000) + 'd ago';
+  }
+  parseScore(s) { const m = /^(\d+):(\d\d)/.exec(String(s)); if (m) return +m[1] * 60 + +m[2]; const f = parseFloat(s); return isNaN(f) ? null : f; }
+  sortBoard(c) {
+    const rows = [...(c.board || [])];
+    if (c.dots) return rows.sort((a, b) => (this.dots(b.bw, b.score) || -1) - (this.dots(a.bw, a.score) || -1));
+    if (rows.every(r => this.parseScore(r.score) != null)) rows.sort((a, b) => c.lowerBetter ? this.parseScore(a.score) - this.parseScore(b.score) : this.parseScore(b.score) - this.parseScore(a.score));
+    return rows;
+  }
+  tStatus(t) {
+    const last = t.rounds[t.rounds.length - 1][0];
+    if (last.winner) return 'Complete';
+    for (let r = 0; r < t.rounds.length; r++) if (t.rounds[r].some(m => !m.winner)) return this.roundLabel(t.rounds[r].length);
+    return 'In progress';
+  }
+  champion(t) { return t.rounds[t.rounds.length - 1][0].winner || null; }
+  loser(m) { return m.winner === m.a ? m.b : m.a; }
+  LB_PER_KG = 2.20462262;
+  dots(bwLb, liftLb) {
+    const bwl = parseFloat(bwLb), lfl = parseFloat(liftLb);
+    if (!isFinite(bwl) || !isFinite(lfl) || bwl <= 0 || lfl <= 0) return null;
+    const x = bwl / this.LB_PER_KG, w = lfl / this.LB_PER_KG;
+    const d = -0.000001093 * x * x * x * x
+            + 0.0007391293 * x * x * x
+            - 0.1918759221 * x * x
+            + 24.0900756 * x
+            - 307.75076;
+    if (!(d > 0)) return null;
+    return Math.round(500 * w / d * 100) / 100;
+  }
+  dotsStr(bw, lift) { const v = this.dots(bw, lift); return v == null ? '—' : v.toFixed(2); }
+  isGoldUpdate(u) {
+    if (u && u.gold) return true;
+    const t = (u && u.text) || '';
+    return /^New leader: |^New fastest time: /.test(t) || / extends the lead — /.test(t);
+  }
+  scoreline(m) {
+    if (m.sa == null || m.sb == null) return null;
+    const a = parseFloat(m.sa), b = parseFloat(m.sb);
+    if (isFinite(a) && isFinite(b) && a !== b) return (a > b ? m.sa + '–' + m.sb : m.sb + '–' + m.sa);
+    return m.winner === m.a ? m.sa + '–' + m.sb : m.sb + '–' + m.sa;
+  }
+  mv(m, big) {
+    const playable = m.a && m.b && !m.winner;
+    const hot = playable && big;
+    return {
+      cardAnim: hot ? 'bigmatch 2.4s ease-in-out infinite' : 'none',
+      aName: m.a || (m.bye ? '—' : 'TBD'), bName: m.b || (m.bye ? 'BYE' : 'TBD'),
+      aMark: m.winner && m.winner === m.a ? 'W' : '', bMark: m.winner && m.winner === m.b ? 'W' : '',
+      aScore: m.sa != null ? m.sa : '', bScore: m.sb != null ? m.sb : '',
+      aWeight: m.winner === m.a ? 900 : 600, bWeight: m.winner === m.b ? 900 : 600,
+      aColor: m.a ? (m.winner === m.a ? '#ffc451' : (m.winner ? '#4a6a94' : '#ffab1f')) : '#4a6a94',
+      bColor: m.b ? (m.winner === m.b ? '#ffc451' : (m.winner ? '#4a6a94' : '#ffab1f')) : '#4a6a94',
+      border: playable ? 'rgba(255,74,46,0.55)' : 'rgba(255,171,31,0.1)'
+    };
+  }
+  renderVals() {
+    const data = this.state.data;
+    const latest = this.state.newsMode === 'latest';
+    const base = { hasData: !!data, noData: !data, bPanels: [], lBoards: [], feed: [], upNext: [], upNextEmpty: true,
+                   gridRef: this.gridRef, newsRef: this.newsRef,
+                   newsTitle: latest ? 'Latest' : 'Up Next', newsIsLatest: latest, newsIsNext: !latest,
+                   newsY: this.state.newsY, newsDur: this.state.newsDur, newsViewRef: this.newsViewRef };
+    if (!data) return base;
+    base.bPanels = data.tournaments.map((t, i) => {
+      const g = this.geom(t);
+      const ov = (this.state.offs || {})[i];
+      const cols = [];
+      t.rounds.forEach((rd, r) => {
+        const lit = this.state.focusIdx === i && this.state.sweepCol === r;
+        cols.push({ isRound: true, isConn: false, label: this.roundLabel(rd.length),
+          labelColor: lit ? '#ff4a2e' : '#6f8bb3',
+          colBg: lit ? 'rgba(255,74,46,0.10)' : 'transparent',
+          matches: rd.map(m => this.mv(m, r >= t.rounds.length - 2)) });
+        if (r < t.rounds.length - 1) cols.push({ isRound: false, isConn: true, cells: Array.from({ length: rd.length / 2 }, () => ({})) });
+      });
+      const view = ov || { z: g.scale, tx: -g.staticOff, ty: g.centerY, dur: 3 };
+      return { name: t.name, status: this.tStatus(t), champion: this.champion(t), cols, h: g.h,
+        z: view.z, tx: Math.round(view.tx), ty: Math.round(view.ty), dur: view.dur,
+        outerH: g.outerH, shadow: this.state.focusIdx === i ? '0 0 0 2px rgba(255,74,46,0.55)' : 'none' };
+    });
+    const lbRows = (c, n) => this.sortBoard(c).slice(0, n).map((r, i) => ({
+      rank: i + 1, name: r.name,
+      meta: c.dots ? ('BW ' + (r.bw || '—') + ' · LIFT ' + r.score + ' LBS') : (r.bw ? 'BW ' + r.bw : ''),
+      score: c.dots ? this.dotsStr(r.bw, r.score) + ' pts' : r.score,
+      rankColor: i === 0 ? '#3ce069' : '#6f8bb3',
+      nameColor: i === 0 ? '#3ce069' : '#ffab1f',
+      scoreColor: i === 0 ? '#3ce069' : '#ff4a2e'
+    }));
+    const lbKicker = (c) => (c.board && c.board.length)
+      ? (c.dots ? 'TOP 5 · DOTS POINTS' : c.lowerBetter ? 'FASTEST · TOP 5' : 'TOP 5' + (c.unit && c.unit !== 'TIME' ? ' · ' + c.unit : ''))
+      : 'AWAITING RESULTS';
+
+    // The featured competition is promoted to a full-width panel at the top and
+    // dropped from the grid below, so it isn't shown twice.
+    const feat = data.featuredComp ? data.competitions.find(c => c.id === data.featuredComp) : null;
+    base.hasFeat = !!feat;
+    if (feat) {
+      base.featName = feat.name;
+      base.featKicker = feat.dots ? 'DOTS POINTS' : lbKicker(feat).replace('TOP 5 · ', '').replace('TOP 5', 'LEADERBOARD');
+      base.featEmpty = !(feat.board && feat.board.length);
+      const fr = lbRows(feat, 5);
+      base.featRows = fr;
+      base.featTop = fr.slice(0, 1);     // centred on its own line
+      base.featSecond = fr.slice(1, 3);  // 2 and 3
+      base.featThird = fr.slice(3, 5);   // 4 and 5
+      base.featHasSecond = fr.length > 1;
+      base.featHasThird = fr.length > 3;
+    }
+
+    base.lBoards = data.competitions.filter(c => !feat || c.id !== feat.id).map(c => ({
+      name: c.name,
+      empty: !(c.board && c.board.length),
+      kicker: lbKicker(c),
+      rows: lbRows(c, 5)
+    }));
+
+    // Competitions take over the bracket row three at a time. The last page
+    // carries the final two plus the Latest / Up Next panel on the right.
+    const pages = this.pagesFrom(base.lBoards);
+    const page = pages[Math.min(this.state.compPage, pages.length - 1)] || [];
+    base.stageBrackets = this.state.stage === 'brackets';
+    base.stageComps = this.state.stage === 'comps';
+    base.pageCells = page;
+    base.pageLabel = pages.length > 1 ? 'Competitions ' + (Math.min(this.state.compPage, pages.length - 1) + 1) + ' / ' + pages.length : 'Competitions';
+    const feed = [];
+    data.tournaments.forEach(t => {
+      const L = t.rounds.length;
+      t.rounds.forEach((rd, r) => rd.forEach(m => {
+        if (m.winner && !m.bye && m.ts) {
+          const sl = this.scoreline(m);
+          const toFinal = (r === L - 2) ? ' — advances to the Final' : '';
+          feed.push({ ts: m.ts, comp: t.name, gold: r >= L - 2,
+            title: m.winner + ' def. ' + this.loser(m) + ' · ' + this.roundLabel(rd.length) + (sl ? ' · ' + sl : '') + toFinal });
+        }
+      }));
+      // Both semifinals settled: announce the matchup as its own entry.
+      if (L >= 2) {
+        const fin = t.rounds[L - 1][0];
+        if (fin && fin.a && fin.b && !fin.winner) {
+          const semis = t.rounds[L - 2].filter(m => m.winner && m.ts);
+          if (semis.length) {
+            feed.push({ ts: Math.max(...semis.map(m => m.ts)) + 1, comp: t.name, gold: true,
+              title: fin.a + ' will face ' + fin.b + ' in the Final' });
+          }
+        }
+      }
+      const last = t.rounds[t.rounds.length - 1][0];
+      if (last.winner && last.ts) feed.push({ ts: last.ts + 1, comp: t.name, title: '🏆 ' + last.winner + ' wins it all', gold: true });
+    });
+    data.competitions.forEach(c => c.updates.forEach(u => feed.push({ ts: u.ts, comp: c.name, title: u.text, gold: this.isGoldUpdate(u) })));
+    feed.sort((a, b) => b.ts - a.ts);
+    base.feed = feed.slice(0, 14).map(f => ({
+      ...f, time: this.rel(f.ts),
+      titleColor: f.gold ? '#3ce069' : '#ffab1f',
+      compColor: f.gold ? '#3ce069' : '#ff4a2e'
+    }));
+
+    // Featured matches lead, then everything else that's ready to play,
+    // finals first because that's what the room cares about.
+    const ups = [], seen = new Set();
+    const addUp = (t, r, i, m, feat) => {
+      const key = t.name + '|' + r + '|' + i;
+      if (seen.has(key)) return;
+      seen.add(key);
+      const big = r >= t.rounds.length - 2;
+      ups.push({
+        comp: t.name, round: this.roundLabel(t.rounds[r].length),
+        a: m.a, b: m.b, star: feat ? '\u2605' : '',
+        vsColor: big ? '#3ce069' : '#3d5c86',
+        vsAnim: big ? 'goldglow 2.4s ease-in-out infinite' : 'none',
+        lineColor: big ? 'rgba(60,224,105,0.35)' : 'rgba(111,139,179,0.30)',
+        topW: big ? 2 : 0,
+        topColor: big ? '#3ce069' : 'transparent',
+        topAnim: big ? 'goldline 2.4s ease-in-out infinite' : 'none',
+        topPad: big ? 7 : 0
+      });
+    };
+    // Featured matches jump the queue regardless of round.
+    data.tournaments.forEach(t => {
+      const f = t.featured;
+      if (!f) return;
+      const m = t.rounds[f.r] && t.rounds[f.r][f.i];
+      if (m && m.a && m.b && !m.winner) addUp(t, f.r, f.i, m, true);
+    });
+
+    // Everything else is drawn round-robin: one match from each bracket before
+    // any bracket gets a second, and within a bracket the later rounds first.
+    const queues = data.tournaments.map(t => {
+      const q = [];
+      for (let r = t.rounds.length - 1; r >= 0; r--) {
+        t.rounds[r].forEach((m, i) => { if (m.a && m.b && !m.winner) q.push({ t, r, i, m }); });
+      }
+      return q;
+    });
+    let drew = true;
+    while (drew && ups.length < 14) {
+      drew = false;
+      for (const q of queues) {
+        while (q.length) {
+          const n = q.shift();
+          if (seen.has(n.t.name + '|' + n.r + '|' + n.i)) continue;  // already in as featured
+          addUp(n.t, n.r, n.i, n.m, false);
+          drew = true;
+          break;
+        }
+        if (ups.length >= 14) break;
+      }
+    }
+    base.upNext = ups.slice(0, 14);
+    base.upNextEmpty = ups.length === 0;
+    return base;
+  }
+}
+</script>
+</body>
+</html>
