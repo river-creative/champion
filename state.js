@@ -48,11 +48,20 @@ export default async function handler(req, res) {
       // Anyone sitting in the sign-up queue appears immediately, before an
       // admin save has folded them into the stored state.
       const pending = rec && rec.data && hasQueue() ? await peekSignups() : [];
-      const data = rec ? mergeSignups(rec.data, pending) : null;
+      // The revision moves when the queue does, so polling clients notice.
+      const rev = rec ? rec.rev + (pending.length ? pending.length / 1000 : 0) : 0;
+
+      // Clients send the revision they already hold. When nothing has moved we
+      // answer in ~40 bytes instead of shipping the whole competition state,
+      // which at 300 entrants is well over 100 KB every three seconds.
+      const since = /[?&]since=([\d.]+)/.exec(req.url || '');
+      if (since && rec && parseFloat(since[1]) === rev) {
+        return send(res, 200, { unchanged: true, rev });
+      }
+
       return send(res, 200, {
-        // The revision moves when the queue does, so polling clients notice.
-        rev: rec ? rec.rev + (pending.length ? pending.length / 1000 : 0) : 0,
-        data,
+        rev,
+        data: rec ? mergeSignups(rec.data, pending) : null,
         pendingSignups: pending.length,
         backend: backend()
       });

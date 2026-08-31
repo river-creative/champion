@@ -10,7 +10,7 @@
  * rare case of two people scoring the same match inside the same second.
  */
 window.ChampSync = (function () {
-  var API = 'api/state';
+  var API = '/api/state';  // root-absolute; a relative path breaks at /board/
   var LS = 'champion-app-v2';
   var LS_REV = 'champion-rev';
   var LS_PIN = 'champion-pin';
@@ -46,13 +46,18 @@ window.ChampSync = (function () {
   // or when we're running without an API.
   function pull() {
     if (remote === false || demo()) return Promise.resolve(null);
-    return fetch(API + '?t=' + Date.now(), { cache: 'no-store' })
+    // Tell the server what we already have. It replies "unchanged" in a few
+    // bytes when nothing has moved, instead of resending the whole state on
+    // every poll. Only claim a revision if we actually still hold the data.
+    var since = (rev > 0 && cacheGet()) ? '&since=' + rev : '';
+    return fetch(API + '?t=' + Date.now() + since, { cache: 'no-store' })
       .then(function (r) {
         if (r.status === 404 || r.status === 405 || r.status === 501) { remote = false; return null; }
         if (!r.ok) return null;
         return r.json().then(function (j) {
           remote = true;
           if (!j || typeof j.rev !== 'number') return null;
+          if (j.unchanged) return null;        // server confirmed nothing moved
           if (j.rev === rev) return null;      // unchanged, don't churn React
           if (!j.data) return null;            // server empty, caller may seed
           cacheSet(j.data, j.rev);
