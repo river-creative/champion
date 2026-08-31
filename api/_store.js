@@ -172,3 +172,90 @@ export async function writeState(record) {
     default: mem = record; return mem;
   }
 }
+
+/* ─────────────────────────── sign-up queue ───────────────────────────
+ * A mass text means dozens of people submitting at once. Read-modify-write
+ * on the whole state loses entries under that kind of burst: two requests
+ * read the same snapshot and the second overwrites the first.
+ *
+ * Sign-ups therefore go onto a Redis list instead. RPUSH is atomic and
+ * append-only, so concurrent writers cannot clobber each other however many
+ * arrive in the same second. The list is merged into the state on read and
+ * drained into it whenever an admin saves.
+ */
+
+const QKEY = 'champion:signups';
+export const QUEUE_MAX = 500;
+
+export function hasQueue() {
+  const b = backend();
+  return b === 'redis' || b === 'redis-tcp';
+}
+
+export async function queueSignup(entry) {
+  const payload = JSON.stringify(entry);
+  if (backend() === 'redis') { await redis(['RPUSH', QKEY, payload]); return true; }
+  if (backend() === 'redis-tcp') { const c = await tcp(); await c.rPush(QKEY, payload); return true; }
+  return false;
+}
+
+export async function queueLength() {
+  if (backend() === 'redis') return (await redis(['LLEN', QKEY])) || 0;
+  if (backend() === 'redis-tcp') { const c = await tcp(); return (await c.lLen(QKEY)) || 0; }
+  return 0;
+}
+
+function parseAll(list) {
+  return (list || []).map((x) => { try { return JSON.parse(x); } catch { return null; } }).filter(Boolean);
+}
+
+export async function peekSignups() {
+  if (backend() === 'redis') return parseAll(await redis(['LRANGE', QKEY, '0', '-1']));
+  if (backend() === 'redis-tcp') { const c = await tcp(); return parseAll(await c.lRange(QKEY, 0, -1)); }
+  return [];
+}
+
+// LPOP with a count removes and returns in one operation, so anything pushed
+// mid-drain simply stays queued for next time.
+export async function drainSignups(n = QUEUE_MAX) {
+  if (backend() === 'redis') return parseAll(await redis(['LPOP', QKEY, String(n)]));
+  if (backend() === 'redis-tcp') { const c = await tcp(); return parseAll(await c.lPopCount(QKEY, n)); }
+  return [];
+}
+
+// If the state write fails after a drain, put the entries back rather than
+// silently dropping people who signed up.
+export async function restoreSignups(items) {
+  if (!items || !items.length) return;
+  const payload = items.map((x) => JSON.stringify(x));
+  if (backend() === 'redis') { await redis(['LPUSH', QKEY, ...payload.slice().reverse()]); return; }
+  if (backend() === 'redis-tcp') { const c = await tcp(); await c.lPush(QKEY, payload.slice().reverse()); }
+}
+
+/* Fold queued entries into a state object. Matching is by name per
+ * competition, so an entry that has already been persisted is skipped and
+ * replaying the queue can never duplicate anyone. */
+export function mergeSignups(data, queued) {
+  if (!data || !queued || !queued.length) return data;
+  const byComp = new Map();
+  for (const q of queued) {
+    if (!byComp.has(q.compId)) byComp.set(q.compId, []);
+    byComp.get(q.compId).push(q);
+  }
+  return {
+    ...data,
+    competitions: (data.competitions || []).map((c) => {
+      const adds = byComp.get(c.id);
+      if (!adds || !adds.length) return c;
+      const board = [...(c.board || [])];
+      const seen = new Set(board.map((r) => String(r.name || '').trim().toLowerCase()));
+      for (const q of adds) {
+        const key = String(q.name || '').trim().toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+        board.push({ name: q.name, bw: q.bw || '', score: '', signedUpAt: q.ts });
+      }
+      return { ...c, board };
+    })
+  };
+}

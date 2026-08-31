@@ -1,4 +1,5 @@
-import { readState, writeState, backend, backendVar } from './_store.js';
+import { readState, writeState, backend, backendVar,
+         hasQueue, peekSignups, drainSignups, restoreSignups, mergeSignups } from './_store.js';
 
 const MAX_BYTES = 512 * 1024;
 
@@ -20,9 +21,23 @@ export default async function handler(req, res) {
           .filter((k) => /REDIS|KV_|UPSTASH|BLOB|CHAMP_PIN/.test(k))
           .filter((k) => (process.env[k] || '').length > 0)
           .sort();
+        // Health summary: small enough to read at a glance mid-event, unlike
+        // the full state response where these sit after the whole data blob.
+        let rec = null, queued = 0, openComps = [];
+        try {
+          rec = await readState();
+          if (hasQueue()) queued = (await peekSignups()).length;
+          openComps = ((rec && rec.data && rec.data.competitions) || [])
+            .filter((c) => c.signupOpen).map((c) => c.name);
+        } catch (e) {}
         return send(res, 200, {
           backend: backend(),
           usingVar: backendVar(),
+          atomicSignupQueue: hasQueue(),
+          pendingSignups: queued,
+          signupsOpenFor: openComps,
+          rev: rec ? rec.rev : 0,
+          competitions: ((rec && rec.data && rec.data.competitions) || []).length,
           envVarsFound: seen,
           hint: seen.length === 0
             ? 'No storage env vars visible. They are not scoped to this environment, or the deployment predates them — redeploy.'
@@ -30,9 +45,24 @@ export default async function handler(req, res) {
         });
       }
       const rec = await readState();
+      // Anyone sitting in the sign-up queue appears immediately, before an
+      // admin save has folded them into the stored state.
+      const pending = rec && rec.data && hasQueue() ? await peekSignups() : [];
+      // The revision moves when the queue does, so polling clients notice.
+      const rev = rec ? rec.rev + (pending.length ? pending.length / 1000 : 0) : 0;
+
+      // Clients send the revision they already hold. When nothing has moved we
+      // answer in ~40 bytes instead of shipping the whole competition state,
+      // which at 300 entrants is well over 100 KB every three seconds.
+      const since = /[?&]since=([\d.]+)/.exec(req.url || '');
+      if (since && rec && parseFloat(since[1]) === rev) {
+        return send(res, 200, { unchanged: true, rev });
+      }
+
       return send(res, 200, {
-        rev: rec ? rec.rev : 0,
-        data: rec ? rec.data : null,
+        rev,
+        data: rec ? mergeSignups(rec.data, pending) : null,
+        pendingSignups: pending.length,
         backend: backend()
       });
     }
@@ -62,13 +92,25 @@ export default async function handler(req, res) {
       }
 
       const current = await readState();
+
+      // Fold the queue into this save so it stops living in two places. LPOP
+      // takes only what exists right now; anything arriving mid-save stays
+      // queued for the next one. Matching is by name, so an entry the admin
+      // already has in hand is not added twice.
+      const drained = hasQueue() ? await drainSignups() : [];
       const rec = {
         rev: (current ? current.rev : 0) + 1,
-        data: parsed.data,
+        data: mergeSignups(parsed.data, drained),
         updatedAt: new Date().toISOString()
       };
-      await writeState(rec);
-      return send(res, 200, { rev: rec.rev, updatedAt: rec.updatedAt });
+      try {
+        await writeState(rec);
+      } catch (err) {
+        // Put people back rather than dropping them on a failed write.
+        await restoreSignups(drained);
+        throw err;
+      }
+      return send(res, 200, { rev: rec.rev, updatedAt: rec.updatedAt, merged: drained.length });
     }
 
     res.setHeader('allow', 'GET, PUT, POST');
