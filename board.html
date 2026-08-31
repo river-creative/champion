@@ -530,10 +530,17 @@ class Component extends DCLogic {
   parseScore(s) { const m = /^(\d+):(\d\d)/.exec(String(s)); if (m) return +m[1] * 60 + +m[2]; const f = parseFloat(s); return isNaN(f) ? null : f; }
   sortBoard(c) {
     const rows = [...(c.board || [])];
-    if (c.dots) return rows.sort((a, b) => (this.dots(b.bw, b.score) || -1) - (this.dots(a.bw, a.score) || -1));
-    if (rows.every(r => this.parseScore(r.score) != null)) rows.sort((a, b) => c.lowerBetter ? this.parseScore(a.score) - this.parseScore(b.score) : this.parseScore(b.score) - this.parseScore(a.score));
-    return rows;
+    const val = (r) => c.dots ? this.dots(r.bw, r.score) : this.parseScore(r.score);
+    // Unscored rows always sink, whatever the scoring format.
+    return rows.sort((x, y) => {
+      const a = val(x), b = val(y);
+      if (a == null && b == null) return 0;
+      if (a == null) return 1;
+      if (b == null) return -1;
+      return c.lowerBetter ? a - b : b - a;
+    });
   }
+
   tStatus(t) {
     const last = t.rounds[t.rounds.length - 1][0];
     if (last.winner) return 'Complete';
