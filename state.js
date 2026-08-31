@@ -21,9 +21,23 @@ export default async function handler(req, res) {
           .filter((k) => /REDIS|KV_|UPSTASH|BLOB|CHAMP_PIN/.test(k))
           .filter((k) => (process.env[k] || '').length > 0)
           .sort();
+        // Health summary: small enough to read at a glance mid-event, unlike
+        // the full state response where these sit after the whole data blob.
+        let rec = null, queued = 0, openComps = [];
+        try {
+          rec = await readState();
+          if (hasQueue()) queued = (await peekSignups()).length;
+          openComps = ((rec && rec.data && rec.data.competitions) || [])
+            .filter((c) => c.signupOpen).map((c) => c.name);
+        } catch (e) {}
         return send(res, 200, {
           backend: backend(),
           usingVar: backendVar(),
+          atomicSignupQueue: hasQueue(),
+          pendingSignups: queued,
+          signupsOpenFor: openComps,
+          rev: rec ? rec.rev : 0,
+          competitions: ((rec && rec.data && rec.data.competitions) || []).length,
           envVarsFound: seen,
           hint: seen.length === 0
             ? 'No storage env vars visible. They are not scoped to this environment, or the deployment predates them — redeploy.'
