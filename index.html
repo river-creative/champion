@@ -683,8 +683,23 @@ class Component extends DCLogic {
       method: 'POST', headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ name, bw: s.signupBw, comps: picked })
     })
-      .then(r => r.json().then(j => ({ ok: r.ok, j })))
-      .then(({ ok, j }) => {
+      // Read as text first: a missing endpoint answers with an HTML 404, and
+      // parsing that as JSON would throw and look identical to being offline.
+      .then(r => r.text().then(t => {
+        let j = null;
+        try { j = JSON.parse(t); } catch (e) {}
+        return { ok: r.ok, status: r.status, j };
+      }))
+      .then(({ ok, status, j }) => {
+        if (!j) {
+          this.setState({
+            signupBusy: false,
+            signupMsg: status === 404
+              ? 'Sign-up is not switched on for this site yet — please see the booth.'
+              : 'Server error (' + status + ') — please see the booth.'
+          });
+          return;
+        }
         if (!ok) { this.setState({ signupBusy: false, signupMsg: j.error || 'Could not sign up.' }); return; }
         this.setState({ signupBusy: false, signupName: '', signupBw: '', signupPick: {}, signupBench: '',
                         signupMsg: 'You are in — see you at the station.' });
