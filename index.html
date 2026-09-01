@@ -159,6 +159,13 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
               </sc-for>
             </div>
             <input value="{{ signupBw }}" onInput="{{ setSignupBw }}" placeholder="Body weight (lb)" inputmode="decimal" style="width:100%;box-sizing:border-box;margin-top:8px;background:#0d131c;border:1px solid rgba(243,242,242,0.2);color:#f3f2f2;padding:11px;font-size:14px">
+            <div style="font-size:9px;letter-spacing:2px;color:#8b93a1;font-weight:800;text-transform:uppercase;margin-top:12px">Your three attempts (lb)</div>
+            <div style="display:flex;gap:8px;margin-top:7px">
+              <input value="{{ signupA1 }}" onInput="{{ setSignupA1 }}" placeholder="1st" inputmode="decimal" style="flex:1;min-width:0;background:#0d131c;border:1px solid rgba(243,242,242,0.2);color:#f3f2f2;padding:11px;font-size:14px;text-align:center">
+              <input value="{{ signupA2 }}" onInput="{{ setSignupA2 }}" placeholder="2nd" inputmode="decimal" style="flex:1;min-width:0;background:#0d131c;border:1px solid rgba(243,242,242,0.2);color:#f3f2f2;padding:11px;font-size:14px;text-align:center">
+              <input value="{{ signupA3 }}" onInput="{{ setSignupA3 }}" placeholder="3rd" inputmode="decimal" style="flex:1;min-width:0;background:#0d131c;border:1px solid rgba(243,242,242,0.2);color:#f3f2f2;padding:11px;font-size:14px;text-align:center">
+            </div>
+            <div style="font-size:10.5px;color:#8b93a1;margin-top:6px;line-height:1.45">Places are limited. Entries are ranked on the DOTS score your best attempt would earn, so body weight is taken into account.</div>
           </sc-if>
 
           <sc-if value="{{ signupHasTours }}" hint-placeholder-val="{{ true }}">
@@ -423,7 +430,27 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
             </sc-for>
           </div>
           <sc-if value="{{ adminOn }}" hint-placeholder-val="{{ false }}">
-            <div style="display:flex;gap:8px;margin-top:8px">
+            <sc-if value="{{ cHasApplicants }}" hint-placeholder-val="{{ false }}">
+              <div style="border:1px solid rgba(232,180,74,0.4);background:rgba(232,180,74,0.06);padding:12px 13px;margin-top:10px">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+                  <span style="font-size:9px;letter-spacing:2px;color:#e8b44a;font-weight:800;text-transform:uppercase">{{ cApplicantCount }} · ranked by projected DOTS</span>
+                  <button onClick="{{ cAcceptTop }}" style="flex:none;background:#e8b44a;color:#151d29;border:none;padding:7px 11px;font-weight:900;letter-spacing:1.2px;text-transform:uppercase;font-size:9px;cursor:pointer">{{ cAcceptLabel }}</button>
+                </div>
+                <div style="margin-top:9px;display:flex;flex-direction:column">
+                  <sc-for list="{{ cApplicants }}" as="a" hint-placeholder-count="5">
+                    <div style="display:flex;align-items:center;gap:9px;padding:7px 6px;border-bottom:1px solid rgba(243,242,242,0.07);background:{{ a.bg }}">
+                      <span style="width:22px;font-weight:900;font-style:italic;color:{{ a.projColor }};font-size:12px;flex:none">{{ a.rank }}</span>
+                      <span style="flex:1;min-width:0"><span style="font-weight:700;font-size:12.5px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ a.name }}</span><span style="font-size:9.5px;color:#8b93a1">{{ a.meta }}</span></span>
+                      <span style="font-weight:900;font-size:11.5px;color:{{ a.projColor }};flex:none">{{ a.proj }}</span>
+                      <button onClick="{{ a.accept }}" title="Add to the competition" style="flex:none;width:26px;height:26px;background:rgba(60,200,90,0.14);border:1px solid rgba(60,200,90,0.5);color:#4cd964;font-size:12px;font-weight:800;cursor:pointer;border-radius:6px;padding:0">✓</button>
+                      <button onClick="{{ a.drop }}" title="Decline" style="flex:none;width:26px;height:26px;background:rgba(236,48,19,0.12);border:1px solid rgba(236,48,19,0.5);color:#ec3013;font-size:11px;font-weight:800;cursor:pointer;border-radius:6px;padding:0">✕</button>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-if>
+
+            <div style="display:flex;gap:8px;margin-top:14px">
               <input value="{{ boardName }}" onChange="{{ onBoardName }}" placeholder="Name" style="flex:2;min-width:0;background:#0d131c;border:1px solid rgba(243,242,242,0.2);color:#f3f2f2;padding:9px;font-size:12px">
               <sc-if value="{{ cHasBW }}" hint-placeholder-val="{{ false }}">
                 <input value="{{ boardBw }}" onChange="{{ onBoardBw }}" placeholder="BW" style="flex:1;min-width:0;background:#0d131c;border:1px solid rgba(243,242,242,0.2);color:#f3f2f2;padding:9px;font-size:12px">
@@ -431,12 +458,13 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
               <input value="{{ boardScore }}" onChange="{{ onBoardScore }}" placeholder="{{ scorePlaceholder }}" style="flex:1;min-width:0;background:#0d131c;border:1px solid rgba(243,242,242,0.2);color:#f3f2f2;padding:9px;font-size:12px">
               <button onClick="{{ addBoardRow }}" style="flex:none;background:#ec3013;color:#fff;border:none;padding:9px 14px;font-weight:900;cursor:pointer">+</button>
             </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:10px">
-              <span style="font-size:10px;color:#5c6675;letter-spacing:0.5px">Re-enter a name to overwrite that result. Admin sees every place, not just the top 5.</span>
-              <sc-if value="{{ cCanClear }}" hint-placeholder-val="{{ true }}">
-                <button onClick="{{ clearComp }}" style="flex:none;background:none;border:1px solid rgba(236,48,19,0.55);color:#ec3013;padding:7px 12px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;font-size:9.5px;cursor:pointer;border-radius:6px">Clear results</button>
-              </sc-if>
-            </div>
+            <div style="font-size:10px;color:#5c6675;letter-spacing:0.5px;margin-top:8px;line-height:1.5">Re-enter a name to overwrite that result. Admin sees every place, not just the top 5.</div>
+            <sc-if value="{{ cCanClear }}" hint-placeholder-val="{{ true }}">
+              <div style="margin-top:22px;padding-top:14px;border-top:1px solid rgba(243,242,242,0.1)">
+                <button onClick="{{ clearComp }}" style="background:none;border:1px solid rgba(236,48,19,0.55);color:#ec3013;padding:8px 14px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;font-size:9.5px;cursor:pointer;border-radius:6px">Clear results</button>
+                <span style="font-size:10px;color:#5c6675;margin-left:10px">Deletes every result and update here.</span>
+              </div>
+            </sc-if>
           </sc-if>
         </div>
       </sc-if>
@@ -483,7 +511,7 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;pin&quot;: {&quot;editor&quot;: &quot;text&quot;, &quot;default&quot;: &quot;Champs26&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Admin&quot;}, &quot;showBanner&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Layout&quot;}}">
 class Component extends DCLogic {
-  state = { view: 'home', tId: null, cId: null, adminOn: false, pinOk: false, pinOpen: false, pinVal: '', pinError: false, entrantsText: '', newCompName: '', newCompType: 'timed', boardName: '', boardBw: '', boardScore: '', updateText: '', zoom: 0.85, confirm: null, tdragFrom: null, tOverId: null, cDragId: null, cOverId: null, guideOpen: false, signupName: '', signupBw: '', signupPick: {}, signupTour: {}, signupBench: '', signupMsg: '', signupBusy: false, data: null };
+  state = { view: 'home', tId: null, cId: null, adminOn: false, pinOk: false, pinOpen: false, pinVal: '', pinError: false, entrantsText: '', newCompName: '', newCompType: 'timed', boardName: '', boardBw: '', boardScore: '', updateText: '', zoom: 0.85, confirm: null, tdragFrom: null, tOverId: null, cDragId: null, cOverId: null, guideOpen: false, signupName: '', signupBw: '', signupA1: '', signupA2: '', signupA3: '', signupPick: {}, signupTour: {}, signupBench: '', signupMsg: '', signupBusy: false, data: null };
 
   // 30s rather than 5s: with a dozen phones open, a 5s poll burns through the
   // database's monthly command allowance in days. 30s keeps roughly 40% of the
@@ -619,9 +647,7 @@ class Component extends DCLogic {
     const t3 = { id: 'cod', name: 'Call of Duty', seeding: 'order', scored: false, entrants: cod, rounds: this.genBracket(cod, 'order') };
     this.playPicks(t3, [0, 0, 1, 1, 0], now - 5 * H);
     const competitions = [
-      { id: 'bench1823', name: 'Benchpress 18-23', unit: 'LBS', hasBW: true, dots: true, board: [{ name: 'Dre Whitfield', bw: '198', score: '295' }, { name: 'Ben Hastings', bw: '176', score: '255' }], updates: [{ ts: now - 6 * H, text: 'Qualifying open at the main stage — 3 attempts each.' }] },
-      { id: 'bench2445', name: 'Benchpress 24-45', unit: 'LBS', hasBW: true, dots: true, board: [{ name: 'Moses Grant', bw: '224', score: '315' }, { name: 'Tony Alvarez', bw: '205', score: '285' }], updates: [{ ts: now - 2 * H, text: 'Moses Grant takes the lead with a 315 lb press. Finals round at 4 PM.' }] },
-      { id: 'bench45', name: 'Benchpress 45+', unit: 'LBS', hasBW: true, dots: true, board: [{ name: 'Cal Whitaker', bw: '187', score: '275' }], updates: [{ ts: now - 5 * H, text: 'Masters flight lifts at 2 PM.' }] },
+      { id: 'bench', name: 'Bench Press', unit: 'LBS', hasBW: true, dots: true, signupOpen: false, board: [{ name: 'Moses Grant', bw: '224', score: '315' }, { name: 'Tony Alvarez', bw: '205', score: '285' }, { name: 'Dre Whitfield', bw: '198', score: '295' }, { name: 'Cal Whitaker', bw: '187', score: '275' }, { name: 'Ben Hastings', bw: '176', score: '255' }], applicants: [], updates: [{ ts: now - 2 * H, text: 'Moses Grant takes the lead with a 315 lb press. Finals round at 4 PM.' }] },
       { id: 'crucible', name: 'Crucible', unit: 'TIME', lowerBetter: true, board: [{ name: 'Isaiah Cole', score: '8:42' }, { name: 'Marcus Reed', score: '9:15' }, { name: 'Ty Renner', score: '9:58' }, { name: 'Omar Fields', score: '11:03' }], updates: [{ ts: now - 90 * 60000, text: 'Station 3 (rope climb) is live. Isaiah Cole sets the pace at 8:42.' }] },
       { id: 'wick', name: 'John Wick Challenge', unit: 'TIME', lowerBetter: true, board: [{ name: 'Ray Delgado', score: '1:42' }, { name: 'Jake Rollins', score: '1:58' }, { name: 'Kev Marsh', score: '2:07' }], updates: [{ ts: now - 40 * 60000, text: 'Ray Delgado sets the course record: 1:42. Heats continue through 6 PM.' }, { ts: now - 4 * H, text: 'Course walkthrough at the pavilion. Closed-course rules — eye protection required.' }] }
     ];
@@ -723,14 +749,18 @@ class Component extends DCLogic {
     const tours = Object.keys(s.signupTour || {}).filter(k => s.signupTour[k]);
     if (name.length < 2) { this.setState({ signupMsg: 'Enter your full name.' }); return; }
     if (!picked.length && !tours.length) { this.setState({ signupMsg: 'Pick at least one competition.' }); return; }
+    const attempts = [s.signupA1, s.signupA2, s.signupA3];
     if (s.signupBench) {
       const bw = parseFloat(s.signupBw);
       if (!isFinite(bw) || bw < 80 || bw > 500) { this.setState({ signupMsg: 'Body weight is needed for bench press (80-500 lb).' }); return; }
+      if (attempts.some(a => { const v = parseFloat(a); return !isFinite(v) || v < 45 || v > 1000; })) {
+        this.setState({ signupMsg: 'Enter all three attempt weights (45-1000 lb).' }); return;
+      }
     }
     this.setState({ signupBusy: true, signupMsg: '' });
     fetch('/api/signup', {
       method: 'POST', headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ name, bw: s.signupBw, comps: picked, tours })
+      body: JSON.stringify({ name, bw: s.signupBw, attempts, comps: picked, tours })
     })
       // Read as text first: a missing endpoint answers with an HTML 404, and
       // parsing that as JSON would throw and look identical to being offline.
@@ -750,7 +780,7 @@ class Component extends DCLogic {
           return;
         }
         if (!ok) { this.setState({ signupBusy: false, signupMsg: j.error || 'Could not sign up.' }); return; }
-        this.setState({ signupBusy: false, signupName: '', signupBw: '', signupPick: {}, signupTour: {}, signupBench: '',
+        this.setState({ signupBusy: false, signupName: '', signupBw: '', signupA1: '', signupA2: '', signupA3: '', signupPick: {}, signupTour: {}, signupBench: '',
                         signupMsg: 'You are in — see you at the station.' });
         ChampSync.pull().then(r => { if (r && r.data) this.setState({ data: r.data }); });
       })
@@ -962,6 +992,10 @@ class Component extends DCLogic {
     base.signupBtn = s.signupBusy ? 'Sending…' : 'Sign me up';
     base.setSignupName = (e) => this.setState({ signupName: e.target.value, signupMsg: '' });
     base.setSignupBw = (e) => this.setState({ signupBw: e.target.value, signupMsg: '' });
+    base.signupA1 = s.signupA1; base.signupA2 = s.signupA2; base.signupA3 = s.signupA3;
+    base.setSignupA1 = (e) => this.setState({ signupA1: e.target.value, signupMsg: '' });
+    base.setSignupA2 = (e) => this.setState({ signupA2: e.target.value, signupMsg: '' });
+    base.setSignupA3 = (e) => this.setState({ signupA3: e.target.value, signupMsg: '' });
     base.submitSignup = this.submitSignup;
 
     const feed = [];
@@ -1197,6 +1231,47 @@ class Component extends DCLogic {
         bg: i === 0 ? 'rgba(232,180,74,0.08)' : 'transparent',
         remove: () => this.setState({ confirm: { kind: 'delrow', cid: c.id, name: row.name } })
       }));
+      // Applicants are ranked on the DOTS their best planned attempt would
+      // score. That is the only comparable measure before anyone lifts, and
+      // it is what decides who makes the field.
+      const apps = [...(c.applicants || [])].map(a => {
+        const best = Math.max(...(a.attempts || ['0']).map(x => parseFloat(x) || 0));
+        return { ...a, best, proj: this.dots(a.bw, best) };
+      }).sort((x, y) => (y.proj || -1) - (x.proj || -1));
+      base.cHasApplicants = apps.length > 0;
+      base.cApplicantCount = apps.length + (apps.length === 1 ? ' applicant' : ' applicants');
+      base.cApplicants = apps.map((a, i) => ({
+        rank: i + 1, name: a.name,
+        meta: 'BW ' + a.bw + ' · ' + (a.attempts || []).join(' / ') + ' LBS',
+        proj: a.proj == null ? '—' : a.proj.toFixed(2) + ' proj',
+        projColor: i < 30 ? '#e8b44a' : '#8b93a1',
+        bg: i < 30 ? 'rgba(232,180,74,0.07)' : 'transparent',
+        accept: () => {
+          const d = this.state.data;
+          this.save({ ...d, competitions: d.competitions.map(x => x.id !== c.id ? x : {
+            ...x,
+            board: [...(x.board || []), { name: a.name, bw: a.bw, score: '', signedUpAt: a.signedUpAt }],
+            applicants: (x.applicants || []).filter(p => p.name !== a.name)
+          }) });
+        },
+        drop: () => {
+          const d = this.state.data;
+          this.save({ ...d, competitions: d.competitions.map(x => x.id !== c.id ? x : {
+            ...x, applicants: (x.applicants || []).filter(p => p.name !== a.name)
+          }) });
+        }
+      }));
+      base.cAcceptTop = () => {
+        const d = this.state.data;
+        const take = apps.slice(0, 30);
+        const names = new Set(take.map(a => a.name));
+        this.save({ ...d, competitions: d.competitions.map(x => x.id !== c.id ? x : {
+          ...x,
+          board: [...(x.board || []), ...take.map(a => ({ name: a.name, bw: a.bw, score: '', signedUpAt: a.signedUpAt }))],
+          applicants: (x.applicants || []).filter(p => !names.has(p.name))
+        }) });
+      };
+      base.cAcceptLabel = 'Accept top ' + Math.min(30, apps.length);
       base.cRowCount = (c.board || []).length;
       base.cCanClear = !!((c.board && c.board.length) || (c.updates && c.updates.length));
       base.clearComp = () => this.setState({ confirm: { kind: 'clearcomp', cid: c.id, name: c.name } });
