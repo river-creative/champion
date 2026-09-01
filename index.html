@@ -142,6 +142,49 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
   </sc-if>
 
   <sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
+    <div style="padding:16px 16px 0">
+      <sc-if value="{{ signupAny }}" hint-placeholder-val="{{ true }}">
+        <div style="background:#151d29;border:1px solid rgba(232,180,74,0.35);border-top:2px solid #e8b44a;padding:16px">
+          <div style="font-size:9px;letter-spacing:2px;color:#e8b44a;font-weight:800;text-transform:uppercase">Open for entries</div>
+          <div style="font-weight:900;font-style:italic;text-transform:uppercase;font-size:18px;margin-top:4px">Sign up to compete</div>
+          <div style="font-size:11.5px;color:#8b93a1;margin-top:4px;line-height:1.45">Enter your name and pick your events. The crew records your score at the station.</div>
+
+          <input value="{{ signupName }}" onInput="{{ setSignupName }}" placeholder="Full name" style="width:100%;box-sizing:border-box;margin-top:12px;background:#0d131c;border:1px solid rgba(243,242,242,0.2);color:#f3f2f2;padding:11px;font-size:14px">
+
+          <sc-if value="{{ signupHasBench }}" hint-placeholder-val="{{ true }}">
+            <div style="font-size:9px;letter-spacing:2px;color:#8b93a1;font-weight:800;text-transform:uppercase;margin-top:14px">Bench press — pick one age group</div>
+            <div style="display:flex;flex-direction:column;gap:7px;margin-top:7px">
+              <sc-for list="{{ signupBench }}" as="b" hint-placeholder-count="3">
+                <button onClick="{{ b.pick }}" style="text-align:left;background:{{ b.bg }};border:1px solid {{ b.border }};color:{{ b.color }};padding:11px 12px;font-size:13px;font-weight:700;cursor:pointer">{{ b.name }}</button>
+              </sc-for>
+            </div>
+            <input value="{{ signupBw }}" onInput="{{ setSignupBw }}" placeholder="Body weight (lb)" inputmode="decimal" style="width:100%;box-sizing:border-box;margin-top:8px;background:#0d131c;border:1px solid rgba(243,242,242,0.2);color:#f3f2f2;padding:11px;font-size:14px">
+          </sc-if>
+
+          <sc-if value="{{ signupHasTours }}" hint-placeholder-val="{{ true }}">
+            <div style="font-size:9px;letter-spacing:2px;color:#8b93a1;font-weight:800;text-transform:uppercase;margin-top:14px">Tournaments</div>
+            <div style="display:flex;flex-direction:column;gap:7px;margin-top:7px">
+              <sc-for list="{{ signupTours }}" as="t" hint-placeholder-count="2">
+                <button onClick="{{ t.pick }}" style="display:flex;align-items:center;gap:9px;text-align:left;background:{{ t.bg }};border:1px solid {{ t.border }};color:{{ t.color }};padding:11px 12px;font-size:13px;font-weight:700;cursor:pointer"><span style="width:14px;flex:none">{{ t.mark }}</span>{{ t.name }}</button>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ signupHasOther }}" hint-placeholder-val="{{ true }}">
+            <div style="font-size:9px;letter-spacing:2px;color:#8b93a1;font-weight:800;text-transform:uppercase;margin-top:14px">Other competitions</div>
+            <div style="display:flex;flex-direction:column;gap:7px;margin-top:7px">
+              <sc-for list="{{ signupOther }}" as="o" hint-placeholder-count="2">
+                <button onClick="{{ o.pick }}" style="display:flex;align-items:center;gap:9px;text-align:left;background:{{ o.bg }};border:1px solid {{ o.border }};color:{{ o.color }};padding:11px 12px;font-size:13px;font-weight:700;cursor:pointer"><span style="width:14px;flex:none">{{ o.mark }}</span>{{ o.name }}</button>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <button onClick="{{ submitSignup }}" style="width:100%;margin-top:14px;background:#e8b44a;color:#151d29;border:none;padding:13px;font-weight:900;letter-spacing:2px;text-transform:uppercase;font-size:11px;cursor:pointer">{{ signupBtn }}</button>
+          <div style="font-size:11.5px;color:#c8ccd4;margin-top:9px;min-height:16px;line-height:1.4">{{ signupMsg }}</div>
+        </div>
+      </sc-if>
+
+    </div>
     <sc-if value="{{ hasUpNext }}" hint-placeholder-val="{{ true }}">
       <div style="padding:18px 16px 10px;display:flex;align-items:center;gap:8px">
         <span style="width:8px;height:8px;background:#ec3013;animation:livepulse 1.6s infinite"></span>
@@ -289,7 +332,17 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
     </div>
     <sc-if value="{{ adminOn }}" hint-placeholder-val="{{ false }}">
       <div style="margin:0 16px 16px;background:#151d29;border:1px solid rgba(243,242,242,0.12);padding:14px">
-        <div style="font-size:10px;letter-spacing:2px;color:#ec3013;font-weight:700;text-transform:uppercase;margin-bottom:10px">Admin · Competitors ({{ bCompetitorCount }})</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px">
+          <span style="font-size:10px;letter-spacing:2px;color:#ec3013;font-weight:700;text-transform:uppercase">Admin · Competitors ({{ bCompetitorCount }})</span>
+          <button onClick="{{ bToggleSignup }}" title="{{ bSignupLabel }}" style="flex:none;background:none;border:1px solid {{ bSignupBorder }};color:{{ bSignupColor }};padding:6px 10px;font-size:9px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;cursor:pointer;border-radius:6px">{{ bSignupLabel }}</button>
+        </div>
+        <sc-if value="{{ bHasWaiting }}" hint-placeholder-val="{{ false }}">
+          <div style="background:rgba(232,180,74,0.08);border:1px solid rgba(232,180,74,0.4);padding:10px 12px;margin-bottom:10px">
+            <div style="font-size:9px;letter-spacing:1.5px;color:#e8b44a;font-weight:800;text-transform:uppercase">{{ bWaitingLabel }}</div>
+            <div style="font-size:12px;color:#c8ccd4;margin-top:5px;line-height:1.5">{{ bWaitingText }}</div>
+            <button onClick="{{ bAddWaiting }}" style="width:100%;margin-top:9px;background:#e8b44a;color:#151d29;border:none;padding:9px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;font-size:10px;cursor:pointer">Add them to the list below</button>
+          </div>
+        </sc-if>
         <textarea value="{{ entrantsText }}" onChange="{{ onEntrantsText }}" rows="8" placeholder="One name per line" style="width:100%;box-sizing:border-box;background:#0d131c;border:1px solid rgba(243,242,242,0.2);color:#f3f2f2;padding:10px;font-size:13px;line-height:1.6;resize:vertical"></textarea>
         <div style="display:flex;gap:8px;margin-top:10px;align-items:center">
           <button onClick="{{ setSeedRandom }}" style="flex:1;background:{{ seedRandomBg }};color:{{ seedRandomColor }};border:1px solid rgba(243,242,242,0.2);padding:9px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;text-align:left">Random draw</button>
@@ -302,38 +355,6 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
 
   <sc-if value="{{ isEventList }}" hint-placeholder-val="{{ false }}">
     <div style="display:flex;flex-direction:column;gap:10px;padding:16px">
-
-      <sc-if value="{{ signupAny }}" hint-placeholder-val="{{ true }}">
-        <div style="background:#151d29;border:1px solid rgba(232,180,74,0.35);border-top:2px solid #e8b44a;padding:16px">
-          <div style="font-size:9px;letter-spacing:2px;color:#e8b44a;font-weight:800;text-transform:uppercase">Open for entries</div>
-          <div style="font-weight:900;font-style:italic;text-transform:uppercase;font-size:18px;margin-top:4px">Sign up to compete</div>
-          <div style="font-size:11.5px;color:#8b93a1;margin-top:4px;line-height:1.45">Enter your name and pick your events. The crew records your score at the station.</div>
-
-          <input value="{{ signupName }}" onInput="{{ setSignupName }}" placeholder="Full name" style="width:100%;box-sizing:border-box;margin-top:12px;background:#0d131c;border:1px solid rgba(243,242,242,0.2);color:#f3f2f2;padding:11px;font-size:14px">
-
-          <sc-if value="{{ signupHasBench }}" hint-placeholder-val="{{ true }}">
-            <div style="font-size:9px;letter-spacing:2px;color:#8b93a1;font-weight:800;text-transform:uppercase;margin-top:14px">Bench press — pick one age group</div>
-            <div style="display:flex;flex-direction:column;gap:7px;margin-top:7px">
-              <sc-for list="{{ signupBench }}" as="b" hint-placeholder-count="3">
-                <button onClick="{{ b.pick }}" style="text-align:left;background:{{ b.bg }};border:1px solid {{ b.border }};color:{{ b.color }};padding:11px 12px;font-size:13px;font-weight:700;cursor:pointer">{{ b.name }}</button>
-              </sc-for>
-            </div>
-            <input value="{{ signupBw }}" onInput="{{ setSignupBw }}" placeholder="Body weight (lb)" inputmode="decimal" style="width:100%;box-sizing:border-box;margin-top:8px;background:#0d131c;border:1px solid rgba(243,242,242,0.2);color:#f3f2f2;padding:11px;font-size:14px">
-          </sc-if>
-
-          <sc-if value="{{ signupHasOther }}" hint-placeholder-val="{{ true }}">
-            <div style="font-size:9px;letter-spacing:2px;color:#8b93a1;font-weight:800;text-transform:uppercase;margin-top:14px">Other competitions</div>
-            <div style="display:flex;flex-direction:column;gap:7px;margin-top:7px">
-              <sc-for list="{{ signupOther }}" as="o" hint-placeholder-count="2">
-                <button onClick="{{ o.pick }}" style="display:flex;align-items:center;gap:9px;text-align:left;background:{{ o.bg }};border:1px solid {{ o.border }};color:{{ o.color }};padding:11px 12px;font-size:13px;font-weight:700;cursor:pointer"><span style="width:14px;flex:none">{{ o.mark }}</span>{{ o.name }}</button>
-              </sc-for>
-            </div>
-          </sc-if>
-
-          <button onClick="{{ submitSignup }}" style="width:100%;margin-top:14px;background:#e8b44a;color:#151d29;border:none;padding:13px;font-weight:900;letter-spacing:2px;text-transform:uppercase;font-size:11px;cursor:pointer">{{ signupBtn }}</button>
-          <div style="font-size:11.5px;color:#c8ccd4;margin-top:9px;min-height:16px;line-height:1.4">{{ signupMsg }}</div>
-        </div>
-      </sc-if>
 
       <sc-for list="{{ competitions }}" as="c" hint-placeholder-count="3">
         <div data-comp-id="{{ c.id }}" style="display:flex;align-items:stretch;background:{{ c.dragBg }};border:1px solid {{ c.dragBorder }};border-left:2px solid #ec3013;transition:background .15s ease,border-color .15s ease">
@@ -462,7 +483,7 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;pin&quot;: {&quot;editor&quot;: &quot;text&quot;, &quot;default&quot;: &quot;Champs26&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Admin&quot;}, &quot;showBanner&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Layout&quot;}}">
 class Component extends DCLogic {
-  state = { view: 'home', tId: null, cId: null, adminOn: false, pinOk: false, pinOpen: false, pinVal: '', pinError: false, entrantsText: '', newCompName: '', newCompType: 'timed', boardName: '', boardBw: '', boardScore: '', updateText: '', zoom: 0.85, confirm: null, tdragFrom: null, tOverId: null, cDragId: null, cOverId: null, guideOpen: false, signupName: '', signupBw: '', signupPick: {}, signupBench: '', signupMsg: '', signupBusy: false, data: null };
+  state = { view: 'home', tId: null, cId: null, adminOn: false, pinOk: false, pinOpen: false, pinVal: '', pinError: false, entrantsText: '', newCompName: '', newCompType: 'timed', boardName: '', boardBw: '', boardScore: '', updateText: '', zoom: 0.85, confirm: null, tdragFrom: null, tOverId: null, cDragId: null, cOverId: null, guideOpen: false, signupName: '', signupBw: '', signupPick: {}, signupTour: {}, signupBench: '', signupMsg: '', signupBusy: false, data: null };
 
   // 30s rather than 5s: with a dozen phones open, a 5s poll burns through the
   // database's monthly command allowance in days. 30s keeps roughly 40% of the
@@ -486,10 +507,22 @@ class Component extends DCLogic {
     // sign-up pulls immediately on success, so this only governs how quickly
     // one device notices ANOTHER device's change. Fifteen phones at 5s was
     // over twice the free-tier command allowance for a four-day event.
-    this._poll = setInterval(() => {
+    // A phone in a pocket with the tab still open would otherwise keep polling
+    // all day. Nothing is worth fetching while the app is off screen, so the
+    // timer stops and one catch-up pull runs the moment it comes back.
+    const doc = (typeof document !== 'undefined') ? document : null;
+    this._tick = () => {
+      if (doc && doc.hidden) return;
       if (ChampSync.dirty()) return;
       ChampSync.pull().then((r) => { if (r && r.data) this.setState({ data: r.data }); });
-    }, this.POLL_MS);
+    };
+    this._poll = setInterval(this._tick, this.POLL_MS);
+    this._vis = () => {
+      if (!doc) return;
+      if (doc.hidden) { clearInterval(this._poll); this._poll = null; }
+      else if (!this._poll) { this._tick(); this._poll = setInterval(this._tick, this.POLL_MS); }
+    };
+    if (doc && doc.addEventListener) doc.addEventListener('visibilitychange', this._vis);
 
     // Same-browser tabs still sync through localStorage, which is instant.
     this._sh = (e) => {
@@ -502,7 +535,12 @@ class Component extends DCLogic {
     this._esc = (e) => { if (e.key === 'Escape' && this.state.guideOpen) this.setState({ guideOpen: false }); };
     window.addEventListener('keydown', this._esc);
   }
-  componentWillUnmount() { clearInterval(this._poll); window.removeEventListener('storage', this._sh); window.removeEventListener('keydown', this._esc); }
+  componentWillUnmount() {
+    clearInterval(this._poll);
+    window.removeEventListener('storage', this._sh);
+    window.removeEventListener('keydown', this._esc);
+    if (typeof document !== 'undefined' && document.removeEventListener) document.removeEventListener('visibilitychange', this._vis);
+  }
 
   LS = 'champion-app-v2';
   loadData() {
@@ -682,8 +720,9 @@ class Component extends DCLogic {
     const name = (s.signupName || '').trim();
     const picked = Object.keys(s.signupPick || {}).filter(k => s.signupPick[k]);
     if (s.signupBench) picked.push(s.signupBench);
+    const tours = Object.keys(s.signupTour || {}).filter(k => s.signupTour[k]);
     if (name.length < 2) { this.setState({ signupMsg: 'Enter your full name.' }); return; }
-    if (!picked.length) { this.setState({ signupMsg: 'Pick at least one competition.' }); return; }
+    if (!picked.length && !tours.length) { this.setState({ signupMsg: 'Pick at least one competition.' }); return; }
     if (s.signupBench) {
       const bw = parseFloat(s.signupBw);
       if (!isFinite(bw) || bw < 80 || bw > 500) { this.setState({ signupMsg: 'Body weight is needed for bench press (80-500 lb).' }); return; }
@@ -691,7 +730,7 @@ class Component extends DCLogic {
     this.setState({ signupBusy: true, signupMsg: '' });
     fetch('/api/signup', {
       method: 'POST', headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ name, bw: s.signupBw, comps: picked })
+      body: JSON.stringify({ name, bw: s.signupBw, comps: picked, tours })
     })
       // Read as text first: a missing endpoint answers with an HTML 404, and
       // parsing that as JSON would throw and look identical to being offline.
@@ -711,7 +750,7 @@ class Component extends DCLogic {
           return;
         }
         if (!ok) { this.setState({ signupBusy: false, signupMsg: j.error || 'Could not sign up.' }); return; }
-        this.setState({ signupBusy: false, signupName: '', signupBw: '', signupPick: {}, signupBench: '',
+        this.setState({ signupBusy: false, signupName: '', signupBw: '', signupPick: {}, signupTour: {}, signupBench: '',
                         signupMsg: 'You are in — see you at the station.' });
         ChampSync.pull().then(r => { if (r && r.data) this.setState({ data: r.data }); });
       })
@@ -901,13 +940,23 @@ class Component extends DCLogic {
     base.signupHasBench = base.signupBench.length > 0;
     base.signupOther = openComps.filter(c => !c.dots).map(c => ({
       id: c.id, name: c.name,
-      mark: s.signupPick[c.id] ? '\u2713' : '',
-      bg: s.signupPick[c.id] ? 'rgba(236,48,19,0.15)' : 'transparent',
-      color: s.signupPick[c.id] ? '#ec3013' : '#c8ccd4',
-      border: s.signupPick[c.id] ? 'rgba(236,48,19,0.7)' : 'rgba(243,242,242,0.2)',
-      pick: () => this.setState({ signupPick: { ...s.signupPick, [c.id]: !s.signupPick[c.id] }, signupMsg: '' })
+      mark: (s.signupPick || {})[c.id] ? '\u2713' : '',
+      bg: (s.signupPick || {})[c.id] ? 'rgba(236,48,19,0.15)' : 'transparent',
+      color: (s.signupPick || {})[c.id] ? '#ec3013' : '#c8ccd4',
+      border: (s.signupPick || {})[c.id] ? 'rgba(236,48,19,0.7)' : 'rgba(243,242,242,0.2)',
+      pick: () => this.setState({ signupPick: { ...(s.signupPick || {}), [c.id]: !(s.signupPick || {})[c.id] }, signupMsg: '' })
     }));
     base.signupHasOther = base.signupOther.length > 0;
+    base.signupTours = data.tournaments.filter(t => t.signupOpen).map(t => ({
+      id: t.id, name: t.name,
+      mark: (s.signupTour || {})[t.id] ? '\u2713' : '',
+      bg: (s.signupTour || {})[t.id] ? 'rgba(236,48,19,0.15)' : 'transparent',
+      color: (s.signupTour || {})[t.id] ? '#ec3013' : '#c8ccd4',
+      border: (s.signupTour || {})[t.id] ? 'rgba(236,48,19,0.7)' : 'rgba(243,242,242,0.2)',
+      pick: () => this.setState({ signupTour: { ...(s.signupTour || {}), [t.id]: !(s.signupTour || {})[t.id] }, signupMsg: '' })
+    }));
+    base.signupHasTours = base.signupTours.length > 0;
+    base.signupAny = base.signupAny || base.signupHasTours;
     base.signupName = s.signupName; base.signupBw = s.signupBw;
     base.signupMsg = s.signupMsg; base.signupBusy = s.signupBusy;
     base.signupBtn = s.signupBusy ? 'Sending…' : 'Sign me up';
@@ -1057,6 +1106,24 @@ class Component extends DCLogic {
     if (t && s.view === 'bracket') {
       base.bName = t.name; base.bStatus = this.tStatus(t) + ' · ' + t.entrants.length + ' competitors';
       base.bChampion = this.champion(t); base.bCompetitorCount = t.entrants.length;
+      const waiting = t.signups || [];
+      base.bSignupLabel = t.signupOpen ? 'Sign-ups open' : 'Sign-ups closed';
+      base.bSignupColor = t.signupOpen ? '#e8b44a' : '#8b93a1';
+      base.bSignupBorder = t.signupOpen ? 'rgba(232,180,74,0.7)' : 'rgba(243,242,242,0.25)';
+      base.bToggleSignup = () => this.save({ ...data, tournaments: data.tournaments.map(x => x.id === t.id ? { ...x, signupOpen: !x.signupOpen } : x) });
+      base.bHasWaiting = waiting.length > 0;
+      base.bWaitingText = waiting.join(', ');
+      base.bWaitingLabel = waiting.length + (waiting.length === 1 ? ' person signed up' : ' people signed up');
+      // Drops the pending names into the editor. Nothing is rebuilt until the
+      // admin presses Apply, because that wipes every result in this bracket.
+      base.bAddWaiting = () => {
+        const current = (s.entrantsText != null ? s.entrantsText : t.entrants.join('\n'))
+          .split('\n').map(x => x.trim()).filter(Boolean);
+        const seen = new Set(current.map(x => x.toLowerCase()));
+        const merged = [...current];
+        for (const n of waiting) if (!seen.has(n.toLowerCase())) { seen.add(n.toLowerCase()); merged.push(n); }
+        this.setState({ entrantsText: merged.join('\n') });
+      };
       const L = t.rounds.length;
       const half0 = Math.max(1, t.rounds[0].length / 2);
       const H = Math.max(2, half0) * 96;
@@ -1094,6 +1161,9 @@ class Component extends DCLogic {
         const names = s.entrantsText.split('\n').map(x => x.trim()).filter(Boolean);
         if (names.length < 2) return;
         t.entrants = names; t.rounds = this.genBracket(names, t.seeding);
+        // Anyone now in the bracket is no longer waiting to be added.
+        const inBracket = new Set(names.map(n => n.toLowerCase()));
+        t.signups = (t.signups || []).filter(n => !inBracket.has(String(n).toLowerCase()));
         this.save({ ...data });
       };
     } else { base.entrantsText = s.entrantsText; base.onEntrantsText = (e) => this.setState({ entrantsText: e.target.value }); }

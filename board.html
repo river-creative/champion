@@ -247,18 +247,29 @@ class Component extends DCLogic {
   };
   gridRef = (el) => { this._grid = el; if (el) this.measure(); };
   componentDidMount() {
+    // The board normally lives on a screen that is always on, but if the tab is
+    // backgrounded there is nothing to draw and no reason to keep fetching.
+    const doc = (typeof document !== 'undefined') ? document : null;
     const upd = () => {
+      if (doc && doc.hidden) return;
       this.setState({ data: this.loadData(), now: Date.now() });
       ChampSync.pull().then((r) => { if (r && r.data) this.setState({ data: r.data }); });
     };
     upd();
     this._i = setInterval(upd, 3000);
+    this._vis = () => {
+      if (!doc) return;
+      if (doc.hidden) { clearInterval(this._i); this._i = null; }
+      else if (!this._i) { upd(); this._i = setInterval(upd, 3000); }
+    };
+    if (doc && doc.addEventListener) doc.addEventListener('visibilitychange', this._vis);
     this._sh = (e) => { if (!e.key || e.key === this.LS) upd(); };
     window.addEventListener('storage', this._sh);
     window.addEventListener('resize', this.measure);
     this._ct = setTimeout(this.cycle, 8000);
   }
-  componentWillUnmount() { clearInterval(this._i); clearTimeout(this._ct); clearTimeout(this._nt); window.removeEventListener('storage', this._sh); window.removeEventListener('resize', this.measure); }
+  componentWillUnmount() { if (typeof document !== 'undefined' && document.removeEventListener) document.removeEventListener('visibilitychange', this._vis);
+    clearInterval(this._i); clearTimeout(this._ct); clearTimeout(this._nt); window.removeEventListener('storage', this._sh); window.removeEventListener('resize', this.measure); }
 
   // Latest <-> Up Next rotation. Each panel holds still, then creeps down at
   // 15 px/s through the final 30s so the tail is readable before the swap.
