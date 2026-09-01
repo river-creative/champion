@@ -513,12 +513,13 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
 class Component extends DCLogic {
   state = { view: 'home', tId: null, cId: null, adminOn: false, pinOk: false, pinOpen: false, pinVal: '', pinError: false, entrantsText: '', newCompName: '', newCompType: 'timed', boardName: '', boardBw: '', boardScore: '', updateText: '', zoom: 0.85, confirm: null, tdragFrom: null, tOverId: null, cDragId: null, cOverId: null, guideOpen: false, signupName: '', signupBw: '', signupA1: '', signupA2: '', signupA3: '', signupPick: {}, signupTour: {}, signupBench: '', signupMsg: '', signupBusy: false, data: null };
 
-  // 30s rather than 5s: with a dozen phones open, a 5s poll burns through the
-  // database's monthly command allowance in days. 30s keeps roughly 40% of the
-  // allowance spare while halving the window in which two booths can save from
-  // stale copies and overwrite each other. The big screen still refreshes
-  // every 3s, so the room never sees a stale result.
-  POLL_MS = 30000;
+  // 10s. Commands are unmetered on the Fixed plan, so the limit here is Vercel
+  // function invocations, not the database. 10s keeps those to about a third of
+  // what a 3s poll would cost while shrinking the window in which two booths
+  // can save from stale copies and overwrite each other. The big screen
+  // refreshes every 3s regardless - it is one client, and it is what the room
+  // is looking at.
+  POLL_MS = 10000;
   componentDidMount() {
     // Paint instantly from the local cache, then reconcile with the server.
     let d = ChampSync.demo() ? null : ChampSync.cacheGet();
