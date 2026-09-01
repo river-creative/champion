@@ -464,6 +464,12 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
 class Component extends DCLogic {
   state = { view: 'home', tId: null, cId: null, adminOn: false, pinOk: false, pinOpen: false, pinVal: '', pinError: false, entrantsText: '', newCompName: '', newCompType: 'timed', boardName: '', boardBw: '', boardScore: '', updateText: '', zoom: 0.85, confirm: null, tdragFrom: null, tOverId: null, cDragId: null, cOverId: null, guideOpen: false, signupName: '', signupBw: '', signupPick: {}, signupBench: '', signupMsg: '', signupBusy: false, data: null };
 
+  // 30s rather than 5s: with a dozen phones open, a 5s poll burns through the
+  // database's monthly command allowance in days. 30s keeps roughly 40% of the
+  // allowance spare while halving the window in which two booths can save from
+  // stale copies and overwrite each other. The big screen still refreshes
+  // every 3s, so the room never sees a stale result.
+  POLL_MS = 30000;
   componentDidMount() {
     // Paint instantly from the local cache, then reconcile with the server.
     let d = ChampSync.demo() ? null : ChampSync.cacheGet();
@@ -476,10 +482,14 @@ class Component extends DCLogic {
     });
 
     // Pick up edits made from another device, unless we have unsent changes.
+    // 90s between polls. Your own edits show instantly (local state), and a
+    // sign-up pulls immediately on success, so this only governs how quickly
+    // one device notices ANOTHER device's change. Fifteen phones at 5s was
+    // over twice the free-tier command allowance for a four-day event.
     this._poll = setInterval(() => {
       if (ChampSync.dirty()) return;
       ChampSync.pull().then((r) => { if (r && r.data) this.setState({ data: r.data }); });
-    }, 5000);
+    }, this.POLL_MS);
 
     // Same-browser tabs still sync through localStorage, which is instant.
     this._sh = (e) => {
