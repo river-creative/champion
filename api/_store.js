@@ -237,25 +237,54 @@ export async function restoreSignups(items) {
  * replaying the queue can never duplicate anyone. */
 export function mergeSignups(data, queued) {
   if (!data || !queued || !queued.length) return data;
-  const byComp = new Map();
+  const byComp = new Map(), byTour = new Map();
   for (const q of queued) {
-    if (!byComp.has(q.compId)) byComp.set(q.compId, []);
-    byComp.get(q.compId).push(q);
+    if (q.tourId) {
+      if (!byTour.has(q.tourId)) byTour.set(q.tourId, []);
+      byTour.get(q.tourId).push(q);
+    } else {
+      if (!byComp.has(q.compId)) byComp.set(q.compId, []);
+      byComp.get(q.compId).push(q);
+    }
   }
   return {
     ...data,
-    competitions: (data.competitions || []).map((c) => {
-      const adds = byComp.get(c.id);
-      if (!adds || !adds.length) return c;
-      const board = [...(c.board || [])];
-      const seen = new Set(board.map((r) => String(r.name || '').trim().toLowerCase()));
+    // A tournament sign-up cannot go straight into the bracket - the tree is
+    // generated from the entrant list, and rebuilding it wipes every result.
+    // Entries wait in `signups` until an admin folds them in deliberately.
+    tournaments: (data.tournaments || []).map((t) => {
+      const adds = byTour.get(t.id);
+      if (!adds || !adds.length) return t;
+      const pending = [...(t.signups || [])];
+      const seen = new Set([...(t.entrants || []), ...pending].map((n) => String(n).trim().toLowerCase()));
       for (const q of adds) {
         const key = String(q.name || '').trim().toLowerCase();
         if (seen.has(key)) continue;
         seen.add(key);
-        board.push({ name: q.name, bw: q.bw || '', score: '', signedUpAt: q.ts });
+        pending.push(q.name);
       }
-      return { ...c, board };
+      return { ...t, signups: pending };
+    }),
+    competitions: (data.competitions || []).map((c) => {
+      const adds = byComp.get(c.id);
+      if (!adds || !adds.length) return c;
+      const board = [...(c.board || [])];
+      const applicants = [...(c.applicants || [])];
+      // A sign-up carrying attempt weights is an APPLICATION, not an entry.
+      // It waits in `applicants` so an admin can rank the field on projected
+      // DOTS and pick who actually lifts.
+      const seen = new Set([...board, ...applicants].map((r) => String(r.name || '').trim().toLowerCase()));
+      for (const q of adds) {
+        const key = String(q.name || '').trim().toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+        if (q.attempts && q.attempts.length) {
+          applicants.push({ name: q.name, bw: q.bw || '', attempts: q.attempts, signedUpAt: q.ts });
+        } else {
+          board.push({ name: q.name, bw: q.bw || '', score: '', signedUpAt: q.ts });
+        }
+      }
+      return { ...c, board, applicants };
     })
   };
 }

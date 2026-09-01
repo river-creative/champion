@@ -8,6 +8,7 @@ import { readState, writeState, hasQueue, queueSignup, queueLength, peekSignups,
 const MAX_BODY = 8 * 1024;
 const MAX_ENTRIES = 200;      // per competition
 const BW_MIN = 80, BW_MAX = 500;
+const LIFT_MIN = 45, LIFT_MAX = 1000;
 
 function send(res, status, body) {
   res.statusCode = status;
@@ -35,12 +36,21 @@ export default async function handler(req, res) {
     if (/[<>{}]/.test(name)) return send(res, 400, { error: 'Name contains invalid characters.' });
 
     const ids = Array.isArray(body.comps) ? body.comps.slice(0, 12).map(String) : [];
-    if (!ids.length) return send(res, 400, { error: 'Pick at least one competition.' });
+    const tourIds = Array.isArray(body.tours) ? body.tours.slice(0, 12).map(String) : [];
+    if (!ids.length && !tourIds.length) return send(res, 400, { error: 'Pick at least one competition.' });
 
     const rec = await readState();
     if (!rec || !rec.data) return send(res, 409, { error: 'No competition data yet.' });
 
     const comps = rec.data.competitions || [];
+    const tours = rec.data.tournaments || [];
+    const tourTargets = [];
+    for (const id of tourIds) {
+      const t = tours.find((x) => x.id === id);
+      if (!t) return send(res, 400, { error: 'Unknown tournament.' });
+      if (!t.signupOpen) return send(res, 403, { error: `Sign-ups are closed for ${t.name}.` });
+      if (!tourTargets.includes(t)) tourTargets.push(t);
+    }
     const targets = [];
     for (const id of ids) {
       const c = comps.find((x) => x.id === id);
@@ -53,20 +63,41 @@ export default async function handler(req, res) {
     const bench = targets.filter((c) => c.dots);
     if (bench.length > 1) return send(res, 400, { error: 'Choose a single bench press category.' });
 
-    let bw = '';
+    let bw = '', attempts = [];
     if (bench.length) {
       const n = parseFloat(body.bw);
       if (!isFinite(n) || n < BW_MIN || n > BW_MAX) {
         return send(res, 400, { error: `Body weight must be ${BW_MIN}-${BW_MAX} lb.` });
       }
       bw = String(Math.round(n));
+
+      // Three planned attempts. They are what the field is ranked on before
+      // anyone lifts, so all three are required and have to be plausible.
+      const raw = Array.isArray(body.attempts) ? body.attempts : [];
+      if (raw.length !== 3) return send(res, 400, { error: 'Enter all three attempt weights.' });
+      for (const a of raw) {
+        const v = parseFloat(a);
+        if (!isFinite(v) || v < LIFT_MIN || v > LIFT_MAX) {
+          return send(res, 400, { error: `Attempts must be ${LIFT_MIN}-${LIFT_MAX} lb.` });
+        }
+        attempts.push(String(Math.round(v)));
+      }
     }
 
     const lower = name.toLowerCase();
     const pending = hasQueue() ? await peekSignups() : [];
     const merged = mergeSignups(rec.data, pending);
+    for (const t of tourTargets) {
+      const mt = merged.tournaments.find((x) => x.id === t.id) || t;
+      const roster = [...(mt.entrants || []), ...(mt.signups || [])];
+      if (roster.length >= MAX_ENTRIES) return send(res, 409, { error: `${t.name} is full.` });
+      if (roster.some((n) => String(n).trim().toLowerCase() === lower)) {
+        return send(res, 409, { error: `${name} is already signed up for ${t.name}.` });
+      }
+    }
     for (const c of targets) {
-      const board = (merged.competitions.find((x) => x.id === c.id) || c).board || [];
+      const mc = merged.competitions.find((x) => x.id === c.id) || c;
+      const board = [...(mc.board || []), ...(mc.applicants || [])];
       if (board.length >= MAX_ENTRIES) return send(res, 409, { error: `${c.name} is full.` });
       if (board.some((r) => String(r.name || '').trim().toLowerCase() === lower)) {
         return send(res, 409, { error: `${name} is already signed up for ${c.name}.` });
@@ -78,28 +109,38 @@ export default async function handler(req, res) {
     if (hasQueue()) {
       // Atomic append per competition. Nothing is read-modified-written here,
       // so a hundred simultaneous sign-ups all survive.
-      if ((await queueLength()) + targets.length > QUEUE_MAX) {
+      if ((await queueLength()) + targets.length + tourTargets.length > QUEUE_MAX) {
         return send(res, 503, { error: 'Sign-ups are busy right now — try again in a moment.' });
       }
       for (const c of targets) {
-        await queueSignup({ compId: c.id, name, bw: c.dots ? bw : '', ts });
+        await queueSignup({ compId: c.id, name, bw: c.dots ? bw : '', attempts: c.dots ? attempts : [], ts });
       }
-      return send(res, 200, { ok: true, added: targets.map((c) => c.name), queued: true });
+      for (const t of tourTargets) {
+        await queueSignup({ tourId: t.id, name, ts });
+      }
+      return send(res, 200, {
+        ok: true,
+        added: [...targets, ...tourTargets].map((x) => x.name),
+        queued: true
+      });
     }
 
     // No atomic list available (blob or in-memory): fall back to a whole-state
     // write. Correct, but only safe at low concurrency.
-    const next = comps.map((c) =>
-      targets.includes(c)
-        ? { ...c, board: [...(c.board || []), { name, bw: c.dots ? bw : '', score: '', signedUpAt: ts }] }
-        : c
+    const next = comps.map((c) => {
+      if (!targets.includes(c)) return c;
+      if (c.dots) return { ...c, applicants: [...(c.applicants || []), { name, bw, attempts, signedUpAt: ts }] };
+      return { ...c, board: [...(c.board || []), { name, bw: '', score: '', signedUpAt: ts }] };
+    });
+    const nextTours = tours.map((t) =>
+      tourTargets.includes(t) ? { ...t, signups: [...(t.signups || []), name] } : t
     );
     await writeState({
       rev: (rec.rev || 0) + 1,
-      data: { ...rec.data, competitions: next },
+      data: { ...rec.data, competitions: next, tournaments: nextTours },
       updatedAt: new Date().toISOString()
     });
-    return send(res, 200, { ok: true, added: targets.map((c) => c.name) });
+    return send(res, 200, { ok: true, added: [...targets, ...tourTargets].map((x) => x.name) });
   } catch (err) {
     return send(res, 500, { error: String((err && err.message) || err) });
   }
