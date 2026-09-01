@@ -152,7 +152,7 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
           <input value="{{ signupName }}" onInput="{{ setSignupName }}" placeholder="Full name" style="width:100%;box-sizing:border-box;margin-top:12px;background:#0d131c;border:1px solid rgba(243,242,242,0.2);color:#f3f2f2;padding:11px;font-size:14px">
 
           <sc-if value="{{ signupHasBench }}" hint-placeholder-val="{{ true }}">
-            <div style="font-size:9px;letter-spacing:2px;color:#8b93a1;font-weight:800;text-transform:uppercase;margin-top:14px">Bench press — pick one age group</div>
+            <div style="font-size:9px;letter-spacing:2px;color:#8b93a1;font-weight:800;text-transform:uppercase;margin-top:14px">Bench press — Click the button and enter the information</div>
             <div style="display:flex;flex-direction:column;gap:7px;margin-top:7px">
               <sc-for list="{{ signupBench }}" as="b" hint-placeholder-count="3">
                 <button onClick="{{ b.pick }}" style="text-align:left;background:{{ b.bg }};border:1px solid {{ b.border }};color:{{ b.color }};padding:11px 12px;font-size:13px;font-weight:700;cursor:pointer">{{ b.name }}</button>
