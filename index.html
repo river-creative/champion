@@ -476,6 +476,13 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
               <button onClick="{{ addBoardRow }}" style="flex:none;background:#ec3013;color:#fff;border:none;padding:9px 14px;font-weight:900;cursor:pointer">+</button>
             </div>
             <div style="font-size:10px;color:#5c6675;letter-spacing:0.5px;margin-top:8px;line-height:1.5">Re-enter a name to overwrite that result. Admin sees every place, not just the top 5.</div>
+            <sc-if value="{{ cCanFlipSort }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;align-items:center;gap:10px;margin-top:14px;padding:10px 12px;border:1px solid rgba(243,242,242,0.12);background:#11161f">
+                <span style="font-size:9px;letter-spacing:1.5px;color:#8b93a1;font-weight:800;text-transform:uppercase;flex:none">Ranking</span>
+                <button onClick="{{ flipSort }}" title="{{ cSortHint }}" style="background:rgba(232,180,74,0.12);border:1px solid rgba(232,180,74,0.5);color:#e8b44a;padding:7px 12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;font-size:9.5px;cursor:pointer;border-radius:6px">{{ cSortLabel }} ⇅</button>
+                <span style="font-size:10px;color:#5c6675">{{ cSortHint }}</span>
+              </div>
+            </sc-if>
             <sc-if value="{{ cCanClear }}" hint-placeholder-val="{{ true }}">
               <div style="margin-top:22px;padding-top:14px;border-top:1px solid rgba(243,242,242,0.1)">
                 <button onClick="{{ clearComp }}" style="background:none;border:1px solid rgba(236,48,19,0.55);color:#ec3013;padding:8px 14px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;font-size:9.5px;cursor:pointer;border-radius:6px">Clear results</button>
@@ -809,7 +816,7 @@ class Component extends DCLogic {
   isGoldUpdate(u) {
     if (u && u.gold) return true;
     const t = (u && u.text) || '';
-    return /^New leader: |^New fastest time: / .test(t) || / extends the lead — /.test(t);
+    return /^New leader: |^New fastest time: |^New longest time: /.test(t) || / extends the lead — /.test(t);
   }
   scoreWinner(cf) {
     if (!cf || cf.kind !== 'advance') return cf ? cf.winner : null;
@@ -1086,7 +1093,7 @@ class Component extends DCLogic {
       if (!c.board || !c.board.length) return c.updates[0] ? c.updates[0].text : 'No results yet';
       const sorted = this.sortBoard(c);
       const top = sorted[0];
-      const label = c.lowerBetter ? 'Fastest: ' : 'Leader: ';
+      const label = c.lowerBetter ? 'Fastest: ' : (c.unit === 'TIME' ? 'Longest: ' : 'Leader: ');
       if (c.dots) return label + top.name + ' · ' + this.dotsStr(top.bw, top.score) + ' pts';
       return label + top.name + ' · ' + top.score + (c.unit && c.unit !== 'TIME' ? ' ' + c.unit : '');
     };
@@ -1117,7 +1124,7 @@ class Component extends DCLogic {
       return {
         name: c.name, tag: c.board && c.board.length ? (c.dots ? 'DOTS · POINTS' : c.unit === 'TIME' ? 'TIMED' : (c.unit ? 'LEADERBOARD · ' + c.unit : 'LEADERBOARD')) : 'UPDATES',
         hasLeader: !!top,
-        leaderKicker: c.lowerBetter ? 'Fastest' : 'Leader',
+        leaderKicker: c.lowerBetter ? 'Fastest' : (c.unit === 'TIME' ? 'Longest' : 'Leader'),
         leader: top ? (c.dots ? top.name + ' · ' + this.dotsStr(top.bw, top.score) + ' pts' : top.name + ' · ' + top.score + (c.unit && c.unit !== 'TIME' ? ' ' + c.unit : '')) : '',
         latestKicker: c.updates[0] ? 'Latest · ' + this.rel(c.updates[0].ts) : 'Latest',
         latest: c.updates[0] ? c.updates[0].text : 'No updates yet',
@@ -1243,7 +1250,7 @@ class Component extends DCLogic {
     base.cBoard = []; base.cUpdates = [];
     if (c && s.view === 'event') {
       base.cName = c.name;
-      base.cSub = c.dots ? 'Max bench · ranked on DOTS points' : c.unit === 'TIME' ? 'Timed competition · fastest wins' : (c.hasBW ? 'Max bench · body weight recorded' : (c.unit === 'LBS' ? 'Weight competition · highest wins' : c.unit === 'REPS' ? 'Count competition · most wins' : 'Leaderboard competition'));
+      base.cSub = c.dots ? 'Max bench · ranked on DOTS points' : c.unit === 'TIME' ? (c.lowerBetter ? 'Timed competition · fastest wins' : 'Timed competition · longest wins') : (c.hasBW ? 'Max bench · body weight recorded' : (c.unit === 'LBS' ? 'Weight competition · highest wins' : c.unit === 'REPS' ? 'Count competition · most wins' : 'Leaderboard competition'));
       base.cHasBoard = s.adminOn || (c.board && c.board.length > 0);
       base.cHasBW = !!c.hasBW;
       base.scorePlaceholder = c.unit === 'TIME' ? 'm:ss' : 'Score';
@@ -1320,6 +1327,13 @@ class Component extends DCLogic {
       base.cRowCount = (c.board || []).length;
       base.cCanClear = !!((c.board && c.board.length) || (c.updates && c.updates.length));
       base.clearComp = () => this.setState({ confirm: { kind: 'clearcomp', cid: c.id, name: c.name } });
+      // Sort direction is a flag, not a property of the scores, so flipping it
+      // reorders the board without touching a single result. A hang or a
+      // plank is timed but longest wins; a sprint is timed but shortest wins.
+      base.cSortLabel = c.dots ? 'Ranked on DOTS' : (c.lowerBetter ? 'Lowest wins' : 'Highest wins');
+      base.cSortHint = c.dots ? '' : (c.lowerBetter ? 'Tap to rank highest first' : 'Tap to rank lowest first');
+      base.cCanFlipSort = !c.dots;
+      base.flipSort = () => this.save({ ...data, competitions: data.competitions.map(x => x.id === c.id ? { ...x, lowerBetter: !x.lowerBetter } : x) });
       base.cUpdates = c.updates.map(u => ({ time: this.rel(u.ts), text: u.text, color: this.isGoldUpdate(u) ? '#e8b44a' : '#c8ccd4', remove: () => this.setState({ confirm: { kind: 'delupdate', cid: c.id, ts: u.ts, text: u.text } }) }));
       base.addBoardRow = () => {
         if (!s.boardName.trim()) return;
@@ -1355,7 +1369,7 @@ class Component extends DCLogic {
         const prevIdx = before.indexOf(row.name);
         const disp = c.dots ? (this.dotsStr(row.bw, scoreVal) + ' pts (' + scoreVal + ' LBS)') : scoreVal + (c.unit && c.unit !== 'TIME' ? ' ' + c.unit : '');
         let text = null;
-        if (idx === 0 && prevIdx !== 0) text = (c.lowerBetter ? 'New fastest time: ' : 'New leader: ') + row.name + ' · ' + disp;
+        if (idx === 0 && prevIdx !== 0) text = (c.lowerBetter ? 'New fastest time: ' : (c.unit === 'TIME' ? 'New longest time: ' : 'New leader: ')) + row.name + ' · ' + disp;
         else if (idx === 0 && prevIdx === 0) text = row.name + ' extends the lead — ' + disp;
         else if (idx < 5 && prevIdx === -1) text = row.name + ' enters the top 5 — #' + (idx + 1) + ' at ' + disp;
         else if (idx < 5 && idx < prevIdx) text = row.name + ' moves up to #' + (idx + 1) + ' at ' + disp;

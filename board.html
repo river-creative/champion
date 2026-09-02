@@ -575,7 +575,7 @@ class Component extends DCLogic {
   isGoldUpdate(u) {
     if (u && u.gold) return true;
     const t = (u && u.text) || '';
-    return /^New leader: |^New fastest time: /.test(t) || / extends the lead — /.test(t);
+    return /^New leader: |^New fastest time: |^New longest time: /.test(t) || / extends the lead — /.test(t);
   }
   scoreline(m) {
     if (m.sa == null || m.sb == null) return null;
@@ -631,7 +631,7 @@ class Component extends DCLogic {
       scoreColor: i === 0 ? '#e8b44a' : '#ec3013'
     }));
     const lbKicker = (c) => (c.board && c.board.length)
-      ? (c.dots ? 'TOP 5 · DOTS POINTS' : c.lowerBetter ? 'FASTEST · TOP 5' : 'TOP 5' + (c.unit && c.unit !== 'TIME' ? ' · ' + c.unit : ''))
+      ? (c.dots ? 'TOP 5 · DOTS POINTS' : c.lowerBetter ? 'FASTEST · TOP 5' : c.unit === 'TIME' ? 'LONGEST · TOP 5' : 'TOP 5' + (c.unit ? ' · ' + c.unit : ''))
       : 'AWAITING RESULTS';
 
     // The featured competition is promoted to a full-width panel at the top and
