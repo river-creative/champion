@@ -273,7 +273,7 @@ class Component extends DCLogic {
 
   // Latest <-> Up Next rotation. Each panel holds still, then creeps down at
   // 15 px/s through the final 30s so the tail is readable before the swap.
-  NEWS_VH = 214; NEWS_PERIOD = 90000; NEWS_LEAD = 30000; NEWS_SPEED = 15;
+  NEWS_VH = 214; NEWS_PERIOD = 45000; NEWS_LEAD = 15000; NEWS_SPEED = 15;
   newsViewRef = (el) => { this._newsView = el; };
   newsRef = (el) => { this._news = el; };
   newsCycle = () => {
@@ -372,7 +372,7 @@ class Component extends DCLogic {
   compPages() { const d = this.state.data; if (!d) return []; const feat = d.featuredComp;
     return this.pagesFrom(d.competitions.filter(c => !feat || c.id !== feat)); }
   setView(i, v) { this.setState({ offs: { ...(this.state.offs || {}), [i]: v } }); }
-  COMP_PERIOD = 90000; PHASE_IN = 1500; PHASE_HOLD = 2400; PHASE_OUT = 2200; PHASE_TAIL = 1400;
+  COMP_PERIOD = 45000; PHASE_IN = 1500; PHASE_HOLD = 2400; PHASE_OUT = 2200; PHASE_TAIL = 1400;
 
   // Walk every bracket, zooming through its rounds so the cards are legible
   // from the back of the room, then hand the stage over to the competitions.
@@ -622,15 +622,30 @@ class Component extends DCLogic {
         z: view.z, tx: Math.round(view.tx), ty: Math.round(view.ty), dur: view.dur,
         outerH: g.outerH, shadow: this.state.focusIdx === i ? '0 0 0 2px rgba(236,48,19,0.55)' : 'none' };
     });
-    const lbRows = (c, n) => this.sortBoard(c).slice(0, n).map((r, i) => ({
-      rank: i + 1, name: r.name,
-      meta: c.dots ? ('BW ' + (r.bw || '—') + ' · LIFT ' + r.score + ' LBS') : (r.bw ? 'BW ' + r.bw : ''),
-      score: c.dots ? this.dotsStr(r.bw, r.score) + ' pts' : r.score,
-      rankColor: i === 0 ? '#e8b44a' : '#8b93a1',
-      nameColor: i === 0 ? '#e8b44a' : '#f3f2f2',
-      scoreColor: i === 0 ? '#e8b44a' : '#ec3013'
-    }));
-    const lbKicker = (c) => (c.board && c.board.length)
+    // Only people with a result belong on the big screen; anyone still waiting
+    // for their turn sits in the app, not on the wall. Equal results share a
+    // place (1, 1, 3), so a tie for the lead is two gold rows, not one.
+    const lbRows = (c, n) => {
+      const val = (r) => c.dots ? this.dots(r.bw, r.score) : this.parseScore(r.score);
+      const rows = this.sortBoard(c).filter(r => r.score !== '' && r.score != null && val(r) != null).slice(0, n);
+      let rank = 0, prev = null;
+      return rows.map((r, i) => {
+        const v = val(r);
+        if (i === 0 || v !== prev) rank = i + 1;
+        prev = v;
+        const lead = rank === 1;
+        return {
+          rank, name: r.name,
+          meta: c.dots ? ('BW ' + (r.bw || '—') + ' · ' + ((r.lifts && r.lifts.length) ? r.lifts.join(' / ') : r.score) + ' LBS') : (r.bw ? 'BW ' + r.bw : ''),
+          score: c.dots ? this.dotsStr(r.bw, r.score) + ' pts' : r.score,
+          rankColor: lead ? '#e8b44a' : '#8b93a1',
+          nameColor: lead ? '#e8b44a' : '#f3f2f2',
+          scoreColor: lead ? '#e8b44a' : '#ec3013'
+        };
+      });
+    };
+    const scored = (c) => (c.board || []).some(r => r.score !== '' && r.score != null);
+    const lbKicker = (c) => scored(c)
       ? (c.dots ? 'TOP 5 · DOTS POINTS' : c.lowerBetter ? 'FASTEST · TOP 5' : c.unit === 'TIME' ? 'LONGEST · TOP 5' : 'TOP 5' + (c.unit ? ' · ' + c.unit : ''))
       : 'AWAITING RESULTS';
 
@@ -641,7 +656,7 @@ class Component extends DCLogic {
     if (feat) {
       base.featName = feat.name;
       base.featKicker = feat.dots ? 'DOTS POINTS' : lbKicker(feat).replace('TOP 5 · ', '').replace('TOP 5', 'LEADERBOARD');
-      base.featEmpty = !(feat.board && feat.board.length);
+      base.featEmpty = !scored(feat);
       const fr = lbRows(feat, 5);
       base.featRows = fr;
       base.featTop = fr.slice(0, 1);     // centred on its own line
@@ -653,7 +668,7 @@ class Component extends DCLogic {
 
     base.lBoards = data.competitions.filter(c => !feat || c.id !== feat.id).map(c => ({
       name: c.name,
-      empty: !(c.board && c.board.length),
+      empty: !scored(c),
       kicker: lbKicker(c),
       rows: lbRows(c, 5)
     }));

@@ -1255,8 +1255,15 @@ class Component extends DCLogic {
       base.cHasBW = !!c.hasBW;
       base.scorePlaceholder = c.unit === 'TIME' ? 'm:ss' : 'Score';
       const sorted = s.adminOn ? this.sortBoard(c) : this.sortBoard(c).slice(0, 5);
-      base.cBoard = sorted.map((row, i) => ({
-        rank: i + 1, name: row.name,
+      // Shared places on equal results, matching the board.
+      const cval = (r) => c.dots ? this.dots(r.bw, r.score) : this.parseScore(r.score);
+      let crank = 0, cprev = null;
+      base.cBoard = sorted.map((row, i) => {
+        const v = cval(row);
+        if (i === 0 || v !== cprev) crank = i + 1;
+        cprev = v;
+        return ({
+        rank: crank, name: row.name,
         meta: c.dots ? ('BW ' + (row.bw || '—') + ' · ' + ((row.lifts && row.lifts.length) ? row.lifts.join(' / ') : row.score) + ' LBS')
                      : (row.bw ? 'BW ' + row.bw + ' LBS' : ''),
         score: !row.score ? 'AWAITING'
@@ -1269,16 +1276,16 @@ class Component extends DCLogic {
           boardScore2: (row.lifts && row.lifts[1]) || '',
           boardScore3: (row.lifts && row.lifts[2]) || ''
         }),
-        rankColor: !row.score ? '#5c6675' : (i === 0 ? '#e8b44a' : '#8b93a1'),
-        nameColor: !row.score ? '#8b93a1' : (i === 0 ? '#e8b44a' : '#f3f2f2'),
-        scoreColor: !row.score ? '#5c6675' : (i === 0 ? '#e8b44a' : '#ec3013'),
-        bg: i === 0 ? 'rgba(232,180,74,0.08)' : 'transparent',
+        rankColor: !row.score ? '#5c6675' : (crank === 1 ? '#e8b44a' : '#8b93a1'),
+        nameColor: !row.score ? '#8b93a1' : (crank === 1 ? '#e8b44a' : '#f3f2f2'),
+        scoreColor: !row.score ? '#5c6675' : (crank === 1 ? '#e8b44a' : '#ec3013'),
+        bg: (row.score && crank === 1) ? 'rgba(232,180,74,0.08)' : 'transparent',
         remove: () => this.setState({ confirm: { kind: 'delrow', cid: c.id, name: row.name } }),
         hasPhone: !!(s.adminOn && row.phone),
         phone: row.phone || '',
         text: () => this.setState({ confirm: { kind: 'sms', who: row.name, num: row.phone,
           href: 'sms:' + String(row.phone || '').replace(/[^0-9+]/g, '') } })
-      }));
+      }); });
       // Applicants are ranked on the DOTS their best planned attempt would
       // score. That is the only comparable measure before anyone lifts, and
       // it is what decides who makes the field.
