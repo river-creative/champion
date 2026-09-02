@@ -3,6 +3,26 @@ import { readState, writeState, backend, backendVar,
 
 const MAX_BYTES = 512 * 1024;
 
+/* Phone numbers are collected at sign-up so the crew can reach people. The
+ * state endpoint is public, so they are stripped from every response unless
+ * the caller proves it is an admin with the same PIN that gates writes.
+ * Hiding them only in the UI would leave them readable at /api/state. */
+function redactPhones(data) {
+  if (!data) return data;
+  const strip = (rows) => (rows || []).map(({ phone, ...rest }) => rest);
+  return {
+    ...data,
+    competitions: (data.competitions || []).map((c) => ({
+      ...c, board: strip(c.board), applicants: strip(c.applicants)
+    }))
+  };
+}
+
+function isAdmin(req) {
+  const required = process.env.CHAMP_PIN || '';
+  return !!required && req.headers['x-champ-pin'] === required;
+}
+
 function send(res, status, body) {
   res.statusCode = status;
   res.setHeader('content-type', 'application/json; charset=utf-8');
@@ -59,10 +79,13 @@ export default async function handler(req, res) {
         return send(res, 200, { unchanged: true, rev });
       }
 
+      const merged = rec ? mergeSignups(rec.data, pending) : null;
+      const admin = isAdmin(req);
       return send(res, 200, {
         rev,
-        data: rec ? mergeSignups(rec.data, pending) : null,
+        data: admin ? merged : redactPhones(merged),
         pendingSignups: pending.length,
+        contactsVisible: admin,
         backend: backend()
       });
     }

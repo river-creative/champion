@@ -35,6 +35,14 @@ export default async function handler(req, res) {
     if (name.length < 2 || name.length > 40) return send(res, 400, { error: 'Name must be 2-40 characters.' });
     if (/[<>{}]/.test(name)) return send(res, 400, { error: 'Name contains invalid characters.' });
 
+    // Contact number. Kept out of every public response - see api/state.js.
+    let phone = String(body.phone || '').trim();
+    if (phone) {
+      if (phone.length > 24 || !/^[0-9+()\-.\s]{7,24}$/.test(phone)) {
+        return send(res, 400, { error: 'Enter a valid phone number, or leave it blank.' });
+      }
+    }
+
     const ids = Array.isArray(body.comps) ? body.comps.slice(0, 12).map(String) : [];
     const tourIds = Array.isArray(body.tours) ? body.tours.slice(0, 12).map(String) : [];
     if (!ids.length && !tourIds.length) return send(res, 400, { error: 'Pick at least one competition.' });
@@ -113,10 +121,10 @@ export default async function handler(req, res) {
         return send(res, 503, { error: 'Sign-ups are busy right now — try again in a moment.' });
       }
       for (const c of targets) {
-        await queueSignup({ compId: c.id, name, bw: c.dots ? bw : '', attempts: c.dots ? attempts : [], ts });
+        await queueSignup({ compId: c.id, name, phone, bw: c.dots ? bw : '', attempts: c.dots ? attempts : [], ts });
       }
       for (const t of tourTargets) {
-        await queueSignup({ tourId: t.id, name, ts });
+        await queueSignup({ tourId: t.id, name, phone, ts });
       }
       return send(res, 200, {
         ok: true,
@@ -129,8 +137,8 @@ export default async function handler(req, res) {
     // write. Correct, but only safe at low concurrency.
     const next = comps.map((c) => {
       if (!targets.includes(c)) return c;
-      if (c.dots) return { ...c, applicants: [...(c.applicants || []), { name, bw, attempts, signedUpAt: ts }] };
-      return { ...c, board: [...(c.board || []), { name, bw: '', score: '', signedUpAt: ts }] };
+      if (c.dots) return { ...c, applicants: [...(c.applicants || []), { name, phone, bw, attempts, signedUpAt: ts }] };
+      return { ...c, board: [...(c.board || []), { name, phone, bw: '', score: '', signedUpAt: ts }] };
     });
     const nextTours = tours.map((t) =>
       tourTargets.includes(t) ? { ...t, signups: [...(t.signups || []), name] } : t

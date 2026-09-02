@@ -279,9 +279,9 @@ export function mergeSignups(data, queued) {
         if (seen.has(key)) continue;
         seen.add(key);
         if (q.attempts && q.attempts.length) {
-          applicants.push({ name: q.name, bw: q.bw || '', attempts: q.attempts, signedUpAt: q.ts });
+          applicants.push({ name: q.name, phone: q.phone || '', bw: q.bw || '', attempts: q.attempts, signedUpAt: q.ts });
         } else {
-          board.push({ name: q.name, bw: q.bw || '', score: '', signedUpAt: q.ts });
+          board.push({ name: q.name, phone: q.phone || '', bw: q.bw || '', score: '', signedUpAt: q.ts });
         }
       }
       return { ...c, board, applicants };
