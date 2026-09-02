@@ -154,20 +154,22 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
           <div style="font-size:10.5px;color:#5c6675;margin-top:5px;line-height:1.45">Only the competition crew can see this. It is used to reach you about your heat, nothing else.</div>
 
           <sc-if value="{{ signupHasBench }}" hint-placeholder-val="{{ true }}">
-            <div style="font-size:9px;letter-spacing:2px;color:#8b93a1;font-weight:800;text-transform:uppercase;margin-top:14px">Bench press — pick one age group</div>
+            <div style="font-size:9px;letter-spacing:2px;color:#8b93a1;font-weight:800;text-transform:uppercase;margin-top:14px">Bench press</div>
             <div style="display:flex;flex-direction:column;gap:7px;margin-top:7px">
               <sc-for list="{{ signupBench }}" as="b" hint-placeholder-count="3">
                 <button onClick="{{ b.pick }}" style="text-align:left;background:{{ b.bg }};border:1px solid {{ b.border }};color:{{ b.color }};padding:11px 12px;font-size:13px;font-weight:700;cursor:pointer">{{ b.name }}</button>
               </sc-for>
             </div>
+            <sc-if value="{{ signupBenchPicked }}" hint-placeholder-val="{{ true }}">
+            <div style="font-size:12px;color:#c8ccd4;margin-top:12px;line-height:1.5">Enter your current weight and three weights you will attempt, in pounds (lbs).</div>
             <input value="{{ signupBw }}" onInput="{{ setSignupBw }}" placeholder="Body weight (lb)" inputmode="decimal" style="width:100%;box-sizing:border-box;margin-top:8px;background:#0d131c;border:1px solid rgba(243,242,242,0.2);color:#f3f2f2;padding:11px;font-size:14px">
-            <div style="font-size:9px;letter-spacing:2px;color:#8b93a1;font-weight:800;text-transform:uppercase;margin-top:12px">Your three attempts (lb)</div>
             <div style="display:flex;gap:8px;margin-top:7px">
               <input value="{{ signupA1 }}" onInput="{{ setSignupA1 }}" placeholder="1st" inputmode="decimal" style="flex:1;min-width:0;background:#0d131c;border:1px solid rgba(243,242,242,0.2);color:#f3f2f2;padding:11px;font-size:14px;text-align:center">
               <input value="{{ signupA2 }}" onInput="{{ setSignupA2 }}" placeholder="2nd" inputmode="decimal" style="flex:1;min-width:0;background:#0d131c;border:1px solid rgba(243,242,242,0.2);color:#f3f2f2;padding:11px;font-size:14px;text-align:center">
               <input value="{{ signupA3 }}" onInput="{{ setSignupA3 }}" placeholder="3rd" inputmode="decimal" style="flex:1;min-width:0;background:#0d131c;border:1px solid rgba(243,242,242,0.2);color:#f3f2f2;padding:11px;font-size:14px;text-align:center">
             </div>
             <div style="font-size:10.5px;color:#8b93a1;margin-top:6px;line-height:1.45">Places are limited. Entries are ranked on the DOTS score your best attempt would earn, so body weight is taken into account.</div>
+            </sc-if>
           </sc-if>
 
           <sc-if value="{{ signupHasTours }}" hint-placeholder-val="{{ true }}">
@@ -425,7 +427,7 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
                 <span style="flex:1;min-width:0"><span style="font-weight:700;font-size:14px;color:{{ row.nameColor }}">{{ row.name }}</span><span style="font-size:10.5px;color:#8b93a1;margin-left:8px">{{ row.meta }}</span></span>
                 <span style="font-weight:900;font-size:{{ row.scoreSize }};color:{{ row.scoreColor }};letter-spacing:0.5px;flex:none">{{ row.score }}</span>
                 <sc-if value="{{ row.hasPhone }}" hint-placeholder-val="{{ false }}">
-                  <a href="{{ row.tel }}" title="{{ row.phone }}" style="flex:none;width:26px;height:26px;display:flex;align-items:center;justify-content:center;background:rgba(243,242,242,0.06);border:1px solid rgba(243,242,242,0.25);color:#c8ccd4;font-size:12px;border-radius:6px;text-decoration:none">&#9742;</a>
+                  <button onClick="{{ row.text }}" title="Text {{ row.phone }}" style="flex:none;width:26px;height:26px;background:rgba(243,242,242,0.06);border:1px solid rgba(243,242,242,0.25);color:#c8ccd4;font-size:12px;border-radius:6px;cursor:pointer;padding:0;line-height:1">&#9993;</button>
                 </sc-if>
                 <sc-if value="{{ adminOn }}" hint-placeholder-val="{{ false }}">
                   <button onClick="{{ row.fill }}" title="Load into the entry form" style="flex:none;width:26px;height:26px;background:rgba(232,180,74,0.12);border:1px solid rgba(232,180,74,0.5);color:#e8b44a;font-size:12px;font-weight:800;cursor:pointer;border-radius:6px;padding:0;line-height:1">↑</button>
@@ -448,7 +450,7 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
                       <span style="flex:1;min-width:0"><span style="font-weight:700;font-size:12.5px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ a.name }}</span><span style="font-size:9.5px;color:#8b93a1">{{ a.meta }}</span></span>
                       <span style="font-weight:900;font-size:11.5px;color:{{ a.projColor }};flex:none">{{ a.proj }}</span>
                       <sc-if value="{{ a.hasPhone }}" hint-placeholder-val="{{ true }}">
-                        <a href="{{ a.tel }}" title="{{ a.phone }}" style="flex:none;width:26px;height:26px;display:flex;align-items:center;justify-content:center;background:rgba(243,242,242,0.06);border:1px solid rgba(243,242,242,0.25);color:#c8ccd4;font-size:12px;border-radius:6px;text-decoration:none">&#9742;</a>
+                        <button onClick="{{ a.text }}" title="Text {{ a.phone }}" style="flex:none;width:26px;height:26px;background:rgba(243,242,242,0.06);border:1px solid rgba(243,242,242,0.25);color:#c8ccd4;font-size:12px;border-radius:6px;cursor:pointer;padding:0;line-height:1">&#9993;</button>
                       </sc-if>
                       <button onClick="{{ a.accept }}" title="Add to the competition" style="flex:none;width:26px;height:26px;background:rgba(60,200,90,0.14);border:1px solid rgba(60,200,90,0.5);color:#4cd964;font-size:12px;font-weight:800;cursor:pointer;border-radius:6px;padding:0">✓</button>
                       <button onClick="{{ a.drop }}" title="Decline" style="flex:none;width:26px;height:26px;background:rgba(236,48,19,0.12);border:1px solid rgba(236,48,19,0.5);color:#ec3013;font-size:11px;font-weight:800;cursor:pointer;border-radius:6px;padding:0">✕</button>
@@ -463,7 +465,14 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
               <sc-if value="{{ cHasBW }}" hint-placeholder-val="{{ false }}">
                 <input value="{{ boardBw }}" onChange="{{ onBoardBw }}" placeholder="BW" style="flex:1;min-width:0;background:#0d131c;border:1px solid rgba(243,242,242,0.2);color:#f3f2f2;padding:9px;font-size:12px">
               </sc-if>
-              <input value="{{ boardScore }}" onChange="{{ onBoardScore }}" placeholder="{{ scorePlaceholder }}" style="flex:1;min-width:0;background:#0d131c;border:1px solid rgba(243,242,242,0.2);color:#f3f2f2;padding:9px;font-size:12px">
+              <sc-if value="{{ notDots }}" hint-placeholder-val="{{ true }}">
+                <input value="{{ boardScore }}" onChange="{{ onBoardScore }}" placeholder="{{ scorePlaceholder }}" style="flex:1;min-width:0;background:#0d131c;border:1px solid rgba(243,242,242,0.2);color:#f3f2f2;padding:9px;font-size:12px">
+              </sc-if>
+              <sc-if value="{{ isDots }}" hint-placeholder-val="{{ false }}">
+                <input value="{{ boardScore }}" onChange="{{ onBoardScore }}" placeholder="1st" style="flex:1;min-width:0;background:#0d131c;border:1px solid rgba(243,242,242,0.2);color:#f3f2f2;padding:9px;font-size:12px;text-align:center">
+                <input value="{{ boardScore2 }}" onChange="{{ onBoardScore2 }}" placeholder="2nd" style="flex:1;min-width:0;background:#0d131c;border:1px solid rgba(243,242,242,0.2);color:#f3f2f2;padding:9px;font-size:12px;text-align:center">
+                <input value="{{ boardScore3 }}" onChange="{{ onBoardScore3 }}" placeholder="3rd" style="flex:1;min-width:0;background:#0d131c;border:1px solid rgba(243,242,242,0.2);color:#f3f2f2;padding:9px;font-size:12px;text-align:center">
+              </sc-if>
               <button onClick="{{ addBoardRow }}" style="flex:none;background:#ec3013;color:#fff;border:none;padding:9px 14px;font-weight:900;cursor:pointer">+</button>
             </div>
             <div style="font-size:10px;color:#5c6675;letter-spacing:0.5px;margin-top:8px;line-height:1.5">Re-enter a name to overwrite that result. Admin sees every place, not just the top 5.</div>
@@ -519,7 +528,7 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;pin&quot;: {&quot;editor&quot;: &quot;text&quot;, &quot;default&quot;: &quot;Champs26&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Admin&quot;}, &quot;showBanner&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Layout&quot;}}">
 class Component extends DCLogic {
-  state = { view: 'home', tId: null, cId: null, adminOn: false, pinOk: false, pinOpen: false, pinVal: '', pinError: false, entrantsText: '', newCompName: '', newCompType: 'timed', boardName: '', boardBw: '', boardScore: '', updateText: '', zoom: 0.85, confirm: null, tdragFrom: null, tOverId: null, cDragId: null, cOverId: null, guideOpen: false, signupName: '', signupPhone: '', signupBw: '', signupA1: '', signupA2: '', signupA3: '', signupPick: {}, signupTour: {}, signupBench: '', signupMsg: '', signupBusy: false, data: null };
+  state = { view: 'home', tId: null, cId: null, adminOn: false, pinOk: false, pinOpen: false, pinVal: '', pinError: false, entrantsText: '', newCompName: '', newCompType: 'timed', boardName: '', boardBw: '', boardScore: '', boardScore2: '', boardScore3: '', updateText: '', zoom: 0.85, confirm: null, tdragFrom: null, tOverId: null, cDragId: null, cOverId: null, guideOpen: false, signupName: '', signupPhone: '', signupBw: '', signupA1: '', signupA2: '', signupA3: '', signupPick: {}, signupTour: {}, signupBench: '', signupMsg: '', signupBusy: false, data: null };
 
   // 10s. Commands are unmetered on the Fixed plan, so the limit here is Vercel
   // function invocations, not the database. 10s keeps those to about a third of
@@ -908,12 +917,13 @@ class Component extends DCLogic {
       screenTitle: { home: 'Dashboard', brackets: 'Brackets', bracket: 'Bracket', events: 'Competitions', event: 'Competition' }[s.view],
       confirmOpen: !!cf,
       confirmTitle: cf ? ({ advance: 'Advance competitor', swap: 'Match change', delcomp: 'Remove competition',
-        delrow: 'Remove result', clearcomp: 'Clear all results', delupdate: 'Remove update' }[cf.kind] || 'Confirm') : '',
+        delrow: 'Remove result', clearcomp: 'Clear all results', delupdate: 'Remove update', sms: 'Send a text' }[cf.kind] || 'Confirm') : '',
       confirmBody: cf ? (
         cf.kind === 'advance' ? this.scoreWinner(cf) + ' wins over ' + (this.scoreWinner(cf) === cf.aName ? cf.bName : cf.aName) + ' and moves to the next round.'
         : cf.kind === 'swap' ? 'Swap ' + cf.n1 + ' with ' + cf.n2 + '? This changes the matchups.'
         : cf.kind === 'delrow' ? 'Remove ' + cf.name + ' from this leaderboard? Their result and rank are deleted. Any update mentioning them stays until you remove it.'
         : cf.kind === 'clearcomp' ? 'Delete every result and update in "' + cf.name + '"? The competition itself stays, with its name and type. This cannot be undone.'
+        : cf.kind === 'sms' ? 'Open a text message to ' + cf.who + ' at ' + cf.num + '?'
         : cf.kind === 'delupdate' ? 'Remove this update?  "' + (cf.text || '').slice(0, 90) + '"'
         : 'Remove "' + cf.name + '" and all of its results? This cannot be undone.') : '',
       confirmScored: !!(cf && cf.kind === 'advance' && cf.scored),
@@ -924,6 +934,11 @@ class Component extends DCLogic {
       confirmNo: () => this.setState({ confirm: null }),
       confirmYes: () => {
         const c = this.state.confirm; if (!c) return;
+        if (c.kind === 'sms') {
+          this.setState({ confirm: null });
+          try { window.location.href = c.href; } catch (e) {}
+          return;
+        }
         if (c.kind === 'delcomp') {
           const d = { ...data, competitions: data.competitions.filter(x => x.id !== c.cid) };
           this.setState({ confirm: null }); this.save(d); return;
@@ -979,6 +994,7 @@ class Component extends DCLogic {
       pick: () => this.setState({ signupBench: s.signupBench === c.id ? '' : c.id, signupMsg: '' })
     }));
     base.signupHasBench = base.signupBench.length > 0;
+    base.signupBenchPicked = !!s.signupBench;
     base.signupOther = openComps.filter(c => !c.dots).map(c => ({
       id: c.id, name: c.name,
       mark: (s.signupPick || {})[c.id] ? '\u2713' : '',
@@ -1219,6 +1235,10 @@ class Component extends DCLogic {
     base.onBoardName = (e) => this.setState({ boardName: e.target.value });
     base.onBoardBw = (e) => this.setState({ boardBw: e.target.value });
     base.onBoardScore = (e) => this.setState({ boardScore: e.target.value });
+      base.boardScore2 = s.boardScore2; base.boardScore3 = s.boardScore3;
+      base.onBoardScore2 = (e) => this.setState({ boardScore2: e.target.value });
+      base.onBoardScore3 = (e) => this.setState({ boardScore3: e.target.value });
+      base.isDots = !!(c && c.dots); base.notDots = !(c && c.dots);
     base.onUpdateText = (e) => this.setState({ updateText: e.target.value });
     base.cBoard = []; base.cUpdates = [];
     if (c && s.view === 'event') {
@@ -1230,13 +1250,18 @@ class Component extends DCLogic {
       const sorted = s.adminOn ? this.sortBoard(c) : this.sortBoard(c).slice(0, 5);
       base.cBoard = sorted.map((row, i) => ({
         rank: i + 1, name: row.name,
-        meta: c.dots ? ('BW ' + (row.bw || '—') + ' · LIFT ' + row.score + ' LBS')
+        meta: c.dots ? ('BW ' + (row.bw || '—') + ' · ' + ((row.lifts && row.lifts.length) ? row.lifts.join(' / ') : row.score) + ' LBS')
                      : (row.bw ? 'BW ' + row.bw + ' LBS' : ''),
         score: !row.score ? 'AWAITING'
              : c.dots ? this.dotsStr(row.bw, row.score) + ' pts'
              : row.score + (c.unit && c.unit !== 'TIME' ? ' ' + c.unit : ''),
         scoreSize: !row.score ? '10px' : '14px',
-        fill: () => this.setState({ boardName: row.name, boardBw: row.bw || '', boardScore: '' }),
+        fill: () => this.setState({
+          boardName: row.name, boardBw: row.bw || '',
+          boardScore: (row.lifts && row.lifts[0]) || '',
+          boardScore2: (row.lifts && row.lifts[1]) || '',
+          boardScore3: (row.lifts && row.lifts[2]) || ''
+        }),
         rankColor: !row.score ? '#5c6675' : (i === 0 ? '#e8b44a' : '#8b93a1'),
         nameColor: !row.score ? '#8b93a1' : (i === 0 ? '#e8b44a' : '#f3f2f2'),
         scoreColor: !row.score ? '#5c6675' : (i === 0 ? '#e8b44a' : '#ec3013'),
@@ -1244,7 +1269,8 @@ class Component extends DCLogic {
         remove: () => this.setState({ confirm: { kind: 'delrow', cid: c.id, name: row.name } }),
         hasPhone: !!(s.adminOn && row.phone),
         phone: row.phone || '',
-        tel: 'tel:' + String(row.phone || '').replace(/[^0-9+]/g, '')
+        text: () => this.setState({ confirm: { kind: 'sms', who: row.name, num: row.phone,
+          href: 'sms:' + String(row.phone || '').replace(/[^0-9+]/g, '') } })
       }));
       // Applicants are ranked on the DOTS their best planned attempt would
       // score. That is the only comparable measure before anyone lifts, and
@@ -1260,7 +1286,8 @@ class Component extends DCLogic {
         meta: 'BW ' + a.bw + ' · ' + (a.attempts || []).join(' / ') + ' LBS',
         phone: a.phone || '',
         hasPhone: !!a.phone,
-        tel: 'tel:' + String(a.phone || '').replace(/[^0-9+]/g, ''),
+        text: () => this.setState({ confirm: { kind: 'sms', who: a.name, num: a.phone,
+          href: 'sms:' + String(a.phone || '').replace(/[^0-9+]/g, '') } }),
         proj: a.proj == null ? '—' : a.proj.toFixed(2) + ' proj',
         projColor: i < 30 ? '#e8b44a' : '#8b93a1',
         bg: i < 30 ? 'rgba(232,180,74,0.07)' : 'transparent',
@@ -1295,17 +1322,31 @@ class Component extends DCLogic {
       base.clearComp = () => this.setState({ confirm: { kind: 'clearcomp', cid: c.id, name: c.name } });
       base.cUpdates = c.updates.map(u => ({ time: this.rel(u.ts), text: u.text, color: this.isGoldUpdate(u) ? '#e8b44a' : '#c8ccd4', remove: () => this.setState({ confirm: { kind: 'delupdate', cid: c.id, ts: u.ts, text: u.text } }) }));
       base.addBoardRow = () => {
-        if (!s.boardName.trim() || !s.boardScore.trim()) return;
-        const name = s.boardName.trim(), scoreVal = s.boardScore.trim();
+        if (!s.boardName.trim()) return;
+        // Bench takes up to three attempts; only the best one counts, which is
+        // how the lift is actually judged.
+        let scoreVal = s.boardScore.trim();
+        let lifts = null;
+        if (c.dots) {
+          lifts = [s.boardScore, s.boardScore2, s.boardScore3]
+            .map(x => String(x || '').trim()).filter(Boolean);
+          const nums = lifts.map(x => parseFloat(x)).filter(n => isFinite(n));
+          if (!nums.length) return;
+          scoreVal = String(Math.max(...nums));
+        }
+        if (!scoreVal) return;
+        const name = s.boardName.trim();
         const before = this.sortBoard(c).slice(0, 5).map(r => r.name);
         const existing = (c.board || []).find(r => r.name.toLowerCase() === name.toLowerCase());
         let row;
         if (existing) {
           row = existing; row.score = scoreVal;
+          if (lifts) row.lifts = lifts;
           if (c.hasBW && s.boardBw.trim()) row.bw = s.boardBw.trim();
           c.board = [...c.board];
         } else {
           row = { name, score: scoreVal };
+          if (lifts) row.lifts = lifts;
           if (c.hasBW && s.boardBw.trim()) row.bw = s.boardBw.trim();
           c.board = [...(c.board || []), row];
         }
@@ -1320,7 +1361,7 @@ class Component extends DCLogic {
         else if (idx < 5 && idx < prevIdx) text = row.name + ' moves up to #' + (idx + 1) + ' at ' + disp;
         else if (idx < 5 && idx === prevIdx) text = row.name + ' improves to ' + disp + ' — holds #' + (idx + 1);
         if (text) c.updates = [{ ts: Date.now(), text, auto: true, gold: idx === 0 }, ...c.updates];
-        this.setState({ boardName: '', boardBw: '', boardScore: '' }); this.save({ ...data });
+        this.setState({ boardName: '', boardBw: '', boardScore: '', boardScore2: '', boardScore3: '' }); this.save({ ...data });
       };
       base.postUpdate = () => {
         const text = s.updateText.trim(); if (!text) return;
