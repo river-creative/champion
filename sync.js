@@ -50,7 +50,12 @@ window.ChampSync = (function () {
     // bytes when nothing has moved, instead of resending the whole state on
     // every poll. Only claim a revision if we actually still hold the data.
     var since = (rev > 0 && cacheGet()) ? '&since=' + rev : '';
-    return fetch(API + '?t=' + Date.now() + since, { cache: 'no-store' })
+    // Send the PIN on reads too: contact numbers are withheld from anyone who
+    // cannot prove they are an admin.
+    var headers = {};
+    var p = getPin();
+    if (p) headers['x-champ-pin'] = p;
+    return fetch(API + '?t=' + Date.now() + since, { cache: 'no-store', headers: headers })
       .then(function (r) {
         if (r.status === 404 || r.status === 405 || r.status === 501) { remote = false; return null; }
         if (!r.ok) return null;

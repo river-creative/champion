@@ -150,9 +150,11 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
           <div style="font-size:11.5px;color:#8b93a1;margin-top:4px;line-height:1.45">Enter your name and pick your events. The crew records your score at the station.</div>
 
           <input value="{{ signupName }}" onInput="{{ setSignupName }}" placeholder="Full name" style="width:100%;box-sizing:border-box;margin-top:12px;background:#0d131c;border:1px solid rgba(243,242,242,0.2);color:#f3f2f2;padding:11px;font-size:14px">
+          <input value="{{ signupPhone }}" onInput="{{ setSignupPhone }}" placeholder="Mobile number" inputmode="tel" style="width:100%;box-sizing:border-box;margin-top:8px;background:#0d131c;border:1px solid rgba(243,242,242,0.2);color:#f3f2f2;padding:11px;font-size:14px">
+          <div style="font-size:10.5px;color:#5c6675;margin-top:5px;line-height:1.45">Only the competition crew can see this. It is used to reach you about your heat, nothing else.</div>
 
           <sc-if value="{{ signupHasBench }}" hint-placeholder-val="{{ true }}">
-            <div style="font-size:9px;letter-spacing:2px;color:#8b93a1;font-weight:800;text-transform:uppercase;margin-top:14px">Bench press — Click the button and enter the information</div>
+            <div style="font-size:9px;letter-spacing:2px;color:#8b93a1;font-weight:800;text-transform:uppercase;margin-top:14px">Bench press — pick one age group</div>
             <div style="display:flex;flex-direction:column;gap:7px;margin-top:7px">
               <sc-for list="{{ signupBench }}" as="b" hint-placeholder-count="3">
                 <button onClick="{{ b.pick }}" style="text-align:left;background:{{ b.bg }};border:1px solid {{ b.border }};color:{{ b.color }};padding:11px 12px;font-size:13px;font-weight:700;cursor:pointer">{{ b.name }}</button>
@@ -422,6 +424,9 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
                 <span style="width:24px;font-weight:900;font-style:italic;color:{{ row.rankColor }};font-size:14px">{{ row.rank }}</span>
                 <span style="flex:1;min-width:0"><span style="font-weight:700;font-size:14px;color:{{ row.nameColor }}">{{ row.name }}</span><span style="font-size:10.5px;color:#8b93a1;margin-left:8px">{{ row.meta }}</span></span>
                 <span style="font-weight:900;font-size:{{ row.scoreSize }};color:{{ row.scoreColor }};letter-spacing:0.5px;flex:none">{{ row.score }}</span>
+                <sc-if value="{{ row.hasPhone }}" hint-placeholder-val="{{ false }}">
+                  <a href="{{ row.tel }}" title="{{ row.phone }}" style="flex:none;width:26px;height:26px;display:flex;align-items:center;justify-content:center;background:rgba(243,242,242,0.06);border:1px solid rgba(243,242,242,0.25);color:#c8ccd4;font-size:12px;border-radius:6px;text-decoration:none">&#9742;</a>
+                </sc-if>
                 <sc-if value="{{ adminOn }}" hint-placeholder-val="{{ false }}">
                   <button onClick="{{ row.fill }}" title="Load into the entry form" style="flex:none;width:26px;height:26px;background:rgba(232,180,74,0.12);border:1px solid rgba(232,180,74,0.5);color:#e8b44a;font-size:12px;font-weight:800;cursor:pointer;border-radius:6px;padding:0;line-height:1">↑</button>
                   <button onClick="{{ row.remove }}" title="Remove this result" style="flex:none;width:26px;height:26px;background:rgba(236,48,19,0.12);border:1px solid rgba(236,48,19,0.55);color:#ec3013;font-size:11px;font-weight:800;cursor:pointer;border-radius:6px;padding:0;line-height:1">✕</button>
@@ -442,6 +447,9 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
                       <span style="width:22px;font-weight:900;font-style:italic;color:{{ a.projColor }};font-size:12px;flex:none">{{ a.rank }}</span>
                       <span style="flex:1;min-width:0"><span style="font-weight:700;font-size:12.5px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ a.name }}</span><span style="font-size:9.5px;color:#8b93a1">{{ a.meta }}</span></span>
                       <span style="font-weight:900;font-size:11.5px;color:{{ a.projColor }};flex:none">{{ a.proj }}</span>
+                      <sc-if value="{{ a.hasPhone }}" hint-placeholder-val="{{ true }}">
+                        <a href="{{ a.tel }}" title="{{ a.phone }}" style="flex:none;width:26px;height:26px;display:flex;align-items:center;justify-content:center;background:rgba(243,242,242,0.06);border:1px solid rgba(243,242,242,0.25);color:#c8ccd4;font-size:12px;border-radius:6px;text-decoration:none">&#9742;</a>
+                      </sc-if>
                       <button onClick="{{ a.accept }}" title="Add to the competition" style="flex:none;width:26px;height:26px;background:rgba(60,200,90,0.14);border:1px solid rgba(60,200,90,0.5);color:#4cd964;font-size:12px;font-weight:800;cursor:pointer;border-radius:6px;padding:0">✓</button>
                       <button onClick="{{ a.drop }}" title="Decline" style="flex:none;width:26px;height:26px;background:rgba(236,48,19,0.12);border:1px solid rgba(236,48,19,0.5);color:#ec3013;font-size:11px;font-weight:800;cursor:pointer;border-radius:6px;padding:0">✕</button>
                     </div>
@@ -511,7 +519,7 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;pin&quot;: {&quot;editor&quot;: &quot;text&quot;, &quot;default&quot;: &quot;Champs26&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Admin&quot;}, &quot;showBanner&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Layout&quot;}}">
 class Component extends DCLogic {
-  state = { view: 'home', tId: null, cId: null, adminOn: false, pinOk: false, pinOpen: false, pinVal: '', pinError: false, entrantsText: '', newCompName: '', newCompType: 'timed', boardName: '', boardBw: '', boardScore: '', updateText: '', zoom: 0.85, confirm: null, tdragFrom: null, tOverId: null, cDragId: null, cOverId: null, guideOpen: false, signupName: '', signupBw: '', signupA1: '', signupA2: '', signupA3: '', signupPick: {}, signupTour: {}, signupBench: '', signupMsg: '', signupBusy: false, data: null };
+  state = { view: 'home', tId: null, cId: null, adminOn: false, pinOk: false, pinOpen: false, pinVal: '', pinError: false, entrantsText: '', newCompName: '', newCompType: 'timed', boardName: '', boardBw: '', boardScore: '', updateText: '', zoom: 0.85, confirm: null, tdragFrom: null, tOverId: null, cDragId: null, cOverId: null, guideOpen: false, signupName: '', signupPhone: '', signupBw: '', signupA1: '', signupA2: '', signupA3: '', signupPick: {}, signupTour: {}, signupBench: '', signupMsg: '', signupBusy: false, data: null };
 
   // 10s. Commands are unmetered on the Fixed plan, so the limit here is Vercel
   // function invocations, not the database. 10s keeps those to about a third of
@@ -749,6 +757,8 @@ class Component extends DCLogic {
     if (s.signupBench) picked.push(s.signupBench);
     const tours = Object.keys(s.signupTour || {}).filter(k => s.signupTour[k]);
     if (name.length < 2) { this.setState({ signupMsg: 'Enter your full name.' }); return; }
+    const ph = (s.signupPhone || '').trim();
+    if (ph && !/^[0-9+()\-.\s]{7,24}$/.test(ph)) { this.setState({ signupMsg: 'That phone number does not look right.' }); return; }
     if (!picked.length && !tours.length) { this.setState({ signupMsg: 'Pick at least one competition.' }); return; }
     const attempts = [s.signupA1, s.signupA2, s.signupA3];
     if (s.signupBench) {
@@ -761,7 +771,7 @@ class Component extends DCLogic {
     this.setState({ signupBusy: true, signupMsg: '' });
     fetch('/api/signup', {
       method: 'POST', headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ name, bw: s.signupBw, attempts, comps: picked, tours })
+      body: JSON.stringify({ name, phone: s.signupPhone, bw: s.signupBw, attempts, comps: picked, tours })
     })
       // Read as text first: a missing endpoint answers with an HTML 404, and
       // parsing that as JSON would throw and look identical to being offline.
@@ -781,7 +791,7 @@ class Component extends DCLogic {
           return;
         }
         if (!ok) { this.setState({ signupBusy: false, signupMsg: j.error || 'Could not sign up.' }); return; }
-        this.setState({ signupBusy: false, signupName: '', signupBw: '', signupA1: '', signupA2: '', signupA3: '', signupPick: {}, signupTour: {}, signupBench: '',
+        this.setState({ signupBusy: false, signupName: '', signupPhone: '', signupBw: '', signupA1: '', signupA2: '', signupA3: '', signupPick: {}, signupTour: {}, signupBench: '',
                         signupMsg: 'You are in — see you at the station.' });
         ChampSync.pull().then(r => { if (r && r.data) this.setState({ data: r.data }); });
       })
@@ -988,7 +998,8 @@ class Component extends DCLogic {
     }));
     base.signupHasTours = base.signupTours.length > 0;
     base.signupAny = base.signupAny || base.signupHasTours;
-    base.signupName = s.signupName; base.signupBw = s.signupBw;
+    base.signupName = s.signupName; base.signupBw = s.signupBw; base.signupPhone = s.signupPhone;
+    base.setSignupPhone = (e) => this.setState({ signupPhone: e.target.value, signupMsg: '' });
     base.signupMsg = s.signupMsg; base.signupBusy = s.signupBusy;
     base.signupBtn = s.signupBusy ? 'Sending…' : 'Sign me up';
     base.setSignupName = (e) => this.setState({ signupName: e.target.value, signupMsg: '' });
@@ -1230,7 +1241,10 @@ class Component extends DCLogic {
         nameColor: !row.score ? '#8b93a1' : (i === 0 ? '#e8b44a' : '#f3f2f2'),
         scoreColor: !row.score ? '#5c6675' : (i === 0 ? '#e8b44a' : '#ec3013'),
         bg: i === 0 ? 'rgba(232,180,74,0.08)' : 'transparent',
-        remove: () => this.setState({ confirm: { kind: 'delrow', cid: c.id, name: row.name } })
+        remove: () => this.setState({ confirm: { kind: 'delrow', cid: c.id, name: row.name } }),
+        hasPhone: !!(s.adminOn && row.phone),
+        phone: row.phone || '',
+        tel: 'tel:' + String(row.phone || '').replace(/[^0-9+]/g, '')
       }));
       // Applicants are ranked on the DOTS their best planned attempt would
       // score. That is the only comparable measure before anyone lifts, and
@@ -1244,6 +1258,9 @@ class Component extends DCLogic {
       base.cApplicants = apps.map((a, i) => ({
         rank: i + 1, name: a.name,
         meta: 'BW ' + a.bw + ' · ' + (a.attempts || []).join(' / ') + ' LBS',
+        phone: a.phone || '',
+        hasPhone: !!a.phone,
+        tel: 'tel:' + String(a.phone || '').replace(/[^0-9+]/g, ''),
         proj: a.proj == null ? '—' : a.proj.toFixed(2) + ' proj',
         projColor: i < 30 ? '#e8b44a' : '#8b93a1',
         bg: i < 30 ? 'rgba(232,180,74,0.07)' : 'transparent',
