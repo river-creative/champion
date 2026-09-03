@@ -451,7 +451,9 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
                 </div>
                 <sc-if value="{{ row.isBench }}" hint-placeholder-val="{{ false }}">
                   <div style="padding-left:36px;display:flex;flex-direction:column;gap:3px">
-                    <span style="font-size:14px;color:#c8ccd4;letter-spacing:0.4px;white-space:pre-wrap">{{ row.sub1 }}</span>
+                    <sc-if value="{{ adminOn }}" hint-placeholder-val="{{ false }}">
+                      <span style="font-size:14px;color:#c8ccd4;letter-spacing:0.4px;white-space:pre-wrap">{{ row.sub1 }}</span>
+                    </sc-if>
                     <span style="font-size:14px;color:#c8ccd4;letter-spacing:0.4px;white-space:pre-wrap">{{ row.sub2 }}</span>
                   </div>
                 </sc-if>
@@ -872,15 +874,22 @@ class Component extends DCLogic {
   // recorded on the day. Both stay on the row so the two can be compared.
   // Two lines under a bench lifter's name: what they said at sign-up, and
   // what happened at the station. Left as a dash until it has happened.
+  // Each line ends with the DOTS its own figures would give: sign-up weight
+  // with the best planned attempt, weigh-in weight with the best real lift.
+  // Ranking still uses the actual figure alone; the sign-up one is for
+  // comparison.
   benchSignup(row) {
-    const bw = row.bwSignup || row.bw || '—';
+    const bw = row.bwSignup || row.bw || '';
+    const plans = (row.planned || []).map(x => parseFloat(x)).filter(n => isFinite(n));
     const plan = (row.planned && row.planned.length) ? row.planned.join(' / ') : '—';
-    return 'BW ' + bw + ' · ' + plan;
+    const pts = (bw && plans.length) ? this.dots(bw, Math.max(...plans)) : null;
+    return 'BW ' + (bw || '—') + ' · ' + plan + (pts != null ? ' · ' + pts.toFixed(2) + ' pts' : '');
   }
   benchActual(row) {
-    const bw = row.bw || '—';
+    const bw = row.bw || '';
     const did = (row.lifts && row.lifts.length) ? row.lifts.join(' / ') : (row.score ? row.score : '—');
-    return 'BW ' + bw + ' · ' + did;
+    const pts = (bw && row.score) ? this.dots(bw, row.score) : null;
+    return 'BW ' + (bw || '—') + ' · ' + did + (pts != null ? ' · ' + pts.toFixed(2) + ' pts' : '');
   }
   benchMeta(row) {
     // `bw` is the weigh-in; `bwSignup` is what they wrote on the form. DOTS is
