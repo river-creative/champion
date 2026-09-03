@@ -436,20 +436,24 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
           <div style="font-size:10px;letter-spacing:2px;color:#8b93a1;font-weight:700;text-transform:uppercase;margin-bottom:8px">Leaderboard</div>
           <div style="border:1px solid rgba(243,242,242,0.12)">
             <sc-for list="{{ cBoard }}" as="row" hint-placeholder-count="5">
-              <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;border-bottom:1px solid rgba(243,242,242,0.07);background:{{ row.bg }}">
-                <span style="width:24px;font-weight:900;font-style:italic;color:{{ row.rankColor }};font-size:14px">{{ row.rank }}</span>
-                <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px"><span style="font-weight:700;font-size:14px;color:{{ row.nameColor }};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ row.name }}<span style="font-size:10.5px;color:#8b93a1;margin-left:8px;font-weight:400">{{ row.meta }}</span></span>
-                  <sc-if value="{{ row.isBench }}" hint-placeholder-val="{{ false }}">
-                    <span style="font-size:14px;color:#c8ccd4;letter-spacing:0.4px;white-space:pre">{{ row.sub1 }}</span>
-                    <span style="font-size:14px;color:#c8ccd4;letter-spacing:0.4px;white-space:pre">{{ row.sub2 }}</span>
-                  </sc-if></span>
-                <span style="font-weight:900;font-size:{{ row.scoreSize }};color:{{ row.scoreColor }};letter-spacing:0.5px;flex:none">{{ row.score }}</span>
-                <sc-if value="{{ row.hasPhone }}" hint-placeholder-val="{{ false }}">
-                  <button onClick="{{ row.text }}" title="Text {{ row.phone }}" style="flex:none;width:26px;height:26px;background:rgba(243,242,242,0.06);border:1px solid rgba(243,242,242,0.25);color:#c8ccd4;font-size:12px;border-radius:6px;cursor:pointer;padding:0;line-height:1">&#9993;</button>
-                </sc-if>
-                <sc-if value="{{ adminOn }}" hint-placeholder-val="{{ false }}">
-                  <button onClick="{{ row.fill }}" title="Load into the entry form" style="flex:none;width:26px;height:26px;background:rgba(232,180,74,0.12);border:1px solid rgba(232,180,74,0.5);color:#e8b44a;font-size:12px;font-weight:800;cursor:pointer;border-radius:6px;padding:0;line-height:1">↑</button>
-                  <button onClick="{{ row.remove }}" title="Remove this result" style="flex:none;width:26px;height:26px;background:rgba(236,48,19,0.12);border:1px solid rgba(236,48,19,0.55);color:#ec3013;font-size:11px;font-weight:800;cursor:pointer;border-radius:6px;padding:0;line-height:1">✕</button>
+              <div style="display:flex;flex-direction:column;gap:6px;padding:10px 12px;border-bottom:1px solid rgba(243,242,242,0.07);background:{{ row.bg }}">
+                <div style="display:flex;align-items:center;gap:12px">
+                  <span style="width:24px;flex:none;font-weight:900;font-style:italic;color:{{ row.rankColor }};font-size:14px">{{ row.rank }}</span>
+                  <span style="flex:1;min-width:0;font-weight:700;font-size:14px;color:{{ row.nameColor }};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ row.name }}<span style="font-size:10.5px;color:#8b93a1;margin-left:8px;font-weight:400">{{ row.meta }}</span></span>
+                  <span style="font-weight:900;font-size:{{ row.scoreSize }};color:{{ row.scoreColor }};letter-spacing:0.5px;flex:none;white-space:nowrap">{{ row.score }}</span>
+                  <sc-if value="{{ row.hasPhone }}" hint-placeholder-val="{{ false }}">
+                    <button onClick="{{ row.text }}" title="Text {{ row.phone }}" style="flex:none;width:26px;height:26px;background:rgba(243,242,242,0.06);border:1px solid rgba(243,242,242,0.25);color:#c8ccd4;font-size:12px;border-radius:6px;cursor:pointer;padding:0;line-height:1">&#9993;</button>
+                  </sc-if>
+                  <sc-if value="{{ adminOn }}" hint-placeholder-val="{{ false }}">
+                    <button onClick="{{ row.fill }}" title="Load into the entry form" style="flex:none;width:26px;height:26px;background:rgba(232,180,74,0.12);border:1px solid rgba(232,180,74,0.5);color:#e8b44a;font-size:12px;font-weight:800;cursor:pointer;border-radius:6px;padding:0;line-height:1">↑</button>
+                    <button onClick="{{ row.remove }}" title="Remove this result" style="flex:none;width:26px;height:26px;background:rgba(236,48,19,0.12);border:1px solid rgba(236,48,19,0.55);color:#ec3013;font-size:11px;font-weight:800;cursor:pointer;border-radius:6px;padding:0;line-height:1">✕</button>
+                  </sc-if>
+                </div>
+                <sc-if value="{{ row.isBench }}" hint-placeholder-val="{{ false }}">
+                  <div style="padding-left:36px;display:flex;flex-direction:column;gap:3px">
+                    <span style="font-size:14px;color:#c8ccd4;letter-spacing:0.4px;white-space:pre-wrap">{{ row.sub1 }}</span>
+                    <span style="font-size:14px;color:#c8ccd4;letter-spacing:0.4px;white-space:pre-wrap">{{ row.sub2 }}</span>
+                  </div>
                 </sc-if>
               </div>
             </sc-for>
