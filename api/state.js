@@ -14,7 +14,8 @@ function redactPhones(data) {
     ...data,
     competitions: (data.competitions || []).map((c) => ({
       ...c, board: strip(c.board), applicants: strip(c.applicants)
-    }))
+    })),
+    tournaments: (data.tournaments || []).map(({ contacts, ...t }) => t)
   };
 }
 

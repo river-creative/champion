@@ -256,14 +256,18 @@ export function mergeSignups(data, queued) {
       const adds = byTour.get(t.id);
       if (!adds || !adds.length) return t;
       const pending = [...(t.signups || [])];
+      // Numbers live in a name -> phone map on the tournament so they survive
+      // the name being folded into the bracket later.
+      const contacts = { ...(t.contacts || {}) };
       const seen = new Set([...(t.entrants || []), ...pending].map((n) => String(n).trim().toLowerCase()));
       for (const q of adds) {
         const key = String(q.name || '').trim().toLowerCase();
         if (seen.has(key)) continue;
         seen.add(key);
         pending.push(q.name);
+        if (q.phone) contacts[q.name] = q.phone;
       }
-      return { ...t, signups: pending };
+      return { ...t, signups: pending, contacts };
     }),
     competitions: (data.competitions || []).map((c) => {
       const adds = byComp.get(c.id);

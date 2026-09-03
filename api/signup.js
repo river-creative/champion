@@ -141,7 +141,7 @@ export default async function handler(req, res) {
       return { ...c, board: [...(c.board || []), { name, phone, bw: '', score: '', signedUpAt: ts }] };
     });
     const nextTours = tours.map((t) =>
-      tourTargets.includes(t) ? { ...t, signups: [...(t.signups || []), name] } : t
+      tourTargets.includes(t) ? { ...t, signups: [...(t.signups || []), name], contacts: phone ? { ...(t.contacts || {}), [name]: phone } : (t.contacts || {}) } : t
     );
     await writeState({
       rev: (rec.rev || 0) + 1,
