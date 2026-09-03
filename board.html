@@ -70,7 +70,7 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
                   <div style="height:{{ p.h }}px;display:flex;flex-direction:column">
                     <sc-for list="{{ col.matches }}" as="m" hint-placeholder-count="2">
                       <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:2px 1px">
-                        <div style="background:#151d29;border:1px solid {{ m.border }};border-radius:5px;overflow:hidden;animation:{{ m.cardAnim }}">
+                        <div style="visibility:{{ m.vis }};background:#151d29;border:1px solid {{ m.border }};border-radius:5px;overflow:hidden;animation:{{ m.cardAnim }}">
                           <div style="display:flex;justify-content:space-between;align-items:center;gap:3px;padding:3px 7px;font-size:10.5px;font-weight:{{ m.aWeight }};color:{{ m.aColor }};border-bottom:1px solid rgba(243,242,242,0.07)">
                             <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ m.aName }}</span>
                             <span style="flex:none;display:flex;gap:4px;align-items:center"><span style="color:#c8ccd4;font-weight:800;font-size:10px">{{ m.aScore }}</span><span style="color:#ec3013;font-weight:900">{{ m.aMark }}</span></span>
@@ -90,8 +90,8 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
                   <div style="height:20px"></div>
                   <div style="height:{{ p.h }}px;display:flex;flex-direction:column">
                     <sc-for list="{{ col.cells }}" as="cc" hint-placeholder-count="1">
-                      <div style="flex:1;display:flex;align-items:center">
-                        <div style="width:100%;height:50%;border-top:2px solid #33405a;border-bottom:2px solid #33405a;border-right:2px solid #33405a;box-sizing:border-box"></div>
+                      <div style="flex:1;position:relative">
+                        <div style="position:absolute;left:0;right:0;top:{{ cc.top }};height:{{ cc.h }};border-top:{{ cc.bt }};border-bottom:{{ cc.bb }};border-right:{{ cc.br }};box-sizing:border-box"></div>
                       </div>
                     </sc-for>
                   </div>
@@ -562,7 +562,9 @@ class Component extends DCLogic {
   tStatus(t) {
     const last = t.rounds[t.rounds.length - 1][0];
     if (last.winner) return 'Complete';
-    for (let r = 0; r < t.rounds.length; r++) if (t.rounds[r].some(m => !m.winner)) return this.roundLabel(t.rounds[r].length);
+    for (let r = 0; r < t.rounds.length; r++) if (t.rounds[r].some(m => !m.winner)) {
+      return (r === 0 && t.rounds[0].some(m => m.bye)) ? 'Play-in' : this.roundLabel(t.rounds[r].length);
+    }
     return 'In progress';
   }
   champion(t) { return t.rounds[t.rounds.length - 1][0].winner || null; }
@@ -621,6 +623,18 @@ class Component extends DCLogic {
     if (isFinite(a) && isFinite(b) && a !== b) return (a > b ? m.sa + '–' + m.sb : m.sb + '–' + m.sa);
     return m.winner === m.a ? m.sa + '–' + m.sb : m.sb + '–' + m.sa;
   }
+  // Connector between a pair of matches and the next round. With both matches
+  // real it is the usual ] bracket; with one a bye it is an L from the real
+  // match alone; with both byes there is nothing to draw.
+  connector(top, bottom) {
+    const tb = !!(top && top.bye), bb = !!(bottom && bottom.bye);
+    const line = '2px solid #33405a', none = 'none';
+    if (top === null && bottom === null) return { top: '25%', h: '50%', bt: line, bb: line, br: line };
+    if (tb && bb) return { top: '25%', h: '50%', bt: none, bb: none, br: none };
+    if (tb) return { top: '50%', h: '25%', bt: none, bb: line, br: line };
+    if (bb) return { top: '25%', h: '25%', bt: line, bb: none, br: line };
+    return { top: '25%', h: '50%', bt: line, bb: line, br: line };
+  }
   mv(m, big) {
     const playable = m.a && m.b && !m.winner;
     const hot = playable && big;
@@ -649,11 +663,16 @@ class Component extends DCLogic {
       const cols = [];
       t.rounds.forEach((rd, r) => {
         const lit = this.state.focusIdx === i && this.state.sweepCol === r;
-        cols.push({ isRound: true, isConn: false, label: this.roundLabel(rd.length),
+        // A first round with byes is drawn as a play-in: only the matches that
+        // will actually be played appear, each wired straight to its place in
+        // the next round. Bye holders simply start from round two.
+        const playIn = r === 0 && rd.some(m => m.bye);
+        cols.push({ isRound: true, isConn: false, label: playIn ? 'Play-in' : this.roundLabel(rd.length),
           labelColor: lit ? '#ec3013' : '#8b93a1',
           colBg: lit ? 'rgba(236,48,19,0.10)' : 'transparent',
-          matches: rd.map(m => this.mv(m, r >= t.rounds.length - 2)) });
-        if (r < t.rounds.length - 1) cols.push({ isRound: false, isConn: true, cells: Array.from({ length: rd.length / 2 }, () => ({})) });
+          matches: rd.map(m => ({ ...this.mv(m, r >= t.rounds.length - 2), vis: (playIn && m.bye) ? 'hidden' : 'visible' })) });
+        if (r < t.rounds.length - 1) cols.push({ isRound: false, isConn: true,
+          cells: Array.from({ length: rd.length / 2 }, (_, k) => this.connector(playIn ? rd[2 * k] : null, playIn ? rd[2 * k + 1] : null)) });
       });
       const view = ov || { z: g.scale, tx: -g.staticOff, ty: g.centerY, dur: 3 };
       return { name: t.name, status: this.tStatus(t), champion: this.champion(t), cols, h: g.h,

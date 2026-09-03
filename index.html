@@ -308,7 +308,7 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
                         </sc-if>
                       </div>
                     </sc-if>
-                    <div style="background:#151d29;border:1px solid {{ m.border }};border-radius:6px;overflow:hidden;animation:{{ m.cardAnim }}">
+                    <div style="visibility:{{ m.vis }};opacity:{{ m.dim }};background:#151d29;border:1px solid {{ m.border }};border-radius:6px;overflow:hidden;animation:{{ m.cardAnim }}">
                       <div data-slot="{{ m.aSlot }}" draggable="{{ m.aDrag }}" onDragStart="{{ m.aDragStart }}" onDragOver="{{ dragOver }}" onDrop="{{ m.aDrop }}" onTouchStart="{{ m.aTouchStart }}" onTouchMove="{{ touchMove }}" onTouchEnd="{{ m.aTouchEnd }}" onClick="{{ m.onA }}" style="display:flex;justify-content:space-between;align-items:center;gap:4px;padding:7px 8px;font-size:11.5px;font-weight:{{ m.aWeight }};color:{{ m.aColor }};cursor:{{ m.cursor }};background:{{ m.aBg }};touch-action:{{ m.touchAction }};border-bottom:1px solid rgba(243,242,242,0.07)">
                         <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ m.aName }}</span>
                         <span style="flex:none;display:flex;gap:5px;align-items:center"><span style="color:#c8ccd4;font-weight:800;font-size:11px">{{ m.aScore }}</span><span style="color:#ec3013;font-weight:900">{{ m.aMark }}</span></span>
@@ -331,8 +331,8 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
               <div style="height:24px"></div>
               <div style="height:{{ bH }}px;display:flex;flex-direction:column">
                 <sc-for list="{{ col.cells }}" as="cc" hint-placeholder-count="1">
-                  <div style="flex:1;display:flex;align-items:center">
-                    <div style="width:100%;height:{{ cc.h }};border-top:2px solid #33405a;border-bottom:{{ cc.bb }};border-right:{{ cc.br }};border-left:{{ cc.bl }};box-sizing:border-box"></div>
+                  <div style="flex:1;position:relative">
+                    <div style="position:absolute;left:0;right:0;top:{{ cc.top }};height:{{ cc.h }};border-top:{{ cc.bt }};border-bottom:{{ cc.bb }};border-right:{{ cc.br }};border-left:{{ cc.bl }};box-sizing:border-box"></div>
                   </div>
                 </sc-for>
               </div>
@@ -748,7 +748,9 @@ class Component extends DCLogic {
   tStatus(t) {
     const last = t.rounds[t.rounds.length - 1][0];
     if (last.winner) return 'Complete';
-    for (let r = 0; r < t.rounds.length; r++) if (t.rounds[r].some(m => !m.winner)) return this.roundLabel(t.rounds[r].length);
+    for (let r = 0; r < t.rounds.length; r++) if (t.rounds[r].some(m => !m.winner)) {
+      return (r === 0 && t.rounds[0].some(m => m.bye)) ? 'Play-in' : this.roundLabel(t.rounds[r].length);
+    }
     return 'In progress';
   }
   champion(t) { return t.rounds[t.rounds.length - 1][0].winner || null; }
@@ -914,6 +916,7 @@ class Component extends DCLogic {
   }
   matchView(t, r, i, m, s) {
     const playable = m.a && m.b && !m.winner;
+    const vis = 'visible';
     const hot = playable && r >= t.rounds.length - 2;
     const clickable = s.adminOn && m.a && m.b;
     const slotId = (rr, ii, side) => rr + '-' + ii + '-' + side;
@@ -961,6 +964,7 @@ class Component extends DCLogic {
     const canPin = s.adminOn && playable;
     const tag = m.bye ? 'BYE' : (playable ? (pinned ? '★ FEATURED' : 'UP NEXT') : '');
     return {
+      vis, dim: '1',
       aName: m.a || (m.bye ? '—' : 'TBD'), bName: m.b || (m.bye ? 'BYE' : 'TBD'),
       aMark: m.winner && m.winner === m.a ? 'W' : '', bMark: m.winner && m.winner === m.b ? 'W' : '',
       aScore: m.sa != null ? m.sa : '', bScore: m.sb != null ? m.sb : '',
@@ -1326,24 +1330,50 @@ class Component extends DCLogic {
       const H = Math.max(2, half0) * 96;
       base.bH = H; base.bOuterH = Math.ceil((H + 60) * s.zoom) + 20;
       const CONN = '2px solid #33405a';
-      const makeConn = (feedCount, side) => {
+      // A first round with byes is drawn as a play-in: only real matches show,
+      // each wired straight to its place in round two; bye holders start there.
+      const playIn = t.rounds[0].some(m => m.bye);
+      const shape = (top, bottom, side) => {
+        const tb = !!(top && top.bye), bb = !!(bottom && bottom.bye);
+        const br = side === 'left' ? CONN : 'none', bl = side === 'right' ? CONN : 'none';
+        if (tb && bb) return { top: '25%', h: '50%', bt: 'none', bb: 'none', br: 'none', bl: 'none' };
+        if (tb) return { top: '50%', h: '25%', bt: 'none', bb: CONN, br, bl };
+        if (bb) return { top: '25%', h: '25%', bt: CONN, bb: 'none', br, bl };
+        return { top: '25%', h: '50%', bt: CONN, bb: CONN, br, bl };
+      };
+      const makeConn = (feedCount, side, pairs) => {
         const cells = [];
-        if (feedCount === 1) cells.push({ h: '0px', bb: 'none', br: 'none', bl: 'none' });
-        else for (let j = 0; j < feedCount / 2; j++) cells.push({ h: '50%', bb: CONN, br: side === 'left' ? CONN : 'none', bl: side === 'right' ? CONN : 'none' });
+        if (feedCount === 1) cells.push({ top: '50%', h: '0px', bt: 'none', bb: 'none', br: 'none', bl: 'none' });
+        else for (let j = 0; j < feedCount / 2; j++) {
+          cells.push(pairs ? shape(pairs[2 * j], pairs[2 * j + 1], side) : shape(null, null, side));
+        }
         return { isConn: true, isRound: false, cells };
+      };
+      // Attendees see a clean play-in. Admins still need the bye slots as drop
+      // targets for moving people, so for them the slots stay - just faint.
+      const withVis = (m, v) => {
+        const hide = playIn && m.bye;
+        return { ...v,
+          vis: (hide && !s.adminOn) ? 'hidden' : 'visible',
+          dim: hide ? (s.adminOn ? '0.32' : '1') : '1',
+          tagRow: hide ? false : v.tagRow };
       };
       const cols = [];
       for (let r = 0; r < L - 1; r++) {
         const rd = t.rounds[r], half = rd.length / 2;
-        cols.push({ isRound: true, isConn: false, label: this.roundLabel(rd.length), matches: rd.slice(0, half).map((m, i) => this.matchView(t, r, i, m, s)), champion: false });
-        cols.push(makeConn(half, 'left'));
+        const isPlayIn = r === 0 && playIn;
+        cols.push({ isRound: true, isConn: false, label: isPlayIn ? 'Play-in' : this.roundLabel(rd.length),
+          matches: rd.slice(0, half).map((m, i) => isPlayIn ? withVis(m, this.matchView(t, r, i, m, s)) : this.matchView(t, r, i, m, s)), champion: false });
+        cols.push(makeConn(half, 'left', isPlayIn ? rd.slice(0, half) : null));
       }
       const fin = t.rounds[L - 1][0];
       cols.push({ isRound: true, isConn: false, label: 'Final', matches: [this.matchView(t, L - 1, 0, fin, s)], champion: this.champion(t) });
       for (let r = L - 2; r >= 0; r--) {
         const rd = t.rounds[r], half = rd.length / 2;
-        cols.push(makeConn(half, 'right'));
-        cols.push({ isRound: true, isConn: false, label: this.roundLabel(rd.length), matches: rd.slice(half).map((m, i) => this.matchView(t, r, half + i, m, s)), champion: false });
+        const isPlayIn = r === 0 && playIn;
+        cols.push(makeConn(half, 'right', isPlayIn ? rd.slice(half) : null));
+        cols.push({ isRound: true, isConn: false, label: isPlayIn ? 'Play-in' : this.roundLabel(rd.length),
+          matches: rd.slice(half).map((m, i) => isPlayIn ? withVis(m, this.matchView(t, r, half + i, m, s)) : this.matchView(t, r, half + i, m, s)), champion: false });
       }
       base.bCols = cols;
       base.entrantsText = s.entrantsText;
