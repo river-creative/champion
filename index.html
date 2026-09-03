@@ -347,6 +347,20 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
           <span style="font-size:10px;letter-spacing:2px;color:#ec3013;font-weight:700;text-transform:uppercase">Admin · Competitors ({{ bCompetitorCount }})</span>
           <button onClick="{{ bToggleSignup }}" title="{{ bSignupLabel }}" style="flex:none;background:none;border:1px solid {{ bSignupBorder }};color:{{ bSignupColor }};padding:6px 10px;font-size:9px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;cursor:pointer;border-radius:6px">{{ bSignupLabel }}</button>
         </div>
+        <sc-if value="{{ bHasContacts }}" hint-placeholder-val="{{ false }}">
+          <div style="border:1px solid rgba(243,242,242,0.12);background:#11161f;padding:10px 12px;margin-bottom:10px">
+            <div style="font-size:9px;letter-spacing:1.5px;color:#8b93a1;font-weight:800;text-transform:uppercase">{{ bContactsLabel }} · tap to text</div>
+            <div style="margin-top:6px;display:flex;flex-direction:column">
+              <sc-for list="{{ bContacts }}" as="p" hint-placeholder-count="4">
+                <div style="display:flex;align-items:center;gap:9px;padding:6px 0;border-bottom:1px solid rgba(243,242,242,0.07)">
+                  <span style="flex:1;min-width:0;font-weight:700;font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ p.name }}</span>
+                  <span style="font-size:9px;letter-spacing:1px;color:{{ p.whereColor }};font-weight:700;text-transform:uppercase;flex:none">{{ p.where }}</span>
+                  <button onClick="{{ p.text }}" title="Text {{ p.phone }}" style="flex:none;width:26px;height:26px;background:rgba(243,242,242,0.06);border:1px solid rgba(243,242,242,0.25);color:#c8ccd4;font-size:12px;border-radius:6px;cursor:pointer;padding:0;line-height:1">&#9993;</button>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
         <sc-if value="{{ bHasWaiting }}" hint-placeholder-val="{{ false }}">
           <div style="background:rgba(232,180,74,0.08);border:1px solid rgba(232,180,74,0.4);padding:10px 12px;margin-bottom:10px">
             <div style="font-size:9px;letter-spacing:1.5px;color:#e8b44a;font-weight:800;text-transform:uppercase">{{ bWaitingLabel }}</div>
@@ -846,6 +860,16 @@ class Component extends DCLogic {
     const t = (u && u.text) || '';
     return /^New leader: |^New fastest time: |^New longest time: /.test(t) || / extends the lead — /.test(t);
   }
+  // "Plan" is what the lifter wrote at sign-up; "Lift" is what the crew
+  // recorded on the day. Both stay on the row so the two can be compared.
+  benchMeta(row) {
+    // `bw` is the weigh-in; `bwSignup` is what they wrote on the form. DOTS is
+    // always on the weigh-in. The sign-up figure is shown only when it differs.
+    const su = row.bwSignup && row.bwSignup !== row.bw ? ' (signed up ' + row.bwSignup + ')' : '';
+    const plan = (row.planned && row.planned.length) ? 'Plan ' + row.planned.join(' / ') : '';
+    const did = (row.lifts && row.lifts.length) ? 'Lift ' + row.lifts.join(' / ') : (row.score ? 'Lift ' + row.score : '');
+    return ['BW ' + (row.bw || '—') + su, plan, did].filter(Boolean).join(' · ') + (did || plan ? ' LBS' : '');
+  }
   scoreWinner(cf) {
     if (!cf || cf.kind !== 'advance') return cf ? cf.winner : null;
     if (!cf.scored) return cf.winner;
@@ -1227,6 +1251,31 @@ class Component extends DCLogic {
       base.bHasWaiting = waiting.length > 0;
       base.bWaitingText = waiting.join(', ');
       base.bWaitingLabel = waiting.length + (waiting.length === 1 ? ' person signed up' : ' people signed up');
+      // Everyone attached to this tournament who left a number - in the
+      // bracket or still waiting - with a text action each.
+      // A number given anywhere counts everywhere. Someone who entered the
+      // bench press and a bracket left one number; find it wherever it landed.
+      const book = {};
+      const learn = (name, phone) => { if (name && phone && !book[String(name).toLowerCase()]) book[String(name).toLowerCase()] = phone; };
+      Object.entries(t.contacts || {}).forEach(([n, p]) => learn(n, p));
+      data.tournaments.forEach(x => Object.entries(x.contacts || {}).forEach(([n, p]) => learn(n, p)));
+      data.competitions.forEach(x => {
+        (x.board || []).forEach(r => learn(r.name, r.phone));
+        (x.applicants || []).forEach(r => learn(r.name, r.phone));
+      });
+      const inBracket = new Set((t.entrants || []).map(n => String(n).toLowerCase()));
+      const seenC = new Set();
+      base.bContacts = [...(t.entrants || []), ...waiting]
+        .filter(n => { const k = String(n).toLowerCase(); if (seenC.has(k)) return false; seenC.add(k); return !!book[k]; })
+        .map(n => ({
+          name: n, phone: book[String(n).toLowerCase()],
+          where: inBracket.has(String(n).toLowerCase()) ? 'In bracket' : 'Waiting',
+          whereColor: inBracket.has(String(n).toLowerCase()) ? '#8b93a1' : '#e8b44a',
+          text: () => this.setState({ confirm: { kind: 'sms', who: n, num: book[String(n).toLowerCase()],
+            href: 'sms:' + String(book[String(n).toLowerCase()]).replace(/[^0-9+]/g, '') } })
+        }));
+      base.bHasContacts = base.bContacts.length > 0;
+      base.bContactsLabel = base.bContacts.length + (base.bContacts.length === 1 ? ' contact' : ' contacts');
       // Drops the pending names into the editor. Nothing is rebuilt until the
       // admin presses Apply, because that wipes every result in this bracket.
       base.bAddWaiting = () => {
@@ -1308,7 +1357,7 @@ class Component extends DCLogic {
         cprev = v;
         return ({
         rank: crank, name: row.name,
-        meta: c.dots ? ('BW ' + (row.bw || '—') + ' · ' + ((row.lifts && row.lifts.length) ? row.lifts.join(' / ') : row.score) + ' LBS')
+        meta: c.dots ? this.benchMeta(row)
                      : (row.bw ? 'BW ' + row.bw + ' LBS' : ''),
         score: !row.score ? 'AWAITING'
              : c.dots ? this.dotsStr(row.bw, row.score) + ' pts'
@@ -1353,7 +1402,7 @@ class Component extends DCLogic {
           const d = this.state.data;
           this.save({ ...d, competitions: d.competitions.map(x => x.id !== c.id ? x : {
             ...x,
-            board: [...(x.board || []), { name: a.name, bw: a.bw, score: '', signedUpAt: a.signedUpAt }],
+            board: [...(x.board || []), { name: a.name, bw: a.bw, bwSignup: a.bw, phone: a.phone || '', planned: a.attempts || [], score: '', signedUpAt: a.signedUpAt }],
             applicants: (x.applicants || []).filter(p => p.name !== a.name)
           }) });
         },
@@ -1370,7 +1419,7 @@ class Component extends DCLogic {
         const names = new Set(take.map(a => a.name));
         this.save({ ...d, competitions: d.competitions.map(x => x.id !== c.id ? x : {
           ...x,
-          board: [...(x.board || []), ...take.map(a => ({ name: a.name, bw: a.bw, score: '', signedUpAt: a.signedUpAt }))],
+          board: [...(x.board || []), ...take.map(a => ({ name: a.name, bw: a.bw, bwSignup: a.bw, phone: a.phone || '', planned: a.attempts || [], score: '', signedUpAt: a.signedUpAt }))],
           applicants: (x.applicants || []).filter(p => !names.has(p.name))
         }) });
       };
