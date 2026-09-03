@@ -764,7 +764,14 @@ class Component extends DCLogic {
   }
 
   openT(id) { const t = this.state.data.tournaments.find(x => x.id === id); this.setState({ view: 'bracket', tId: id, entrantsText: t ? t.entrants.join('\n') : '' }); }
-  openC(id) { this.setState({ view: 'event', cId: id }); }
+  // The entry fields are shared state, so a name recalled on one competition
+  // would otherwise still be sitting in the form when the next one opens.
+  // Opening a different competition starts with a clean form.
+  openC(id) {
+    const patch = { view: 'event', cId: id };
+    if (id !== this.state.cId) Object.assign(patch, { boardName: '', boardBw: '', boardScore: '', boardScore2: '', boardScore3: '', updateText: '' });
+    this.setState(patch);
+  }
 
   // When scores are entered, they are the source of truth. Tapping the wrong
   // name and then typing 21-7 the other way should advance the 21.
