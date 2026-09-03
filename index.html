@@ -373,7 +373,10 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
           <button onClick="{{ setSeedRandom }}" style="flex:1;background:{{ seedRandomBg }};color:{{ seedRandomColor }};border:1px solid rgba(243,242,242,0.2);padding:9px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;text-align:left">Random draw</button>
           <button onClick="{{ setSeedOrder }}" style="flex:1;background:{{ seedOrderBg }};color:{{ seedOrderColor }};border:1px solid rgba(243,242,242,0.2);padding:9px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;text-align:left">List order</button>
         </div>
-        <button onClick="{{ regenerate }}" style="width:100%;margin-top:10px;background:#ec3013;color:#fff;border:none;padding:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase;font-size:11px;text-align:left;cursor:pointer">Generate bracket → (resets results)</button>
+        <button onClick="{{ regenerate }}" title="{{ bGenLabel }}" style="width:100%;margin-top:10px;background:{{ bGenBg }};color:{{ bGenColor }};border:none;padding:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase;font-size:11px;text-align:left;cursor:{{ bGenCursor }}">{{ bGenLabel }}</button>
+        <sc-if value="{{ bLocked }}" hint-placeholder-val="{{ false }}">
+          <div style="font-size:10px;color:#5c6675;margin-top:6px;line-height:1.5">The draw is fixed while sign-ups are closed. Open sign-ups above to regenerate.</div>
+        </sc-if>
       </div>
     </sc-if>
   </sc-if>
@@ -433,7 +436,49 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
       <div style="font-size:11px;color:#8b93a1;letter-spacing:1px;text-transform:uppercase;margin-top:3px">{{ cSub }}</div>
       <sc-if value="{{ cHasBoard }}" hint-placeholder-val="{{ true }}">
         <div style="margin-top:16px">
-          <div style="font-size:10px;letter-spacing:2px;color:#8b93a1;font-weight:700;text-transform:uppercase;margin-bottom:8px">Leaderboard</div>
+          <sc-if value="{{ adminOn }}" hint-placeholder-val="{{ false }}">
+            <div style="font-size:10px;letter-spacing:2px;color:#ec3013;font-weight:700;text-transform:uppercase;margin-bottom:6px">Admin · Enter results</div>
+            <sc-if value="{{ cHasApplicants }}" hint-placeholder-val="{{ false }}">
+              <div style="border:1px solid rgba(232,180,74,0.4);background:rgba(232,180,74,0.06);padding:12px 13px;margin-top:10px">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+                  <span style="font-size:9px;letter-spacing:2px;color:#e8b44a;font-weight:800;text-transform:uppercase">{{ cApplicantCount }} · ranked by projected DOTS</span>
+                  <button onClick="{{ cAcceptTop }}" style="flex:none;background:#e8b44a;color:#151d29;border:none;padding:7px 11px;font-weight:900;letter-spacing:1.2px;text-transform:uppercase;font-size:9px;cursor:pointer">{{ cAcceptLabel }}</button>
+                </div>
+                <div style="margin-top:9px;display:flex;flex-direction:column">
+                  <sc-for list="{{ cApplicants }}" as="a" hint-placeholder-count="5">
+                    <div style="display:flex;align-items:center;gap:9px;padding:7px 6px;border-bottom:1px solid rgba(243,242,242,0.07);background:{{ a.bg }}">
+                      <span style="width:22px;font-weight:900;font-style:italic;color:{{ a.projColor }};font-size:12px;flex:none">{{ a.rank }}</span>
+                      <span style="flex:1;min-width:0"><span style="font-weight:700;font-size:12.5px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ a.name }}</span><span style="font-size:9.5px;color:#8b93a1">{{ a.meta }}</span></span>
+                      <span style="font-weight:900;font-size:11.5px;color:{{ a.projColor }};flex:none">{{ a.proj }}</span>
+                      <sc-if value="{{ a.hasPhone }}" hint-placeholder-val="{{ true }}">
+                        <button onClick="{{ a.text }}" title="Text {{ a.phone }}" style="flex:none;width:26px;height:26px;background:rgba(243,242,242,0.06);border:1px solid rgba(243,242,242,0.25);color:#c8ccd4;font-size:12px;border-radius:6px;cursor:pointer;padding:0;line-height:1">&#9993;</button>
+                      </sc-if>
+                      <button onClick="{{ a.accept }}" title="Add to the competition" style="flex:none;width:26px;height:26px;background:rgba(60,200,90,0.14);border:1px solid rgba(60,200,90,0.5);color:#4cd964;font-size:12px;font-weight:800;cursor:pointer;border-radius:6px;padding:0">✓</button>
+                      <button onClick="{{ a.drop }}" title="Decline" style="flex:none;width:26px;height:26px;background:rgba(236,48,19,0.12);border:1px solid rgba(236,48,19,0.5);color:#ec3013;font-size:11px;font-weight:800;cursor:pointer;border-radius:6px;padding:0">✕</button>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-if>
+
+            <div style="display:flex;gap:8px;margin-top:8px">
+              <input value="{{ boardName }}" onChange="{{ onBoardName }}" placeholder="Name" style="flex:2;min-width:0;background:#0d131c;border:1px solid rgba(243,242,242,0.2);color:#f3f2f2;padding:9px;font-size:12px">
+              <sc-if value="{{ cHasBW }}" hint-placeholder-val="{{ false }}">
+                <input value="{{ boardBw }}" onChange="{{ onBoardBw }}" placeholder="BW" style="flex:1;min-width:0;background:#0d131c;border:1px solid rgba(243,242,242,0.2);color:#f3f2f2;padding:9px;font-size:12px">
+              </sc-if>
+              <sc-if value="{{ notDots }}" hint-placeholder-val="{{ true }}">
+                <input value="{{ boardScore }}" onChange="{{ onBoardScore }}" placeholder="{{ scorePlaceholder }}" style="flex:1;min-width:0;background:#0d131c;border:1px solid rgba(243,242,242,0.2);color:#f3f2f2;padding:9px;font-size:12px">
+              </sc-if>
+              <sc-if value="{{ isDots }}" hint-placeholder-val="{{ false }}">
+                <input value="{{ boardScore }}" onChange="{{ onBoardScore }}" placeholder="1st" style="flex:1;min-width:0;background:#0d131c;border:1px solid rgba(243,242,242,0.2);color:#f3f2f2;padding:9px;font-size:12px;text-align:center">
+                <input value="{{ boardScore2 }}" onChange="{{ onBoardScore2 }}" placeholder="2nd" style="flex:1;min-width:0;background:#0d131c;border:1px solid rgba(243,242,242,0.2);color:#f3f2f2;padding:9px;font-size:12px;text-align:center">
+                <input value="{{ boardScore3 }}" onChange="{{ onBoardScore3 }}" placeholder="3rd" style="flex:1;min-width:0;background:#0d131c;border:1px solid rgba(243,242,242,0.2);color:#f3f2f2;padding:9px;font-size:12px;text-align:center">
+              </sc-if>
+              <button onClick="{{ addBoardRow }}" style="flex:none;background:#ec3013;color:#fff;border:none;padding:9px 14px;font-weight:900;cursor:pointer">+</button>
+            </div>
+            <div style="font-size:10px;color:#5c6675;letter-spacing:0.5px;margin-top:8px;line-height:1.5">Re-enter a name to overwrite that result. Admin sees every place, not just the top 5.</div>
+          </sc-if>
+          <div style="font-size:10px;letter-spacing:2px;color:#8b93a1;font-weight:700;text-transform:uppercase;margin-bottom:8px;margin-top:18px">Leaderboard</div>
           <div style="border:1px solid rgba(243,242,242,0.12)">
             <sc-for list="{{ cBoard }}" as="row" hint-placeholder-count="5">
               <div style="display:flex;flex-direction:column;gap:6px;padding:10px 12px;border-bottom:1px solid rgba(243,242,242,0.07);background:{{ row.bg }}">
@@ -461,45 +506,6 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
             </sc-for>
           </div>
           <sc-if value="{{ adminOn }}" hint-placeholder-val="{{ false }}">
-            <sc-if value="{{ cHasApplicants }}" hint-placeholder-val="{{ false }}">
-              <div style="border:1px solid rgba(232,180,74,0.4);background:rgba(232,180,74,0.06);padding:12px 13px;margin-top:10px">
-                <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
-                  <span style="font-size:9px;letter-spacing:2px;color:#e8b44a;font-weight:800;text-transform:uppercase">{{ cApplicantCount }} · ranked by projected DOTS</span>
-                  <button onClick="{{ cAcceptTop }}" style="flex:none;background:#e8b44a;color:#151d29;border:none;padding:7px 11px;font-weight:900;letter-spacing:1.2px;text-transform:uppercase;font-size:9px;cursor:pointer">{{ cAcceptLabel }}</button>
-                </div>
-                <div style="margin-top:9px;display:flex;flex-direction:column">
-                  <sc-for list="{{ cApplicants }}" as="a" hint-placeholder-count="5">
-                    <div style="display:flex;align-items:center;gap:9px;padding:7px 6px;border-bottom:1px solid rgba(243,242,242,0.07);background:{{ a.bg }}">
-                      <span style="width:22px;font-weight:900;font-style:italic;color:{{ a.projColor }};font-size:12px;flex:none">{{ a.rank }}</span>
-                      <span style="flex:1;min-width:0"><span style="font-weight:700;font-size:12.5px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ a.name }}</span><span style="font-size:9.5px;color:#8b93a1">{{ a.meta }}</span></span>
-                      <span style="font-weight:900;font-size:11.5px;color:{{ a.projColor }};flex:none">{{ a.proj }}</span>
-                      <sc-if value="{{ a.hasPhone }}" hint-placeholder-val="{{ true }}">
-                        <button onClick="{{ a.text }}" title="Text {{ a.phone }}" style="flex:none;width:26px;height:26px;background:rgba(243,242,242,0.06);border:1px solid rgba(243,242,242,0.25);color:#c8ccd4;font-size:12px;border-radius:6px;cursor:pointer;padding:0;line-height:1">&#9993;</button>
-                      </sc-if>
-                      <button onClick="{{ a.accept }}" title="Add to the competition" style="flex:none;width:26px;height:26px;background:rgba(60,200,90,0.14);border:1px solid rgba(60,200,90,0.5);color:#4cd964;font-size:12px;font-weight:800;cursor:pointer;border-radius:6px;padding:0">✓</button>
-                      <button onClick="{{ a.drop }}" title="Decline" style="flex:none;width:26px;height:26px;background:rgba(236,48,19,0.12);border:1px solid rgba(236,48,19,0.5);color:#ec3013;font-size:11px;font-weight:800;cursor:pointer;border-radius:6px;padding:0">✕</button>
-                    </div>
-                  </sc-for>
-                </div>
-              </div>
-            </sc-if>
-
-            <div style="display:flex;gap:8px;margin-top:14px">
-              <input value="{{ boardName }}" onChange="{{ onBoardName }}" placeholder="Name" style="flex:2;min-width:0;background:#0d131c;border:1px solid rgba(243,242,242,0.2);color:#f3f2f2;padding:9px;font-size:12px">
-              <sc-if value="{{ cHasBW }}" hint-placeholder-val="{{ false }}">
-                <input value="{{ boardBw }}" onChange="{{ onBoardBw }}" placeholder="BW" style="flex:1;min-width:0;background:#0d131c;border:1px solid rgba(243,242,242,0.2);color:#f3f2f2;padding:9px;font-size:12px">
-              </sc-if>
-              <sc-if value="{{ notDots }}" hint-placeholder-val="{{ true }}">
-                <input value="{{ boardScore }}" onChange="{{ onBoardScore }}" placeholder="{{ scorePlaceholder }}" style="flex:1;min-width:0;background:#0d131c;border:1px solid rgba(243,242,242,0.2);color:#f3f2f2;padding:9px;font-size:12px">
-              </sc-if>
-              <sc-if value="{{ isDots }}" hint-placeholder-val="{{ false }}">
-                <input value="{{ boardScore }}" onChange="{{ onBoardScore }}" placeholder="1st" style="flex:1;min-width:0;background:#0d131c;border:1px solid rgba(243,242,242,0.2);color:#f3f2f2;padding:9px;font-size:12px;text-align:center">
-                <input value="{{ boardScore2 }}" onChange="{{ onBoardScore2 }}" placeholder="2nd" style="flex:1;min-width:0;background:#0d131c;border:1px solid rgba(243,242,242,0.2);color:#f3f2f2;padding:9px;font-size:12px;text-align:center">
-                <input value="{{ boardScore3 }}" onChange="{{ onBoardScore3 }}" placeholder="3rd" style="flex:1;min-width:0;background:#0d131c;border:1px solid rgba(243,242,242,0.2);color:#f3f2f2;padding:9px;font-size:12px;text-align:center">
-              </sc-if>
-              <button onClick="{{ addBoardRow }}" style="flex:none;background:#ec3013;color:#fff;border:none;padding:9px 14px;font-weight:900;cursor:pointer">+</button>
-            </div>
-            <div style="font-size:10px;color:#5c6675;letter-spacing:0.5px;margin-top:8px;line-height:1.5">Re-enter a name to overwrite that result. Admin sees every place, not just the top 5.</div>
             <sc-if value="{{ cCanFlipSort }}" hint-placeholder-val="{{ true }}">
               <div style="display:flex;align-items:center;gap:10px;margin-top:14px;padding:10px 12px;border:1px solid rgba(243,242,242,0.12);background:#11161f">
                 <span style="font-size:9px;letter-spacing:1.5px;color:#8b93a1;font-weight:800;text-transform:uppercase;flex:none">Ranking</span>
@@ -1348,7 +1354,15 @@ class Component extends DCLogic {
       base.seedOrderColor = t.seeding === 'order' ? '#fff' : '#8b93a1';
       base.setSeedRandom = () => { t.seeding = 'random'; this.save({ ...data }); };
       base.setSeedOrder = () => { t.seeding = 'order'; this.save({ ...data }); };
+      // Closing sign-ups locks the draw. Once the field is final nobody should
+      // be able to reshuffle it by accident - reopen sign-ups to unlock.
+      base.bLocked = !t.signupOpen;
+      base.bGenLabel = t.signupOpen ? 'Generate bracket → (resets results)' : 'Locked — sign-ups are closed';
+      base.bGenBg = t.signupOpen ? '#ec3013' : '#1c2330';
+      base.bGenColor = t.signupOpen ? '#fff' : '#5c6675';
+      base.bGenCursor = t.signupOpen ? 'pointer' : 'not-allowed';
       base.regenerate = () => {
+        if (!t.signupOpen) return;
         const names = s.entrantsText.split('\n').map(x => x.trim()).filter(Boolean);
         if (names.length < 2) return;
         t.entrants = names; t.rounds = this.genBracket(names, t.seeding);
