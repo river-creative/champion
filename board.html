@@ -577,6 +577,16 @@ class Component extends DCLogic {
     const t = (u && u.text) || '';
     return /^New leader: |^New fastest time: |^New longest time: /.test(t) || / extends the lead — /.test(t);
   }
+  // "Plan" is what the lifter wrote at sign-up; "Lift" is what the crew
+  // recorded on the day. Both stay on the row so the two can be compared.
+  benchMeta(row) {
+    // `bw` is the weigh-in; `bwSignup` is what they wrote on the form. DOTS is
+    // always on the weigh-in. The sign-up figure is shown only when it differs.
+    const su = row.bwSignup && row.bwSignup !== row.bw ? ' (signed up ' + row.bwSignup + ')' : '';
+    const plan = (row.planned && row.planned.length) ? 'Plan ' + row.planned.join(' / ') : '';
+    const did = (row.lifts && row.lifts.length) ? 'Lift ' + row.lifts.join(' / ') : (row.score ? 'Lift ' + row.score : '');
+    return ['BW ' + (row.bw || '—') + su, plan, did].filter(Boolean).join(' · ') + (did || plan ? ' LBS' : '');
+  }
   scoreline(m) {
     if (m.sa == null || m.sb == null) return null;
     const a = parseFloat(m.sa), b = parseFloat(m.sb);
@@ -636,7 +646,7 @@ class Component extends DCLogic {
         const lead = rank === 1;
         return {
           rank, name: r.name,
-          meta: c.dots ? ('BW ' + (r.bw || '—') + ' · ' + ((r.lifts && r.lifts.length) ? r.lifts.join(' / ') : r.score) + ' LBS') : (r.bw ? 'BW ' + r.bw : ''),
+          meta: c.dots ? this.benchMeta(r) : (r.bw ? 'BW ' + r.bw : ''),
           score: c.dots ? this.dotsStr(r.bw, r.score) + ' pts' : r.score,
           rankColor: lead ? '#e8b44a' : '#8b93a1',
           nameColor: lead ? '#e8b44a' : '#f3f2f2',
