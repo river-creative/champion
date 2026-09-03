@@ -122,6 +122,9 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
         <div style="font-size:10px;letter-spacing:2px;color:#ec3013;font-weight:700;margin-bottom:6px">CONFIRM CHANGES</div>
         <div style="font-weight:900;font-style:italic;text-transform:uppercase;font-size:17px;margin-bottom:10px">{{ confirmTitle }}</div>
         <div style="font-size:13px;line-height:1.5;color:#c8ccd4;margin-bottom:14px">{{ confirmBody }}</div>
+        <sc-if value="{{ confirmRename }}" hint-placeholder-val="{{ false }}">
+          <input value="{{ confirmTo }}" onInput="{{ onConfirmTo }}" placeholder="New name" style="width:100%;box-sizing:border-box;margin-bottom:14px;background:#0d131c;border:1px solid rgba(232,180,74,0.6);color:#f3f2f2;padding:11px;font-size:14px;font-weight:700">
+        </sc-if>
         <sc-if value="{{ confirmScored }}" hint-placeholder-val="{{ false }}">
           <div style="font-size:9px;letter-spacing:1.5px;color:#8b93a1;font-weight:700;text-transform:uppercase;margin-bottom:6px">Score (optional)</div>
           <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px">
@@ -345,6 +348,7 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
       <div style="margin:0 16px 16px;background:#151d29;border:1px solid rgba(243,242,242,0.12);padding:14px">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px">
           <span style="font-size:10px;letter-spacing:2px;color:#ec3013;font-weight:700;text-transform:uppercase">Admin · Competitors ({{ bCompetitorCount }})</span>
+          <button onClick="{{ toggleRename }}" title="Tap any name to replace it without moving the bracket" style="flex:none;background:{{ renameBg }};border:1px solid rgba(232,180,74,0.7);color:{{ renameColor }};padding:6px 10px;font-size:9px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;cursor:pointer;border-radius:6px;margin-right:6px">{{ renameLabel }}</button>
           <button onClick="{{ bToggleSignup }}" title="{{ bSignupLabel }}" style="flex:none;background:none;border:1px solid {{ bSignupBorder }};color:{{ bSignupColor }};padding:6px 10px;font-size:9px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;cursor:pointer;border-radius:6px">{{ bSignupLabel }}</button>
         </div>
         <sc-if value="{{ bHasContacts }}" hint-placeholder-val="{{ false }}">
@@ -565,7 +569,7 @@ html,body{margin:0;padding:0;height:100%;background:#0a0f16;overflow-x:hidden;-w
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;pin&quot;: {&quot;editor&quot;: &quot;text&quot;, &quot;default&quot;: &quot;Champs26&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Admin&quot;}, &quot;showBanner&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Layout&quot;}}">
 class Component extends DCLogic {
-  state = { view: 'home', tId: null, cId: null, adminOn: false, pinOk: false, pinOpen: false, pinVal: '', pinError: false, entrantsText: '', newCompName: '', newCompType: 'timed', boardName: '', boardBw: '', boardScore: '', boardScore2: '', boardScore3: '', updateText: '', zoom: 0.85, confirm: null, tdragFrom: null, tOverId: null, cDragId: null, cOverId: null, guideOpen: false, signupName: '', signupPhone: '', signupBw: '', signupA1: '', signupA2: '', signupA3: '', signupPick: {}, signupTour: {}, signupBench: '', signupMsg: '', signupBusy: false, data: null };
+  state = { view: 'home', tId: null, cId: null, adminOn: false, pinOk: false, pinOpen: false, pinVal: '', pinError: false, entrantsText: '', newCompName: '', newCompType: 'timed', boardName: '', boardBw: '', boardScore: '', boardScore2: '', boardScore3: '', updateText: '', zoom: 0.85, confirm: null, tdragFrom: null, tOverId: null, cDragId: null, cOverId: null, guideOpen: false, renameMode: false, signupName: '', signupPhone: '', signupBw: '', signupA1: '', signupA2: '', signupA3: '', signupPick: {}, signupTour: {}, signupBench: '', signupMsg: '', signupBusy: false, data: null };
 
   // 10s. Commands are unmetered on the Fixed plan, so the limit here is Vercel
   // function invocations, not the database. 10s keeps those to about a third of
@@ -667,6 +671,28 @@ class Component extends DCLogic {
   }
   // Undo what a bye had propagated: clear the auto-winner and pull its name
   // back out of the next-round slot it was feeding.
+  // Swap one name for another everywhere it appears in this tournament:
+  // the entrant list, every slot and winner, the waiting list and the contact
+  // book. Nothing moves; a no-show's substitute inherits their exact position
+  // including any bye or result already recorded on it.
+  renameEntrant(t, from, to) {
+    const n = String(to || '').trim();
+    if (!n || n === from) return false;
+    const taken = [...(t.entrants || []), ...(t.signups || [])].some(x => x !== from && String(x).toLowerCase() === n.toLowerCase());
+    if (taken) return false;
+    t.entrants = (t.entrants || []).map(x => x === from ? n : x);
+    t.rounds.forEach(rd => rd.forEach(m => {
+      if (m.a === from) m.a = n;
+      if (m.b === from) m.b = n;
+      if (m.winner === from) m.winner = n;
+    }));
+    if (t.signups) t.signups = t.signups.map(x => x === from ? n : x);
+    if (t.contacts && Object.prototype.hasOwnProperty.call(t.contacts, from)) {
+      t.contacts[n] = t.contacts[from];
+      delete t.contacts[from];
+    }
+    return true;
+  }
   releaseBye(t, r, i) {
     const m = t.rounds[r][i];
     if (!m || !m.bye) return;
@@ -987,8 +1013,12 @@ class Component extends DCLogic {
       touchAction: (canDrop('a') || canDrop('b')) ? 'none' : 'auto',
       aSlot: slotId(r, i, 'a'), bSlot: slotId(r, i, 'b'),
       aBg: bg('a'), bBg: bg('b'),
-      onA: m.a && m.b ? () => openAdvance(m.a) : undefined,
-      onB: m.a && m.b ? () => openAdvance(m.b) : undefined,
+      // In rename mode a tap edits the name in place - the slot, the seed and
+      // any result the slot already carries all stay exactly where they are.
+      onA: (s.adminOn && s.renameMode && m.a) ? () => this.setState({ confirm: { kind: 'rename', from: m.a, to: m.a } })
+         : (m.a && m.b ? () => openAdvance(m.a) : undefined),
+      onB: (s.adminOn && s.renameMode && m.b) ? () => this.setState({ confirm: { kind: 'rename', from: m.b, to: m.b } })
+         : (m.a && m.b ? () => openAdvance(m.b) : undefined),
       aDrag: canDrag('a'), bDrag: canDrag('b'),
       aDragStart: dragStart('a'), bDragStart: dragStart('b'),
       aDrop: drop('a'), bDrop: drop('b'),
@@ -1029,7 +1059,7 @@ class Component extends DCLogic {
       screenTitle: { home: 'Dashboard', brackets: 'Brackets', bracket: 'Bracket', events: 'Competitions', event: 'Competition' }[s.view],
       confirmOpen: !!cf,
       confirmTitle: cf ? ({ advance: 'Advance competitor', swap: 'Match change', delcomp: 'Remove competition',
-        delrow: 'Remove result', clearcomp: 'Clear all results', delupdate: 'Remove update', sms: 'Send a text' }[cf.kind] || 'Confirm') : '',
+        delrow: 'Remove result', clearcomp: 'Clear all results', delupdate: 'Remove update', sms: 'Send a text', rename: 'Replace competitor' }[cf.kind] || 'Confirm') : '',
       confirmBody: cf ? (
         cf.kind === 'advance' ? this.scoreWinner(cf) + ' wins over ' + (this.scoreWinner(cf) === cf.aName ? cf.bName : cf.aName) + ' and moves to the next round.'
         : cf.kind === 'swap' ? (
@@ -1038,10 +1068,19 @@ class Component extends DCLogic {
               : 'Move ' + cf.n1 + ' in to face ' + (cf.other || 'the open slot') + '?' + (cf.leaves ? ' ' + cf.leaves + ' takes the bye instead.' : ''))
         : cf.kind === 'delrow' ? 'Remove ' + cf.name + ' from this leaderboard? Their result and rank are deleted. Any update mentioning them stays until you remove it.'
         : cf.kind === 'clearcomp' ? 'Delete every result and update in "' + cf.name + '"? The competition itself stays, with its name and type. This cannot be undone.'
+        : cf.kind === 'rename' ? 'Type the name that takes ' + cf.from + '\'s place. Their position, seed and any result stay exactly as they are.'
         : cf.kind === 'sms' ? 'Open a text message to ' + cf.who + ' at ' + cf.num + '?'
         : cf.kind === 'delupdate' ? 'Remove this update?  "' + (cf.text || '').slice(0, 90) + '"'
         : 'Remove "' + cf.name + '" and all of its results? This cannot be undone.') : '',
       confirmScored: !!(cf && cf.kind === 'advance' && cf.scored),
+      confirmRename: !!(cf && cf.kind === 'rename'),
+      confirmTo: cf && cf.kind === 'rename' ? cf.to : '',
+      onConfirmTo: (e) => this.setState({ confirm: { ...this.state.confirm, to: e.target.value } }),
+      renameMode: s.renameMode,
+      renameLabel: s.renameMode ? 'Done editing names' : 'Edit names',
+      renameBg: s.renameMode ? '#e8b44a' : 'transparent',
+      renameColor: s.renameMode ? '#151d29' : '#e8b44a',
+      toggleRename: () => this.setState({ renameMode: !s.renameMode }),
       confirmAName: cf && cf.aName || '', confirmBName: cf && cf.bName || '',
       confirmSa: cf ? cf.sa : '', confirmSb: cf ? cf.sb : '',
       onConfirmSa: (e) => this.setState({ confirm: { ...this.state.confirm, sa: e.target.value } }),
@@ -1049,6 +1088,12 @@ class Component extends DCLogic {
       confirmNo: () => this.setState({ confirm: null }),
       confirmYes: () => {
         const c = this.state.confirm; if (!c) return;
+        if (c.kind === 'rename') {
+          const tt = data.tournaments.find(x => x.id === s.tId);
+          if (tt && this.renameEntrant(tt, c.from, c.to)) { this.setState({ confirm: null }); this.save({ ...data }); }
+          else this.setState({ confirm: { ...c, error: true } });
+          return;
+        }
         if (c.kind === 'sms') {
           this.setState({ confirm: null });
           try { window.location.href = c.href; } catch (e) {}
