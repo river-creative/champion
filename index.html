@@ -635,6 +635,34 @@ class Component extends DCLogic {
       if (nm[side] === w) { this.clearMatch(t, r + 1, i >> 1); nm[side] = null; }
     }
   }
+  // Undo what a bye had propagated: clear the auto-winner and pull its name
+  // back out of the next-round slot it was feeding.
+  releaseBye(t, r, i) {
+    const m = t.rounds[r][i];
+    if (!m || !m.bye) return;
+    const w = m.winner;
+    m.winner = null; m.bye = false;
+    if (w && r + 1 < t.rounds.length) {
+      const nm = t.rounds[r + 1][i >> 1], side = i % 2 ? 'b' : 'a';
+      if (nm[side] === w) { this.clearMatch(t, r + 1, i >> 1); nm[side] = null; }
+    }
+  }
+  // After a shuffle, a first-round match with one name is a bye again and its
+  // holder advances; one with two names is a live match. Only the first round
+  // holds byes - an empty slot later on just means "waiting on a result".
+  resolveBye(t, r, i) {
+    const m = t.rounds[r][i];
+    if (!m) return;
+    if (m.a && m.b) { m.bye = false; m.winner = null; m.ts = null; m.sa = null; m.sb = null; return; }
+    if (r !== 0) { m.bye = false; return; }
+    const w = m.a || m.b || null;
+    m.bye = !!w; m.winner = w; m.ts = null; m.sa = null; m.sb = null;
+    if (w && r + 1 < t.rounds.length) {
+      const nm = t.rounds[r + 1][i >> 1], side = i % 2 ? 'b' : 'a';
+      if (nm[side] && nm[side] !== w) this.clearMatch(t, r + 1, i >> 1);
+      nm[side] = w;
+    }
+  }
   setWinner(t, r, i, name, ts, sa, sb) {
     const m = t.rounds[r][i];
     if (m.winner && m.winner !== name) this.clearMatch(t, r, i);
@@ -835,20 +863,27 @@ class Component extends DCLogic {
       if (Date.now() - (this._clickBlock || 0) < 500) return;
       this.setState({ confirm: { kind: 'advance', r, i, winner: name, loserName: name === m.a ? m.b : m.a, aName: m.a, bName: m.b, sa: m.sa || '', sb: m.sb || '', scored: !!t.scored } });
     };
-    const canDrag = (side) => s.adminOn && !m.winner && !!m[side];
+    // A bye auto-advances its holder, so it carries a "winner" - but nothing
+    // has been played. Only a real result locks a match.
+    const played = (mm) => !!(mm.winner && !mm.bye);
+    const canDrop = (side) => s.adminOn && !played(m);
+    const canDrag = (side) => canDrop(side) && !!m[side];
     const openSwap = (fr, fi, fside, tr, ti, tside) => {
       if (fr === tr && fi === ti && fside === tside) return;
       const src = t.rounds[fr] && t.rounds[fr][fi], dst = t.rounds[tr] && t.rounds[tr][ti];
-      if (!src || !dst || src.winner || dst.winner) return;
+      if (!src || !dst || played(src) || played(dst)) return;
       const n1 = src[fside], n2 = dst[tside];
-      if (!n1 || !n2) return;
-      this.setState({ confirm: { kind: 'swap', fr, fi, fside, tr, ti, tside, n1, n2 } });
+      if (!n1) return;
+      // n2 may be empty: that is a bye slot, and moving someone in fills it.
+      const other = dst[tside === 'a' ? 'b' : 'a'];
+      const leaves = src[fside === 'a' ? 'b' : 'a'];
+      this.setState({ confirm: { kind: 'swap', fr, fi, fside, tr, ti, tside, n1, n2: n2 || '', other: other || '', leaves: leaves || '' } });
     };
     const dragStart = (side) => (e) => { this._drag = { r, i, side }; try { e.dataTransfer.setData('text/plain', m[side]); } catch (err) {} };
     const drop = (side) => (e) => {
       e.preventDefault();
       const d = this._drag; this._drag = null;
-      if (!d || !canDrag(side)) return;
+      if (!d || !canDrop(side)) return;
       openSwap(d.r, d.i, d.side, r, i, side);
     };
     const touchStart = (side) => (e) => { if (!canDrag(side)) return; const p = e.touches[0]; this._touch = { r, i, side, x: p.clientX, y: p.clientY, drag: false }; };
@@ -879,7 +914,7 @@ class Component extends DCLogic {
       pinLabel: pinned ? '★' : '☆', pinColor: pinned ? '#ec3013' : '#8b93a1',
       onPin: () => { t.featured = pinned ? null : { r, i }; this.save({ ...this.state.data }); },
       cursor: clickable ? 'pointer' : 'default',
-      touchAction: (canDrag('a') || canDrag('b')) ? 'none' : 'auto',
+      touchAction: (canDrop('a') || canDrop('b')) ? 'none' : 'auto',
       aSlot: slotId(r, i, 'a'), bSlot: slotId(r, i, 'b'),
       aBg: bg('a'), bBg: bg('b'),
       onA: m.a && m.b ? () => openAdvance(m.a) : undefined,
@@ -927,7 +962,10 @@ class Component extends DCLogic {
         delrow: 'Remove result', clearcomp: 'Clear all results', delupdate: 'Remove update', sms: 'Send a text' }[cf.kind] || 'Confirm') : '',
       confirmBody: cf ? (
         cf.kind === 'advance' ? this.scoreWinner(cf) + ' wins over ' + (this.scoreWinner(cf) === cf.aName ? cf.bName : cf.aName) + ' and moves to the next round.'
-        : cf.kind === 'swap' ? 'Swap ' + cf.n1 + ' with ' + cf.n2 + '? This changes the matchups.'
+        : cf.kind === 'swap' ? (
+            cf.n2
+              ? 'Swap ' + cf.n1 + ' with ' + cf.n2 + '? This changes the matchups' + (cf.other || cf.leaves ? ' and moves any byes with them.' : '.')
+              : 'Move ' + cf.n1 + ' in to face ' + (cf.other || 'the open slot') + '?' + (cf.leaves ? ' ' + cf.leaves + ' takes the bye instead.' : ''))
         : cf.kind === 'delrow' ? 'Remove ' + cf.name + ' from this leaderboard? Their result and rank are deleted. Any update mentioning them stays until you remove it.'
         : cf.kind === 'clearcomp' ? 'Delete every result and update in "' + cf.name + '"? The competition itself stays, with its name and type. This cannot be undone.'
         : cf.kind === 'sms' ? 'Open a text message to ' + cf.who + ' at ' + cf.num + '?'
@@ -964,7 +1002,13 @@ class Component extends DCLogic {
           this.setWinner(t, c.r, c.i, this.scoreWinner(c), Date.now(), c.sa, c.sb);
         } else {
           const mF = t.rounds[c.fr][c.fi], mT = t.rounds[c.tr][c.ti];
+          // Let go of whatever either match had already pushed into the next
+          // round, so no stale name survives the shuffle.
+          this.releaseBye(t, c.fr, c.fi);
+          this.releaseBye(t, c.tr, c.ti);
           const tmp = mF[c.fside]; mF[c.fside] = mT[c.tside]; mT[c.tside] = tmp;
+          this.resolveBye(t, c.fr, c.fi);
+          this.resolveBye(t, c.tr, c.ti);
         }
         this.setState({ confirm: null }); this.save({ ...data });
       },
